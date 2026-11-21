@@ -1,0 +1,66 @@
+[workspace]
+resolver = "3"
+members = ["crates/fe-core", "crates/fe-ai", "crates/fe-gpu", "crates/fe-ui-kit", "crates/fe-app"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "Proprietary"
+
+# Shared dependency versions. Crates use `name.workspace = true`.
+[workspace.dependencies]
+fe-core = { path = "crates/fe-core" }
+fe-ai = { path = "crates/fe-ai" }
+fe-gpu = { path = "crates/fe-gpu" }
+fe-ui-kit = { path = "crates/fe-ui-kit" }
+
+eframe = { version = "0.37.0", default-features = false, features = ["accesskit", "clipboard", "default_fonts", "wgpu", "glow"] }
+egui = "0.37.0"
+egui_extras = { version = "0.37.0", default-features = false, features = ["svg"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.154", features = ["preserve_order", "float_roundtrip"] }
+zip = { version = "9.8.1", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "webp", "bmp", "gif", "ico", "tiff", "dds", "rayon"] }
+rayon = "1.12.0"
+rfd = { version = "0.18.0", default-features = false, features = ["common-controls-v6"] }
+trash = "5.4.0"
+dirs = "7.0.0"
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+png = "0.18.1"
+# CPU drawing of shapes and pictures (objects), see docs/plan/01-architecture.md.
+tiny-skia = { version = "0.11.4", default-features = false, features = ["std", "simd"] }
+# Text (Phase 9): find installed fonts, and shape letters (kerning) so they can be drawn as outlines.
+fontdb = { version = "0.24.0", default-features = false, features = ["std", "fs", "memmap"] }
+rustybuzz = "0.20.1"
+# AI (Phase 13): ONNX Runtime loaded from its DLL on first use, downloads of the models, and their checksums.
+ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"] }
+ureq = { version = "3", default-features = false, features = ["rustls"] }
+sha2 = "0.10"
+thiserror = "2.0.21"
+log = "0.4.35"
+simplelog = "0.12.2"
+# Already used by eframe for text copy / paste; used directly for pictures.
+arboard = { version = "3.7.0", default-features = false, features = ["image-data"] }
+clipboard-win = "5.4.3"
+
+[workspace.lints.rust]
+unsafe_code = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
+# Fast enough to work with large pictures while developing.
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# Small, fast release build.
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true

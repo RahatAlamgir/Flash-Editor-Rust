@@ -1,0 +1,29 @@
+//! The ribbon at the top: File button, tabs, search box, collapse arrow and the buttons of the chosen tab.
+
+pub mod model;
+mod tab_row;
+mod view;
+
+pub use view::show;
+
+/// What the ribbon remembers between frames.
+#[derive(Default)]
+pub struct RibbonState {
+    /// Index into [`model::TABS`].
+    pub tab: usize,
+    /// Buttons hidden (double-click a tab or the arrow at the right).
+    pub collapsed: bool,
+    /// Text in the "Search commands" box.
+    pub search: String,
+    /// Colorful icon style (Settings > Icon Style); plain gray when false.
+    pub colorful: bool,
+}
+
+/// Something the user clicked in the ribbon that the app must handle.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum RibbonAction {
+    /// The File button.
+    File,
+    /// A button, by tab / group / item index, and where it is on screen (to open its list under it).
+    Button { tab: usize, group: usize, item: usize, rect: egui::Rect },
+}

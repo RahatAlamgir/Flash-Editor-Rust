@@ -1,0 +1,22 @@
+[package]
+name = "fe-ai"
+description = "Flash Editor AI features (ONNX)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+fe-core.workspace = true
+ort.workspace = true
+ureq.workspace = true
+sha2.workspace = true
+zip.workspace = true
+rayon.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

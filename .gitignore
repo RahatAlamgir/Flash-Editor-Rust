@@ -1,0 +1,53 @@
+# ---- Rust build output ----
+/target/
+**/*.rs.bk
+*.pdb
+
+# ---- AI runtime and models (large; downloaded or copied by scripts\get-ai-runtime.ps1) ----
+/models/
+*.onnx
+*.onnx.data
+onnxruntime*.dll
+DirectML.dll
+
+# ---- Files the program writes next to the exe while developing ----
+/settings/
+flash-editor.log
+*.flash.recovery
+recovery.flash
+
+# ---- Temporary / scratch files ----
+/temp/
+*.tmp
+*.bak
+*.orig
+*.log
+
+# ---- Installer build output (Phase 16) ----
+/installer/build/
+/installer/output/
+*.msi
+
+# ---- .NET helper build output ----
+/tools/csharp-fixtures/bin/
+/tools/csharp-fixtures/obj/
+
+# ---- Python caches (scripts\convert_icons.py) ----
+__pycache__/
+*.pyc
+
+# ---- Editors / OS ----
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- Claude Code local settings ----
+.claude/settings.local.json
+
+# ---- Generated pictures ----
+/docs/screenshots/

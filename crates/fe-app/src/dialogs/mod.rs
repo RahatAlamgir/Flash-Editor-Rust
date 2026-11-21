@@ -1,0 +1,180 @@
+//! Dialog windows. One file per dialog. Only one ordinary dialog is open at a time (`FlashApp::dialog`); the
+//! Project Manager has its own state because it lists many files.
+
+mod ask;
+mod brand_kit;
+pub mod color_picker;
+pub mod effect;
+mod icon_picker;
+mod new_project;
+mod photo_grid;
+pub mod previews;
+pub mod project_manager;
+pub mod remove_bg;
+mod save_style;
+mod save_template;
+mod size;
+mod smartart;
+pub mod upscale;
+
+pub use ask::{Answer, Ask};
+pub use brand_kit::BrandKit;
+pub use color_picker::{ColorPicker, ColorTarget, EffectColor};
+pub use icon_picker::{IconPicker, Page as IconPage, Pick};
+pub use new_project::NewProjectForm;
+pub use photo_grid::{PhotoGridForm, PhotoGridSettings};
+pub use size::{CanvasSizeForm, ImageOp, ImageOpForm, ImageSizeForm};
+pub use smartart::SmartArtForm;
+
+use crate::app::FlashApp;
+use crate::commands::{file, pages};
+
+/// The open dialog.
+pub enum Dialog {
+    Ask(Ask),
+    NewProject(NewProjectForm),
+    SaveTemplate(String),
+    Color(ColorPicker),
+    SaveStyle(String),
+    PhotoGrid(PhotoGridForm),
+    Icons(IconPicker),
+    BrandKit(BrandKit),
+    Effect(Box<crate::commands::effects::EffectSession>),
+    ImageSize(ImageSizeForm),
+    CanvasSize(CanvasSizeForm),
+    ImageOp(ImageOpForm),
+    SmartArt(SmartArtForm),
+    RemoveBg(Box<crate::ai::remove_bg::RemoveBgSession>),
+    Upscale(crate::ai::upscale::UpscaleForm),
+    AiModels,
+}
+
+/// Shows the open dialog (if any) and runs what the user chose.
+pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
+    let Some(dialog) = app.dialog.take() else { return };
+    match dialog {
+        Dialog::Ask(ask) => match ask::show(ctx, &ask) {
+            Some(answer) => run(ctx, app, answer),
+            None => app.dialog = Some(Dialog::Ask(ask)),
+        },
+        Dialog::NewProject(mut form) => match new_project::show(ctx, &mut form) {
+            Some(true) => new_project::create(ctx, app, &form),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::NewProject(form)),
+        },
+        Dialog::SaveTemplate(mut name) => match save_template::show(ctx, &mut name) {
+            Some(true) => file::save_as_template(app, &name),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::SaveTemplate(name)),
+        },
+        Dialog::PhotoGrid(mut form) => match photo_grid::show(ctx, &mut form) {
+            Some(true) => crate::commands::frames::photo_grid(app, &form.settings),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::PhotoGrid(form)),
+        },
+        Dialog::Icons(mut picker) => match icon_picker::show(ctx, &mut picker, &mut app.previews) {
+            Some(Some(pick)) => match pick {
+                Pick::Icon(i) => crate::commands::insert::add_icon(app, &fe_core::library::icons::ALL[i]),
+                Pick::Badge(id) => crate::commands::insert::add_badge(app, id),
+                Pick::Graphic(id) => crate::commands::insert::add_graphic(app, id),
+            },
+            Some(None) => {}
+            None => app.dialog = Some(Dialog::Icons(picker)),
+        },
+        Dialog::SmartArt(mut form) => match smartart::show(ctx, &mut form, &mut app.previews) {
+            Some(Some(choice)) => {
+                crate::commands::insert::add_smartart(app, choice.layout, &choice.words, &choice.scheme);
+            }
+            Some(None) => {}
+            None => app.dialog = Some(Dialog::SmartArt(form)),
+        },
+        Dialog::BrandKit(kit) => {
+            if brand_kit::show(ctx, app) {
+                app.dialog = Some(Dialog::BrandKit(kit));
+            }
+        }
+        Dialog::Effect(mut session) => match effect::show(ctx, app, &mut session) {
+            Some(true) => crate::commands::effects::commit(app, *session),
+            Some(false) => crate::commands::effects::cancel(app, *session),
+            None => app.dialog = Some(Dialog::Effect(session)),
+        },
+        Dialog::ImageSize(mut form) => match size::show_image_size(ctx, &mut form) {
+            Some(true) => crate::commands::image::image_size(app, form.width, form.height, form.mode),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::ImageSize(form)),
+        },
+        Dialog::CanvasSize(mut form) => match size::show_canvas_size(ctx, &mut form) {
+            Some(true) => crate::commands::image::canvas_size(app, form.width, form.height, form.anchor),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::CanvasSize(form)),
+        },
+        Dialog::ImageOp(mut form) => match size::show_image_op(ctx, &mut form) {
+            Some(true) => {
+                let angle = form.values.get("angle");
+                match form.op {
+                    ImageOp::Rotate => crate::commands::image::rotate_custom(app, angle),
+                    ImageOp::Straighten => crate::commands::image::straighten(app, angle, form.values.on("crop")),
+                }
+            }
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::ImageOp(form)),
+        },
+        Dialog::SaveStyle(mut name) => match save_style::show(ctx, &mut name) {
+            Some(true) => crate::commands::styles::add(app, &name),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::SaveStyle(name)),
+        },
+        Dialog::RemoveBg(mut session) => match remove_bg::show(ctx, app, &mut session) {
+            Some(true) => crate::ai::remove_bg::commit(app, *session),
+            Some(false) => crate::ai::remove_bg::cancel(app, *session),
+            None => app.dialog = Some(Dialog::RemoveBg(session)),
+        },
+        Dialog::Upscale(mut form) => match upscale::show(ctx, &mut form) {
+            Some(true) => crate::ai::upscale::run(app, form.scale, form.strength),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::Upscale(form)),
+        },
+        Dialog::AiModels => {
+            if crate::ai::models_dialog::show(ctx, app) {
+                // A question opened from inside (a failed download...) takes over.
+                if app.dialog.is_none() {
+                    app.dialog = Some(Dialog::AiModels);
+                }
+            }
+        }
+        Dialog::Color(mut picker) => {
+            if color_picker::show(ctx, app, &mut picker) {
+                app.dialog = Some(Dialog::Color(picker));
+            }
+        }
+    }
+}
+
+fn run(ctx: &egui::Context, app: &mut FlashApp, answer: Answer) {
+    let index_of = |app: &FlashApp, uid: u64| app.projects.iter().position(|p| p.uid() == uid);
+    match answer {
+        Answer::Nothing => {}
+        Answer::SaveAndCloseProject(uid) => {
+            if let Some(index) = index_of(app, uid) {
+                match app.projects[index].path.clone() {
+                    Some(path) => file::save_to(app, ctx, index, path, crate::app::jobs::AfterSave::CloseProject),
+                    None => {
+                        file::save_as(app, ctx, index, crate::app::jobs::AfterSave::CloseProject);
+                    }
+                }
+            }
+        }
+        Answer::CloseProject(uid) => {
+            if let Some(index) = index_of(app, uid) {
+                file::remove_project(app, index);
+            }
+        }
+        Answer::SaveAllAndQuit => file::continue_closing_window(app, ctx),
+        Answer::Quit => file::quit(app, ctx),
+        Answer::RecoverWork => crate::app::autosave::recover(app),
+        Answer::DiscardRecovery => crate::app::autosave::delete_recovery(),
+        Answer::DeletePages(indices) => pages::delete_now(app, &indices),
+        Answer::DeleteProjectFile(path) => project_manager::delete_file(app, &path),
+        Answer::DownloadModels(pending) => crate::ai::pending::download(app, pending),
+    }
+}

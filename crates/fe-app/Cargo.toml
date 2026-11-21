@@ -1,0 +1,40 @@
+[package]
+name = "fe-app"
+description = "Flash Editor, the program"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "flash-editor"
+path = "src/main.rs"
+
+[dependencies]
+arboard.workspace = true
+chrono.workspace = true
+dirs.workspace = true
+fe-core.workspace = true
+fe-ai.workspace = true
+fe-gpu.workspace = true
+fe-ui-kit.workspace = true
+eframe.workspace = true
+egui.workspace = true
+image.workspace = true
+log.workspace = true
+rayon.workspace = true
+rfd.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+trash.workspace = true
+simplelog.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+clipboard-win.workspace = true
+
+[build-dependencies]
+winresource = "0.1.34"
+
+[lints]
+workspace = true

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    A small helper that uses the C# Flash Editor's own (already built) libraries to
+      1. write sample .flash projects into tests/fixtures (the tutorial project and a "features" project), and
+      2. open any .flash file with the C# reader and print a summary (to check that files saved by the Rust
+         version open in the C# app exactly as they were).
+    It references the built files in "D:\AiBuild\Flash Editor\installer\build\app", so building it never
+    writes into the C# project folder.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <CsharpApp>D:\AiBuild\Flash Editor\installer\build\app</CsharpApp>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FlashEditor.Core"><HintPath>$(CsharpApp)\FlashEditor.Core.dll</HintPath></Reference>
+    <Reference Include="FlashEditor"><HintPath>$(CsharpApp)\FlashEditor.dll</HintPath></Reference>
+    <Reference Include="SkiaSharp"><HintPath>$(CsharpApp)\SkiaSharp.dll</HintPath></Reference>
+    <None Include="$(CsharpApp)\libSkiaSharp.dll" CopyToOutputDirectory="PreserveNewest" Link="libSkiaSharp.dll" />
+  </ItemGroup>
+</Project>
