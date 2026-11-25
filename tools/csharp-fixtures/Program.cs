@@ -22,6 +22,8 @@ internal static class Program
         {
             case "make": Make(args[1]); return 0;
             case "summary": Console.Write(Summary(args[1])); return 0;
+            case "io": MakeIo(args[1]); return 0;
+            case "readdoc": Console.Write(ReadDoc(args[1])); return 0;
             default: Console.Error.WriteLine("unknown command " + args[0]); return 2;
         }
     }
@@ -87,6 +89,36 @@ internal static class Program
     }
 
     /// <summary>What the C# reader sees, as text (two files with the same summary hold the same project).</summary>
+    /// <summary>Writes the first page of the tutorial as PSD, SVG, PDF, PPTX (both kinds) and GIF, with the C# writers, for the Rust tests.</summary>
+    private static void MakeIo(string folder)
+    {
+        Directory.CreateDirectory(folder);
+        var build = typeof(FlashEditor.App.Services.DemoProject).GetMethod("BuildPages", BindingFlags.NonPublic | BindingFlags.Static)
+                    ?? throw new InvalidOperationException("DemoProject.BuildPages not found");
+        var pages = (IReadOnlyList<ProjectPage>)build.Invoke(null, null)!;
+        var doc = pages[2].Document;
+        FlashEditor.Core.IO.Psd.PsdFile.Save(FeaturePages()[0].Document, Path.Combine(folder, "features.psd")); // small canvas: the tutorial page would be 160 MB
+        FlashEditor.Core.IO.Svg.SvgFile.Save(doc, Path.Combine(folder, "page.svg"));
+        var flat = FlashEditor.Core.Painting.Compositor.Flatten(doc);
+        FlashEditor.Core.IO.Pdf.PdfWriter.Save(new[] { flat, flat }, Path.Combine(folder, "pages.pdf"), 90, 96);
+        FlashEditor.Core.IO.Pptx.PptxWriter.Save(new[] { flat }, Path.Combine(folder, "picture.pptx"), 90, false);
+        FlashEditor.Core.IO.Pptx.EditablePptx.Save(new[] { doc }, Path.Combine(folder, "editable.pptx"));
+        File.WriteAllBytes(Path.Combine(folder, "anim.gif"), FlashEditor.Core.IO.GifEncoder.EncodeAnimation(new[] { flat, flat }, 500, true));
+        File.WriteAllBytes(Path.Combine(folder, "page-flat.rgba"), flat.Data);
+        Console.WriteLine($"{doc.Width}x{doc.Height}, {doc.Layers.Count} layers");
+    }
+
+    /// <summary>Opens a .psd or .svg file with the C# reader and prints what it sees.</summary>
+    private static string ReadDoc(string path)
+    {
+        var doc = path.EndsWith(".psd", StringComparison.OrdinalIgnoreCase) ? FlashEditor.Core.IO.Psd.PsdFile.Open(path) : FlashEditor.Core.IO.Svg.SvgFile.Open(path);
+        var sb = new StringBuilder();
+        sb.AppendLine($"{doc.Width}x{doc.Height} layers={doc.Layers.Count}");
+        foreach (var l in doc.Layers)
+            sb.AppendLine($"layer '{l.Name}' opacity={l.Opacity:0.###} visible={l.IsVisible} blend={l.BlendMode} object={(l.Object is { } o ? o.KindName : "-")} bounds={l.Pixels.VisibleBounds()}");
+        return sb.ToString();
+    }
+
     private static string Summary(string path)
     {
         var content = ProjectReader.OpenProject(path);

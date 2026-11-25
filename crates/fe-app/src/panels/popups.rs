@@ -35,6 +35,16 @@ fn file_menu(ui: &mut Ui, app: &mut FlashApp) {
             ("Save As...", "Ctrl+Shift+S"),
             ("Save as Template...", ""),
             ("", ""),
+            ("Export Picture...", "Ctrl+Alt+S"),
+            ("Export For...", ""),
+            ("Export All Pages...", ""),
+            ("Export as PDF...", ""),
+            ("Export as Animated GIF...", ""),
+            ("Export as PowerPoint...", ""),
+            ("Export as SVG...", ""),
+            ("Export as Photoshop (PSD)...", ""),
+            ("Batch Convert...", ""),
+            ("", ""),
             ("Add Page", "Ctrl+Alt+N"),
             ("Close Project", "Ctrl+W"),
             ("", ""),
@@ -66,6 +76,21 @@ fn file_menu(ui: &mut Ui, app: &mut FlashApp) {
         Some("Save as Template...") => {
             app.dialog = Some(crate::dialogs::Dialog::SaveTemplate(app.project().name.clone()))
         }
+        Some("Export Picture...") => crate::commands::export::open_export(app),
+        Some("Export For...") => crate::commands::export::open_export_for(app),
+        Some("Export All Pages...") => crate::commands::export::open_export_all(app),
+        Some("Export as PDF...") => {
+            crate::commands::export::open_pages_export(app, crate::commands::export::PagesKind::Pdf)
+        }
+        Some("Export as Animated GIF...") => {
+            crate::commands::export::open_pages_export(app, crate::commands::export::PagesKind::Gif);
+        }
+        Some("Export as PowerPoint...") => {
+            crate::commands::export::open_pages_export(app, crate::commands::export::PagesKind::Pptx);
+        }
+        Some("Export as SVG...") => crate::commands::export::export_document(app, true),
+        Some("Export as Photoshop (PSD)...") => crate::commands::export::export_document(app, false),
+        Some("Batch Convert...") => crate::commands::export::open_batch(app),
         Some("Add Page") => crate::commands::pages::add_after_current(app),
         Some("Close Project") => {
             let index = app.active_project;

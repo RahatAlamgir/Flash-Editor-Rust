@@ -22,13 +22,15 @@ fn stem(path: &Path) -> String {
 
 /// File > Open (Ctrl+O): pictures and projects.
 pub fn open_dialog(app: &mut FlashApp, ctx: &egui::Context) {
-    let mut all: Vec<&str> = vec![project::EXTENSION];
+    let mut all: Vec<&str> = vec![project::EXTENSION, "psd", "svg"];
     all.extend(format::COMMON_EXTENSIONS);
     all.extend(format::WINDOWS_EXTENSIONS);
     let picked = rfd::FileDialog::new()
         .set_title("Open a picture or project")
         .add_filter("Pictures and projects", &all)
         .add_filter("Flash Editor project", &[project::EXTENSION])
+        .add_filter("Photoshop file", &["psd"])
+        .add_filter("SVG vector picture", &["svg"])
         .add_filter("All files", &["*"])
         .set_directory(app.settings.projects_folder())
         .pick_files();
@@ -49,6 +51,10 @@ pub fn open_path(app: &mut FlashApp, ctx: &egui::Context, path: &Path, as_layers
     app.jobs.spawn(ctx, move || {
         let result = if is_project {
             project::open(&path).map(OpenedFile::Project)
+        } else if fe_core::io::psd::is_psd(&path) {
+            fe_core::io::psd::open(&path).map(OpenedFile::Document)
+        } else if fe_core::io::svg::is_svg(&path) {
+            fe_core::io::svg::open(&path).map(OpenedFile::Document)
         } else {
             decode::load(&path).map(OpenedFile::Picture)
         };
@@ -67,6 +73,15 @@ pub fn on_opened(app: &mut FlashApp, path: PathBuf, result: Result<OpenedFile, S
             add_project(app, project);
             app.settings.add_recent(&path);
             app.status = format!("Opened {} ({pages} page{}).", stem(&path), if pages == 1 { "" } else { "s" });
+        }
+        Ok(OpenedFile::Document(doc)) => {
+            let (w, h, layers) = (doc.width(), doc.height(), doc.layers().len());
+            add_project(app, Project::new(stem(&path), Page::new("Page 1", doc)));
+            app.status = format!(
+                "Opened {} ({w} x {h} px, {layers} layer{}).",
+                file_name(&path),
+                if layers == 1 { "" } else { "s" }
+            );
         }
         Ok(OpenedFile::Picture(image)) if as_layers => add_picture_layer(app, &image, &stem(&path)),
         Ok(OpenedFile::Picture(image)) => {

@@ -1,5 +1,4 @@
-//! Writes a [`PixelBuffer`] as PNG, JPG, WEBP, BMP or TIFF. ICO and GIF (with Flash Editor's own encoders)
-//! come in Phase 14.
+//! Writes a [`PixelBuffer`] as PNG, JPG, WEBP, BMP, TIFF, ICO or GIF.
 
 use std::io::Cursor;
 use std::path::Path;
@@ -13,7 +12,7 @@ use crate::imaging::{ColorRgba, PixelBuffer, over_pixel};
 /// Encodes a picture. `quality` (1..100) is used by JPG; `matte` is the color behind transparent areas in
 /// formats without transparency (JPG), white when `None`.
 ///
-/// WEBP is saved lossless for now (the quality setting arrives with the export work in Phase 14).
+/// `quality` also applies to WEBP (100 = lossless).
 pub fn encode(
     image: &PixelBuffer,
     format: ImageFileFormat,
@@ -34,9 +33,16 @@ pub fn encode(
                 .write_image(&rgb, w, h, ExtendedColorType::Rgb8)
                 .map_err(failed)?
         }
-        ImageFileFormat::Webp => WebPEncoder::new_lossless(&mut out)
-            .write_image(image.data(), w, h, ExtendedColorType::Rgba8)
-            .map_err(failed)?,
+        ImageFileFormat::Webp => {
+            if quality >= 100 {
+                WebPEncoder::new_lossless(&mut out)
+                    .write_image(image.data(), w, h, ExtendedColorType::Rgba8)
+                    .map_err(failed)?
+            } else {
+                let lossy = webp::Encoder::from_rgba(image.data(), w, h).encode(f32::from(quality));
+                out.extend_from_slice(&lossy);
+            }
+        }
         ImageFileFormat::Bmp => {
             BmpEncoder::new(&mut out).write_image(image.data(), w, h, ExtendedColorType::Rgba8).map_err(failed)?
         }
@@ -44,12 +50,8 @@ pub fn encode(
             let mut cursor = Cursor::new(&mut out);
             TiffEncoder::new(&mut cursor).write_image(image.data(), w, h, ExtendedColorType::Rgba8).map_err(failed)?
         }
-        ImageFileFormat::Ico | ImageFileFormat::Gif => {
-            return Err(IoError::CannotSave(format!(
-                "Saving {} files is not available yet.",
-                format.extension().trim_start_matches('.').to_uppercase()
-            )));
-        }
+        ImageFileFormat::Ico => return super::ico::encode_ico(image),
+        ImageFileFormat::Gif => return super::gif::encode_gif(image),
     }
     Ok(out)
 }

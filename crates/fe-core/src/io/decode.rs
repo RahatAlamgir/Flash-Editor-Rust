@@ -1,5 +1,5 @@
 //! Reads pictures (PNG, JPG, WEBP, BMP, GIF, ICO, TIFF, DDS) into a [`PixelBuffer`].
-//! Photos are turned upright using their EXIF orientation. HEIC / AVIF / RAW via Windows come in Phase 14.
+//! Photos are turned upright using their EXIF orientation. HEIC / AVIF / RAW are read through Windows (`wic.rs`).
 
 use std::io::Cursor;
 use std::path::Path;
@@ -16,8 +16,18 @@ pub const MAX_DIMENSION: u32 = 16384;
 /// Reads a picture file.
 pub fn load(path: impl AsRef<Path>) -> Result<PixelBuffer, IoError> {
     let path = path.as_ref();
+    let extension = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+    // Formats only Windows can read (HEIC, AVIF, RAW...) go straight to its codecs.
+    if super::format::WINDOWS_EXTENSIONS.contains(&extension.as_str()) && !matches!(extension.as_str(), "tif" | "tiff")
+    {
+        return super::wic::load_or_explain(path);
+    }
     let bytes = std::fs::read(path)?;
-    load_bytes(&bytes, path.extension().and_then(|e| e.to_str()))
+    match load_bytes(&bytes, Some(&extension)) {
+        // A TIFF the built-in reader cannot handle (unusual compression) may still open through Windows.
+        Err(e) if matches!(extension.as_str(), "tif" | "tiff") => super::wic::load(path).ok_or(e),
+        other => other,
+    }
 }
 
 /// Reads a picture from bytes. `extension` (like "heic") only improves the error message.

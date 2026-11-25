@@ -18,6 +18,11 @@ thiserror.workspace = true
 tiny-skia.workspace = true
 fontdb.workspace = true
 rustybuzz.workspace = true
+webp.workspace = true
+roxmltree.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows.workspace = true
 
 [lints]
 workspace = true

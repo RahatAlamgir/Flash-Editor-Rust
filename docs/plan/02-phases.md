@@ -295,10 +295,22 @@ ImageObject, ObjectStyle, ObjectTransforms), `App/Rendering/ShapeGeometryFactory
 
 **C# to read:** `Views/Panels/FileDrawer*`, `App/Services/Shortcuts.cs`, `Views/Dialogs/ShortcutsDialog*`,
 `SettingsDialog*`, `MessageDialog*`, `Views/Editor/CanvasView.ContextMenu.cs`, `LayersPanel.ContextMenu.cs`,
-`App/Services/IconTheme.cs`, `Views/Panels/RibbonBar.cs` (search), quick tour code in `MainWindow.cs`.
+`App/Services/IconTheme.cs`, `Views/Panels/RibbonBar.cs` (search), quick tour code in `MainWindow.cs`,
+`App/Services/Templates/*` (new in the C# version, commit "load template from online"), `Views/Dialogs/Controls/TemplatesView*`,
+the Templates part of `ProjectManagerWindow*`.
 
 * File drawer (slides in from the left), every ribbon command wired, right-click menus with icons,
   editable keyboard shortcuts (F1), command search, icon style Plain / Colorful, quick tour, About.
+* **Online templates** (added to the C# version after this plan was written; the Project Manager of Phase 5 gets a
+  **Templates** button): the browser swaps the project list for template cards with a search box (name, type, keywords),
+  one button per project type ("All" first), thumbnails loaded 4 at a time in the background, **Use template** / double-click /
+  Enter. The list comes from the public GitHub repository `RahatAlamgir/Flash-Editor-Templates` (`catalog.json`, `types.json`,
+  `templates/<type>/<id>/template.flash` + `thumb.jpg`); the web address can be changed with the `FLASHEDITOR_TEMPLATES`
+  environment variable (a web address or a folder, for testing). Every download is checked against the catalog (size +
+  SHA-256), cached in `settings\online-templates` so it works offline ("Offline: showing the templates saved earlier"),
+  and saved as a new project in the projects folder, then opened. Needs no new library (`ureq` and `sha2` are in since Phase 13);
+  downloads run on a job, never on the UI thread; Esc goes back from Templates to Projects; messages for no internet, no match,
+  retry.
 * Walk the whole `03-feature-checklist.md`: anything still unticked gets done or explicitly listed for the user.
 
 **Done when:** the checklist has no unticked item that the user has not agreed to drop.

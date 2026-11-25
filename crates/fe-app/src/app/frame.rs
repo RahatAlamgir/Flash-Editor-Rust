@@ -69,6 +69,10 @@ fn finished_jobs(app: &mut FlashApp, ctx: &egui::Context) {
             JobDone::AutoSaved(result) => autosave::on_saved(app, result),
             JobDone::ProjectList(entries) => project_manager::on_list(app, entries),
             JobDone::Ai(done) => crate::ai::outcome::on_done(app, done),
+            JobDone::ExportPreview { version, settings, result } => {
+                crate::commands::export::on_preview(app, version, settings, result);
+            }
+            JobDone::SheetPieces { version, result } => crate::commands::split_sheet::on_pieces(app, version, result),
             JobDone::EffectPreview { generation, tiles } => {
                 crate::commands::effects::on_preview(app, ctx, generation, tiles);
             }

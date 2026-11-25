@@ -145,6 +145,8 @@ pub fn handle_ribbon_action(app: &mut FlashApp, ctx: &egui::Context, action: Rib
                 "Fill (AI)" => crate::ai::fill::start(app),
                 "AI Upscale" => crate::ai::upscale::start(app),
                 "AI Models" => app.dialog = Some(crate::dialogs::Dialog::AiModels),
+                "Magic Resize" => crate::commands::magic_resize::open(app),
+                "Split Asset Sheet" => crate::commands::split_sheet::open(app),
                 "Trim Edges" => crate::commands::image::trim(app),
                 "Upscale 2x" => crate::commands::image::upscale_2x(app),
                 "Straighten" => {

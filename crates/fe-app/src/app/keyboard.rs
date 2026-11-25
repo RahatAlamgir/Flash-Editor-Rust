@@ -135,6 +135,7 @@ fn file_shortcut(app: &mut FlashApp, ctx: &egui::Context, key: Key, mods: Modifi
             app.dialog = Some(crate::dialogs::Dialog::NewProject(crate::dialogs::NewProjectForm::new(app.background)));
         }
         Key::O => file::open_dialog(app, ctx),
+        Key::S if mods.alt => crate::commands::export::open_export(app),
         Key::S if mods.shift => {
             let index = app.active_project;
             file::save_as(app, ctx, index, crate::app::jobs::AfterSave::Nothing);

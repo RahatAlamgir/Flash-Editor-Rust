@@ -2,11 +2,16 @@
 //! Project Manager has its own state because it lists many files.
 
 mod ask;
+mod batch;
 mod brand_kit;
 pub mod color_picker;
 pub mod effect;
+pub mod export;
+mod export_for;
 mod icon_picker;
+mod magic_resize;
 mod new_project;
+mod pages_export;
 mod photo_grid;
 pub mod previews;
 pub mod project_manager;
@@ -15,16 +20,22 @@ mod save_style;
 mod save_template;
 mod size;
 mod smartart;
+mod split_sheet;
 pub mod upscale;
 
 pub use ask::{Answer, Ask};
+pub use batch::BatchForm;
 pub use brand_kit::BrandKit;
 pub use color_picker::{ColorPicker, ColorTarget, EffectColor};
+pub use export_for::ExportForForm;
 pub use icon_picker::{IconPicker, Page as IconPage, Pick};
+pub use magic_resize::MagicResizeForm;
 pub use new_project::NewProjectForm;
+pub use pages_export::PagesForm;
 pub use photo_grid::{PhotoGridForm, PhotoGridSettings};
 pub use size::{CanvasSizeForm, ImageOp, ImageOpForm, ImageSizeForm};
 pub use smartart::SmartArtForm;
+pub use split_sheet::SplitSheetForm;
 
 use crate::app::FlashApp;
 use crate::commands::{file, pages};
@@ -47,6 +58,12 @@ pub enum Dialog {
     RemoveBg(Box<crate::ai::remove_bg::RemoveBgSession>),
     Upscale(crate::ai::upscale::UpscaleForm),
     AiModels,
+    Export(Box<export::ExportForm>),
+    ExportFor(Box<ExportForForm>),
+    Pages(PagesForm),
+    Batch(Box<BatchForm>),
+    MagicResize(MagicResizeForm),
+    SplitSheet(Box<SplitSheetForm>),
 }
 
 /// Shows the open dialog (if any) and runs what the user chose.
@@ -133,6 +150,40 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
             Some(true) => crate::ai::upscale::run(app, form.scale, form.strength),
             Some(false) => {}
             None => app.dialog = Some(Dialog::Upscale(form)),
+        },
+        Dialog::Export(mut form) => match export::show(ctx, app, &mut form) {
+            Some(true) => crate::commands::export::finish(app, *form),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::Export(form)),
+        },
+        Dialog::ExportFor(mut form) => match export_for::show(ctx, &mut form) {
+            Some(true) => crate::commands::export::finish_for(app, *form),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::ExportFor(form)),
+        },
+        Dialog::Pages(mut form) => match pages_export::show(ctx, &mut form) {
+            Some(true) => crate::commands::export::finish_pages(app, form.kind, form.values),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::Pages(form)),
+        },
+        Dialog::Batch(mut form) => match batch::show(ctx, &mut form) {
+            Some(true) => {
+                if let Some(options) = form.options() {
+                    crate::commands::export::finish_batch(app, options);
+                }
+            }
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::Batch(form)),
+        },
+        Dialog::MagicResize(mut form) => match magic_resize::show(ctx, &mut form) {
+            Some(true) => crate::commands::magic_resize::run(app, form.width, form.height, form.all_pages),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::MagicResize(form)),
+        },
+        Dialog::SplitSheet(mut form) => match split_sheet::show(ctx, app, &mut form) {
+            Some(true) => crate::commands::split_sheet::finish(app, *form),
+            Some(false) => {}
+            None => app.dialog = Some(Dialog::SplitSheet(form)),
         },
         Dialog::AiModels => {
             if crate::ai::models_dialog::show(ctx, app) {

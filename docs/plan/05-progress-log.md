@@ -12,7 +12,41 @@ Problems / questions for the user: ...
 
 ---
 
-## 2026-11-21 � Phase 13 � AI model store and all AI features
+## 2026-11-25 · Phase 14 · Import and export
+
+Done: File menu: Export Picture (Ctrl+Alt+S), Export For, Export All Pages, Export as PDF / Animated GIF / PowerPoint / SVG /
+Photoshop (PSD), Batch Convert. The Export window shows the real file size and the real result (the file is made on a
+background thread a moment after the last change, so the window never waits): format (PNG, JPG, WebP, ICO, BMP, TIFF, GIF),
+quality, size (pixels, percent, keep proportions, 4 resize methods), drag-to-crop with shapes, "zoom to 100%". WebP now has a
+real quality setting (libwebp). Image tab: Magic Resize (this page or every page, one undo step) and Split Asset Sheet (finds
+the items automatically or from the selection; numbered boxes update as the sliders move; as layers and / or PNG files).
+Open: .psd (layers, opacity, visibility, blend modes, masks), .svg (shapes, text, paths, pictures) and, through the Windows
+picture codecs, HEIC / AVIF / JPEG XL / camera RAW / JPEG XR when Windows has the codec.
+Checked against C# (`tests/fixtures/io`, made by the C# program's own code with `tools/csharp-fixtures io`): a C# Photoshop
+file opens in Rust with the same 5 layers, names, opacity, blend modes and bounds; a C# SVG opens as the same kinds of objects;
+the C# program reads the PSD and SVG Rust writes with the same layers; the PDF has the same structure; the picture-mode and
+editable PowerPoint files have the same XML (editable: the same shapes, text boxes and texts); the animated GIF has the same
+size, loop and delays. Also tested: crop / resize, presets, batch (never overwrites), file size texts, split sheet, magic resize.
+Tried by hand in the window: the Export window, Split Asset Sheet, Magic Resize and the File menu.
+Added: two libraries you agreed to (`webp` for WebP quality, `windows` for the Windows picture codecs) and `roxmltree`, a tiny
+read-only XML reader for SVG files.
+Not the same as C#: GIF colors are picked by the Rust GIF encoder (no dithering, usually closer to the original); TIFF is
+written by the Rust encoder instead of Windows; the Export crop box is redrawn by dragging (no corner handles).
+Not tried by hand: the save-file steps after "Export..." (the Windows file window cannot be driven by my screenshot script),
+Batch Convert, PDF / GIF / PowerPoint / SVG / PSD saving through the menu, opening a real HEIC / AVIF / RAW file, and opening
+the PowerPoint file in PowerPoint itself.
+Next: Phase 15 (also builds the online Templates browser).
+Problems / questions for the user: none.
+
+## 2026-11-23 · Plan update · Online templates
+
+Done: the C# version got a new feature (commit "load template from online"): a Templates browser in the Project Manager that
+loads ready-made designs from the GitHub repository `RahatAlamgir/Flash-Editor-Templates`. Added it to Phase 15 in `02-phases.md`
+(with the C# files to read and the details) and to `03-feature-checklist.md`. No code written yet.
+Next: Phase 14, then Phase 15 builds the templates browser.
+Problems / questions for the user: none.
+
+## 2026-11-21 · Phase 13 · AI model store and all AI features
 
 Done: everything the AI does, running on the real models. `fe-ai` has the model store (same URLs, sizes and SHA-256 as C#,
 `models\` next to the program, asks first, progress + Cancel, deletes half-finished files), the ONNX runtime loaded only on

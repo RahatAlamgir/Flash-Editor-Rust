@@ -7,7 +7,7 @@ has been checked. "Ph" = phase in `02-phases.md`. C# paths are under `D:\AiBuild
 | Done | Feature | Ph | C# source |
 |---|---|---|---|
 | [ ] | Open PNG, JPG, WEBP, ICO, BMP, GIF, TIFF, JPEG XR, DDS | 1, 14 | `Core/IO/ImageDecoder.cs`, `App/Services/WicImageCodec.cs` |
-| [ ] | Open HEIC, AVIF, JPEG XL, camera RAW (via Windows codecs) | 14 | `WicImageCodec.cs` |
+| [x] | Open HEIC, AVIF, JPEG XL, camera RAW (via Windows codecs) | 14 | `WicImageCodec.cs` |
 | [x] | Drag files onto the window; Ctrl+drop adds as layers | 5 | `Views/MainWindow.cs` |
 | [x] | Save / open `.flash` projects (compatible with C# files) | 5 | `Core/IO/Project/*` |
 | [ ] | Several projects as tabs, rename by double-click, Ctrl+Tab, Ctrl+W (done except renaming a tab by double-click) | 5 | `ViewModels/ProjectGroup.cs`, `MainViewModel.cs` |
@@ -94,8 +94,8 @@ has been checked. "Ph" = phase in `02-phases.md`. C# paths are under `D:\AiBuild
 | [x] | Adjust: Recolor, Auto Levels, Brightness/Contrast, Exposure/Gamma, Hue/Saturation, Vibrance, Temperature/Tint, Grayscale, Invert, Sepia, Posterize, Threshold | 11 | `Core/Effects/Adjustments/*`, `RecolorDialog*` |
 | [x] | Filter: Enhance, Gaussian Blur, Motion Blur, Sharpen, Reduce Noise, Add Noise, Pixelate, Vignette, Emboss, Find Edges | 11 | `Core/Effects/Filters/*` |
 | [x] | Live preview; only the selection is changed | 11 | `Services/EffectPreviewSession.cs`, `EffectApplier.cs` |
-| [ ] | Split Asset Sheet | 14 | `Core/Sheets/SheetSplitter.cs`, `SplitSheetDialog*` |
-| [ ] | Magic Resize (optionally every page) | 14 | `Core/Layout/MagicResize.cs` |
+| [x] | Split Asset Sheet | 14 | `Core/Sheets/SheetSplitter.cs`, `SplitSheetDialog*` |
+| [x] | Magic Resize (optionally every page) | 14 | `Core/Layout/MagicResize.cs` |
 
 ## Insert
 | Done | Feature | Ph | C# source |
@@ -111,19 +111,20 @@ has been checked. "Ph" = phase in `02-phases.md`. C# paths are under `D:\AiBuild
 ## Export
 | Done | Feature | Ph | C# source |
 |---|---|---|---|
-| [ ] | Export dialog: format, quality, size, crop, real file size | 14 | `ExportDialog*`, `ExportCropBox.cs`, `Core/IO/ExportSettings.cs` |
-| [ ] | PNG, JPG, WEBP, ICO, BMP, TIFF, GIF | 14 | `Core/IO/*Encoder.cs` |
-| [ ] | Export All Pages, Export For presets | 14 | `PagesExportCommands.cs`, `ExportPresets.cs`, `ExportForDialog*` |
-| [ ] | PDF, animated GIF | 14 | `IO/Pdf/PdfWriter.cs`, `IO/GifEncoder.cs` |
-| [ ] | SVG export and import | 14 | `IO/Svg/SvgFile.cs` |
-| [ ] | PSD import and export | 14 | `IO/Psd/PsdFile.cs` |
-| [ ] | PowerPoint export (editable / pictures) | 14 | `IO/Pptx/*` |
-| [ ] | Batch Convert Folder | 14 | `IO/BatchConverter.cs`, `BatchDialog*` |
+| [x] | Export dialog: format, quality, size, crop, real file size (also HEIC / AVIF / RAW opening through Windows) | 14 | `ExportDialog*`, `ExportCropBox.cs`, `Core/IO/ExportSettings.cs` |
+| [x] | PNG, JPG, WEBP, ICO, BMP, TIFF, GIF | 14 | `Core/IO/*Encoder.cs` |
+| [x] | Export All Pages, Export For presets | 14 | `PagesExportCommands.cs`, `ExportPresets.cs`, `ExportForDialog*` |
+| [x] | PDF, animated GIF | 14 | `IO/Pdf/PdfWriter.cs`, `IO/GifEncoder.cs` |
+| [x] | SVG export and import | 14 | `IO/Svg/SvgFile.cs` |
+| [x] | PSD import and export | 14 | `IO/Psd/PsdFile.cs` |
+| [x] | PowerPoint export (editable / pictures) | 14 | `IO/Pptx/*` |
+| [x] | Batch Convert Folder | 14 | `IO/BatchConverter.cs`, `BatchDialog*` |
 
 ## UI and settings
 | Done | Feature | Ph | C# source |
 |---|---|---|---|
 | [ ] | Ribbon with tabs, collapsible, File drawer | 2, 15 | `RibbonBar*`, `FileDrawer*`, `Themes/Ribbon.xaml` |
+| [ ] | Online templates in the Project Manager (GitHub catalog, search, categories, checked + cached downloads, works offline) | 15 | `Services/Templates/*`, `Controls/TemplatesView*`, `ProjectManagerWindow*` |
 | [ ] | Command search box | 15 | `RibbonBar.cs` |
 | [ ] | Right-click menus (canvas and layers) with icons | 15 | `CanvasView.ContextMenu.cs`, `LayersPanel.ContextMenu.cs` |
 | [x] | Rulers, grid, guides, view aids bar | 3 | `RulerControl.cs`, `AidsOverlay.cs`, `ViewAidsBar*` |

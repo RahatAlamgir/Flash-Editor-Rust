@@ -37,6 +37,11 @@ rustybuzz = "0.20.1"
 ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"] }
 ureq = { version = "3", default-features = false, features = ["rustls"] }
 sha2 = "0.10"
+# Export (Phase 14): WebP with a quality setting (Google's libwebp), and Windows' own picture codecs (HEIC, AVIF, RAW...).
+webp = { version = "0.3", default-features = false }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Com", "Win32_Graphics_Imaging"] }
+# SVG import (Phase 14): a small read-only XML parser.
+roxmltree = "0.20"
 thiserror = "2.0.21"
 log = "0.4.35"
 simplelog = "0.12.2"

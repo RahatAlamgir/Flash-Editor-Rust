@@ -11,6 +11,8 @@ use fe_core::io::project::ProjectContent;
 pub enum OpenedFile {
     Project(ProjectContent),
     Picture(PixelBuffer),
+    /// A Photoshop or SVG file: a document with layers.
+    Document(fe_core::document::Document),
 }
 
 /// What to do after a save finished.
@@ -40,6 +42,17 @@ pub enum JobDone {
     ProjectList(Vec<crate::dialogs::project_manager::Entry>),
     /// Something the AI made (or a model that was downloaded).
     Ai(crate::ai::AiDone),
+    /// The real file made for the Export window (file size and preview).
+    ExportPreview {
+        version: u64,
+        settings: fe_core::io::export::ExportSettings,
+        result: Result<(u64, fe_core::imaging::PixelBuffer, fe_core::imaging::PixelBuffer), String>,
+    },
+    /// The pieces found for the Split Asset Sheet window.
+    SheetPieces {
+        version: u64,
+        result: Result<std::sync::Arc<Vec<fe_core::sheets::SheetPiece>>, String>,
+    },
     /// A live preview of an effect.
     EffectPreview {
         generation: u64,

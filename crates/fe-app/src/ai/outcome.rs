@@ -32,6 +32,9 @@ pub enum AiDone {
         doc: u64,
         result: Result<super::upscale::Upscaled, String>,
     },
+    /// Any other long task with a progress bar and Cancel (exports, batch convert): the text for the status bar; text after a
+    /// blank line is also shown in a window.
+    Task(Result<String, String>),
     Click {
         doc: u64,
         result: Result<Vec<u8>, String>,
@@ -63,6 +66,20 @@ pub fn on_done(app: &mut FlashApp, done: AiDone) {
         AiDone::Subject { doc, result } => super::subject::on_done(app, doc, result),
         AiDone::Fill { doc, result, big } => super::fill::on_done(app, doc, result, big),
         AiDone::Upscale { doc, result } => super::upscale::on_done(app, doc, result),
+        AiDone::Task(result) => match result {
+            Ok(text) => match text.split_once(
+                "
+
+",
+            ) {
+                Some((status, more)) => {
+                    app.status = status.to_owned();
+                    tell(app, "Done", more);
+                }
+                None => app.status = text,
+            },
+            Err(e) => failed(app, "This task", &e),
+        },
         AiDone::Click { doc, result, mods } => super::click::on_done(app, doc, result, mods),
     }
 }
