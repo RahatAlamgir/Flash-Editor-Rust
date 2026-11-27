@@ -105,5 +105,6 @@ pub fn copy_of(page: &Page, name: &str) -> Page {
     let mut copy = Page::new(name, doc);
     copy.vertical_guides = page.vertical_guides.clone();
     copy.horizontal_guides = page.horizontal_guides.clone();
+    copy.transition = page.transition;
     copy
 }

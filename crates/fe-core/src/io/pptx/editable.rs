@@ -331,10 +331,22 @@ pub fn build_slide(page: &Document, options: EditableOptions) -> PptxSlide {
 
 /// A presentation of every page, text and simple shapes editable.
 pub fn build_editable(pages: &[&Document], options: EditableOptions) -> Result<Vec<u8>, IoError> {
+    build_editable_with(pages, options, &[])
+}
+
+/// Like `build_editable`, with a slide transition for each slide.
+pub fn build_editable_with(
+    pages: &[&Document],
+    options: EditableOptions,
+    transitions: &[crate::document::Transition],
+) -> Result<Vec<u8>, IoError> {
     let Some(first) = pages.first() else {
         return Err(IoError::CannotSave("A presentation needs at least one slide.".into()));
     };
-    let slides: Vec<PptxSlide> = pages.iter().map(|p| build_slide(p, options)).collect();
+    let mut slides: Vec<PptxSlide> = pages.iter().map(|p| build_slide(p, options)).collect();
+    for (slide, t) in slides.iter_mut().zip(transitions) {
+        slide.set_transition(t);
+    }
     build_slides(&slides, first.width(), first.height())
 }
 
@@ -344,7 +356,17 @@ pub fn save_editable(
     path: impl AsRef<std::path::Path>,
     options: EditableOptions,
 ) -> Result<(), IoError> {
-    write_file(path.as_ref(), build_editable(pages, options)?)
+    save_editable_with(pages, path, options, &[])
+}
+
+/// Like `save_editable`, with a slide transition for each slide.
+pub fn save_editable_with(
+    pages: &[&Document],
+    path: impl AsRef<std::path::Path>,
+    options: EditableOptions,
+    transitions: &[crate::document::Transition],
+) -> Result<(), IoError> {
+    write_file(path.as_ref(), build_editable_with(pages, options, transitions)?)
 }
 
 #[cfg(test)]

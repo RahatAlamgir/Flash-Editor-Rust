@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::document::{AdjustmentKind, AdjustmentStyle, CurvePoint};
+use crate::document::{AdjustmentKind, AdjustmentStyle, CurvePoint, Transition, TransitionDirection, TransitionKind};
 
 pub const FORMAT_NAME: &str = "flash-project";
 pub const CURRENT_VERSION: u32 = 3;
@@ -15,6 +15,9 @@ pub struct Manifest {
     pub version: u32,
     pub pages: Vec<PageEntry>,
     pub active_page: usize,
+    /// "presentation" for a presentation (the Animation tab is available); empty for other projects.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub project_type: String,
     // Version 1 files: one page written straight into the manifest.
     pub width: u32,
     pub height: u32,
@@ -29,6 +32,7 @@ impl Default for Manifest {
             version: CURRENT_VERSION,
             pages: Vec::new(),
             active_page: 0,
+            project_type: String::new(),
             width: 0,
             height: 0,
             active_layer: 0,
@@ -46,7 +50,52 @@ pub struct PageEntry {
     pub active_layer: usize,
     pub vertical_guides: Vec<f64>,
     pub horizontal_guides: Vec<f64>,
+    /// Left out when it is the plain default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub transition: Option<TransitionEntry>,
     pub layers: Vec<LayerEntry>,
+}
+
+/// A page's slide transition as saved.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase", default)]
+pub struct TransitionEntry {
+    pub kind: String,
+    pub direction: String,
+    pub duration: f32,
+    pub on_click: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub after: Option<f32>,
+}
+
+impl Default for TransitionEntry {
+    fn default() -> Self {
+        Self::from(&Transition::default())
+    }
+}
+
+impl From<&Transition> for TransitionEntry {
+    fn from(t: &Transition) -> Self {
+        Self {
+            kind: t.kind.name().into(),
+            direction: t.direction.key().into(),
+            duration: t.duration,
+            on_click: t.on_click,
+            after: t.after,
+        }
+    }
+}
+
+impl From<&TransitionEntry> for Transition {
+    fn from(e: &TransitionEntry) -> Self {
+        Self {
+            kind: TransitionKind::from_name(&e.kind),
+            direction: TransitionDirection::from_name(&e.direction),
+            duration: e.duration.clamp(0.1, 6.0),
+            on_click: e.on_click,
+            after: e.after.filter(|s| *s > 0.0),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

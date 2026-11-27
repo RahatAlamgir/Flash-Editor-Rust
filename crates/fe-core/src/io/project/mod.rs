@@ -10,7 +10,7 @@ mod write;
 use crate::document::Page;
 
 pub use read::{open, open_from};
-pub use write::{save, to_bytes};
+pub use write::{save, save_as, to_bytes, to_bytes_as};
 
 /// File extension of projects.
 pub const EXTENSION: &str = "fe";
@@ -25,6 +25,8 @@ pub const PREVIEW_SIZE: u32 = 480;
 pub struct ProjectContent {
     pub pages: Vec<Page>,
     pub active_page: usize,
+    /// The project was saved as a presentation.
+    pub presentation: bool,
 }
 
 /// True when the path ends in `.fe` (any case).

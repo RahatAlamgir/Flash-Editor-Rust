@@ -18,9 +18,11 @@ pub fn show(app: &mut FlashApp, ui: &mut Ui) {
             .filter(|label| !panels::ribbon_enabled(app, label))
             .collect();
         let enabled = |label: &str| !disabled.contains(&label);
+        crate::commands::presentation::prepare_ribbon(app);
         if let Some(action) = ribbon::show(ui, &mut app.ribbon, &mut app.aids, &enabled) {
             panels::handle_ribbon_action(app, ui.ctx(), action);
         }
+        crate::commands::presentation::apply_ribbon_edit(app);
     });
     Panel::top("hint-bar").frame(plain(colors::PANEL_HEADER)).exact_size(metrics::HINT_BAR).show(ui, |ui| {
         panels::hint_bar::show(ui, &mut app.tools);

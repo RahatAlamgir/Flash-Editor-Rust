@@ -61,7 +61,7 @@ fn sections() -> Vec<(&'static str, Vec<Row>)> {
                     '\u{E8A1}',
                     blue,
                     Special("template"),
-                    "Keep this picture as a starting point for new pictures (File > New > Start from)",
+                    "Keep this picture as a starting point for new pictures (Project Manager > Templates > My templates)",
                 ),
             ],
         ),
@@ -73,9 +73,16 @@ fn sections() -> Vec<(&'static str, Vec<Row>)> {
                     '\u{E8F4}',
                     green,
                     Command("Add page"),
-                    "A new empty page after this one. All pages are saved together in one .flash file.",
+                    "A new empty page after this one. All pages are saved together in one .fe file.",
                 ),
                 row("Duplicate Page", '\u{E8C8}', sky, Special("duplicate-page"), ""),
+                row(
+                    "Presentation (on / off)",
+                    '\u{E7F4}',
+                    sky,
+                    Special("presentation"),
+                    "Makes this project a presentation: the Animation tab (slide transitions, slideshow) appears. Click again to turn it off.",
+                ),
                 row("Close Page", '\u{E711}', red, Special("close-page"), ""),
                 row("Next Picture", '\u{E72A}', blue, Command("Next picture"), ""),
             ],
@@ -158,6 +165,17 @@ fn run_special(app: &mut FlashApp, ctx: &egui::Context, id: &str) {
         "place" => file::place_image(app, ctx),
         "template" => app.dialog = Some(crate::dialogs::Dialog::SaveTemplate(app.project().name.clone())),
         "duplicate-page" => pages::duplicate(app, &[app.project().active_index()]),
+        "presentation" => {
+            let project = app.project_mut();
+            project.presentation = !project.presentation;
+            project.history_mut().mark_unsaved();
+            let on = project.presentation;
+            app.status = if on {
+                "This project is now a presentation: see the Animation tab.".into()
+            } else {
+                "This project is no longer a presentation.".into()
+            };
+        }
         "close-page" => pages::ask_delete(app, vec![app.project().active_index()]),
         "export-for" => export::open_export_for(app),
         "export-all" => export::open_export_all(app),

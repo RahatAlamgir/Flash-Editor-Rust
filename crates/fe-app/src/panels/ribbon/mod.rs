@@ -1,10 +1,12 @@
 //! The ribbon at the top: File button, tabs, search box, collapse arrow and the buttons of the chosen tab.
 
+mod animation;
 pub mod model;
 mod search;
 mod tab_row;
 mod view;
 
+pub use animation::kind_of as animation_kind_of;
 pub use view::show;
 
 /// What the ribbon remembers between frames.
@@ -21,6 +23,11 @@ pub struct RibbonState {
     /// The search results are showing, and the one chosen with the arrow keys.
     pub search_open: bool,
     pub search_pick: usize,
+    /// The shown project is a presentation: the Animation tab is available.
+    pub presentation: bool,
+    /// The transition of the shown page (copied in each frame); the options boxes change it and set `transition_changed`.
+    pub transition: fe_core::document::Transition,
+    pub transition_changed: bool,
 }
 
 /// Something the user clicked in the ribbon that the app must handle.

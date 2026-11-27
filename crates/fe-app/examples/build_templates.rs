@@ -40,7 +40,7 @@ fn main() {
             continue;
         };
         let content = project::open(&source).unwrap_or_else(|e| panic!("{kind}/{id}: {e}"));
-        let bytes = project::to_bytes(&content.pages, 0).expect("saves");
+        let bytes = project::to_bytes_as(&content.pages, 0, kind == "presentation").expect("saves");
         std::fs::write(folder.join("template.fe"), &bytes).expect("write");
         if source.file_name().is_some_and(|n| n != "template.fe") {
             std::fs::remove_file(&source).expect("remove old file");

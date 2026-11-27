@@ -29,6 +29,8 @@ pub struct FlashApp {
     pub foreground: ColorRgba,
     /// The eyedropper of the color picker.
     pub eyedropper: super::eyedropper::Eyedropper,
+    /// The slideshow or transition preview on screen.
+    pub slideshow: Option<crate::slideshow::Slideshow>,
     /// Text on the left of the status bar.
     pub status: String,
     /// The pixel under the mouse, for the status bar.
@@ -98,6 +100,7 @@ impl FlashApp {
             active_project: 0,
             foreground: ColorRgba::BLACK,
             eyedropper: Default::default(),
+            slideshow: None,
             status: "Nothing selected. Click a shape, text, image or painted area to select it.".into(),
             cursor_text: String::new(),
             history_expanded: false,

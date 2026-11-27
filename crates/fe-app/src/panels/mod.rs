@@ -203,6 +203,7 @@ pub fn handle_ribbon_action(app: &mut FlashApp, ctx: &egui::Context, action: Rib
                     let style = if app.ribbon.colorful { "Colorful" } else { "Plain" };
                     app.status = format!("Icon style: {style}.");
                 }
+                label if crate::commands::presentation::ribbon_button(app, ctx, label) => {}
                 label => app.not_yet(label.trim_end_matches(" ▾")),
             }
         }

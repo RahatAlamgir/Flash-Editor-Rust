@@ -50,6 +50,9 @@ fn tabs(ui: &mut Ui, row: Rect, state: &mut RibbonState) {
     let font = FontId::proportional(TAB_FONT);
     let mut x = row.left() + metrics::RIBBON_TABS_LEFT;
     for (index, tab) in TABS.iter().enumerate() {
+        if tab.name == "Animation" && !state.presentation {
+            continue;
+        }
         let galley = ui.fonts_mut(|f| f.layout_no_wrap(tab.name.into(), font.clone(), Color32::WHITE));
         let selected = index == state.tab && !state.collapsed;
         let height = row.height() - TAB_TOP + if selected { 1.0 } else { 0.0 };

@@ -25,7 +25,7 @@ pub struct Entry {
 }
 
 /// Section, title and the normal shortcut of every command (the order of the list in the window).
-pub const COMMANDS: [(&str, &str, &str); 43] = [
+pub const COMMANDS: [(&str, &str, &str); 45] = [
     ("File", "New", "Ctrl+N"),
     ("File", "Open", "Ctrl+O"),
     ("File", "Save project", "Ctrl+S"),
@@ -67,6 +67,8 @@ pub const COMMANDS: [(&str, &str, &str); 43] = [
     ("View", "Guides", "Ctrl+OemSemicolon"),
     ("View", "Snapping", "Ctrl+Shift+OemSemicolon"),
     ("View", "Keyboard shortcuts", "F1"),
+    ("View", "Slideshow from start", "F5"),
+    ("View", "Slideshow from this slide", "Ctrl+F5"),
     // Not in the C# list, but they have shortcuts in both programs.
     ("Edit", "Rename layer", "F2"),
     ("View", "Speed overlay", "F12"),

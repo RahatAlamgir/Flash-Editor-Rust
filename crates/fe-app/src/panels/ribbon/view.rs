@@ -17,6 +17,9 @@ pub fn show(
     aids: &mut ViewAids,
     enabled: &dyn Fn(&str) -> bool,
 ) -> Option<RibbonAction> {
+    if !state.presentation && TABS.get(state.tab).is_some_and(|t| t.name == "Animation") {
+        state.tab = 0;
+    }
     let width = ui.available_width();
     let body_h = if state.collapsed { 0.0 } else { metrics::RIBBON_BODY };
     let (rect, _) = ui.allocate_exact_size(Vec2::new(width, metrics::RIBBON_TAB_ROW + body_h), Sense::hover());
@@ -34,7 +37,7 @@ pub fn show(
 fn buttons(
     ui: &mut Ui,
     body: Rect,
-    state: &RibbonState,
+    state: &mut RibbonState,
     aids: &mut ViewAids,
     enabled: &dyn Fn(&str) -> bool,
 ) -> Option<RibbonAction> {
@@ -52,8 +55,12 @@ fn buttons(
             for (g, group) in tab.groups.iter().enumerate() {
                 ui.add_space(3.0);
                 let start = ui.cursor().left();
+                if group.items.is_empty() {
+                    super::animation::controls(ui, group.name, state);
+                }
                 for (i, item) in group.items.iter().enumerate() {
-                    let checked = item.toggle && toggle_value(aids, item.label).is_some_and(|v| *v);
+                    let checked = (item.toggle && toggle_value(aids, item.label).is_some_and(|v| *v))
+                        || (tab.name == "Animation" && super::animation::is_current(state, item.label));
                     let color = if state.colorful { color_of(item.color) } else { colors::ICON };
                     let response = ribbon_button(
                         ui,

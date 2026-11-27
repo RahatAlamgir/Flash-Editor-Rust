@@ -98,6 +98,8 @@ pub fn run(app: &mut FlashApp, ctx: &egui::Context, title: &str) -> bool {
         "Send backward" => layers::move_layer(app, -1),
         "Bring to front" => layers::bring_to_end(app, true),
         "Send to back" => layers::bring_to_end(app, false),
+        "Slideshow from start" => crate::commands::presentation::slideshow(app, ctx, false),
+        "Slideshow from this slide" => crate::commands::presentation::slideshow(app, ctx, true),
         "Zoom in" => app.current_view_mut().zoom_in(),
         "Zoom out" => app.current_view_mut().zoom_out(),
         "Fit on screen" => app.current_view_mut().fit(),

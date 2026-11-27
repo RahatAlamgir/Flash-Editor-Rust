@@ -18,6 +18,7 @@ pub mod mask;
 pub mod objects;
 pub mod pages;
 pub mod parts;
+pub mod presentation;
 pub mod selection;
 pub mod split_sheet;
 pub mod styles;

@@ -289,6 +289,35 @@ pub const TABS: &[RibbonTab] = &[
         ],
     },
     RibbonTab {
+        name: "Animation",
+        groups: &[
+            RibbonGroup {
+                name: "Transition to this slide",
+                items: &[
+                    b('\u{E711}', "No Transition", Slate),
+                    b('\u{E706}', "Fade", Sky),
+                    b('\u{E72A}', "Push", Blue),
+                    b('\u{E8AB}', "Wipe", Teal),
+                    b('\u{E8A7}', "Cover", Green),
+                    b('\u{E7C3}', "Uncover", Lime),
+                    b('\u{E8A3}', "Zoom", Amber),
+                    b('\u{E7B5}', "Split", Orange),
+                ],
+            },
+            // Drawn by hand (`animation.rs`): the direction and duration boxes.
+            RibbonGroup { name: "Effect options", items: &[] },
+            RibbonGroup { name: "Advance slide", items: &[] },
+            RibbonGroup {
+                name: "Apply",
+                items: &[b('\u{E8F4}', "Apply to All", Purple), b('\u{E768}', "Preview Transition", Green)],
+            },
+            RibbonGroup {
+                name: "Slideshow",
+                items: &[b('\u{E7F4}', "From Beginning", Red), b('\u{E768}', "From Current Slide", Red)],
+            },
+        ],
+    },
+    RibbonTab {
         name: "View",
         groups: &[
             RibbonGroup {

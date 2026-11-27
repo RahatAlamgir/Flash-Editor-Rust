@@ -341,6 +341,7 @@ pub fn finish_pages(app: &mut FlashApp, kind: PagesKind, values: fe_core::effect
         Vec::new()
     };
     let matte = ColorRgba::WHITE;
+    let transitions: Vec<fe_core::document::Transition> = app.project().pages().iter().map(|p| p.transition).collect();
     job::start(app, title, move |_| {
         let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
         let count = if documents.is_empty() { pages.len() } else { documents.len() };
@@ -353,13 +354,21 @@ pub fn finish_pages(app: &mut FlashApp, kind: PagesKind, values: fe_core::effect
             PagesKind::Pptx => {
                 let quality = values.get("quality") as u8;
                 let saved = if documents.is_empty() {
-                    fe_core::io::pptx::save_pictures(&pages, &path, quality, values.on("lossless"), Some(matte))
+                    fe_core::io::pptx::save_pictures_with(
+                        &pages,
+                        &path,
+                        quality,
+                        values.on("lossless"),
+                        Some(matte),
+                        &transitions,
+                    )
                 } else {
                     let refs: Vec<&fe_core::document::Document> = documents.iter().collect();
-                    fe_core::io::pptx::save_editable(
+                    fe_core::io::pptx::save_editable_with(
                         &refs,
                         &path,
                         fe_core::io::pptx::EditableOptions { quality, matte: Some(matte) },
+                        &transitions,
                     )
                 };
                 saved.map(|()| {

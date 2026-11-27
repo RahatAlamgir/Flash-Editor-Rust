@@ -19,6 +19,10 @@ enum Press {
 }
 
 pub fn handle(ui: &Ui, app: &mut FlashApp) {
+    // The slideshow has its own keys.
+    if crate::slideshow::active(app) {
+        return;
+    }
     // The shortcut list is waiting for new keys: they are not commands now.
     if matches!(app.dialog, Some(crate::dialogs::Dialog::Shortcuts(_))) {
         return;

@@ -78,8 +78,13 @@ impl Pictures {
 
 /// Saves pages to `path`. Writes a temporary file first, so a failed save never damages the old file.
 pub fn save(pages: &[Page], active_page: usize, path: impl AsRef<Path>) -> Result<(), IoError> {
+    save_as(pages, active_page, false, path)
+}
+
+/// Like `save`, for a project that is (or is not) a presentation.
+pub fn save_as(pages: &[Page], active_page: usize, presentation: bool, path: impl AsRef<Path>) -> Result<(), IoError> {
     let path = path.as_ref();
-    let bytes = to_bytes(pages, active_page)?;
+    let bytes = to_bytes_as(pages, active_page, presentation)?;
     let mut temp = path.as_os_str().to_owned();
     temp.push(".saving");
     std::fs::write(&temp, bytes)?;
@@ -91,6 +96,11 @@ pub fn save(pages: &[Page], active_page: usize, path: impl AsRef<Path>) -> Resul
 
 /// The whole project file as bytes.
 pub fn to_bytes(pages: &[Page], active_page: usize) -> Result<Vec<u8>, IoError> {
+    to_bytes_as(pages, active_page, false)
+}
+
+/// Like `to_bytes`, for a project that is (or is not) a presentation.
+pub fn to_bytes_as(pages: &[Page], active_page: usize, presentation: bool) -> Result<Vec<u8>, IoError> {
     if pages.is_empty() {
         return Err(IoError::CannotSave("A project needs at least one page.".into()));
     }
@@ -99,6 +109,7 @@ pub fn to_bytes(pages: &[Page], active_page: usize) -> Result<Vec<u8>, IoError> 
     let manifest = Manifest {
         pages: pages.iter().map(|p| page_entry(p, &mut pictures)).collect(),
         active_page,
+        project_type: if presentation { "presentation".into() } else { String::new() },
         ..Manifest::default()
     };
     let json = serde_json::to_vec_pretty(&manifest).map_err(|e| IoError::CannotSave(e.to_string()))?;
@@ -135,6 +146,7 @@ fn page_entry(page: &Page, pictures: &mut Pictures) -> PageEntry {
         active_layer: doc.active_index().unwrap_or(0),
         vertical_guides: page.vertical_guides.clone(),
         horizontal_guides: page.horizontal_guides.clone(),
+        transition: (!page.transition.is_default()).then(|| (&page.transition).into()),
         layers: doc.layers().iter().map(|l| layer_entry(l, pictures)).collect(),
     }
 }

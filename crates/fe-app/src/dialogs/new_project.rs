@@ -186,5 +186,6 @@ pub fn create(ctx: &egui::Context, app: &mut FlashApp, form: &NewProjectForm) {
     let [r, g, b, a] = form.color;
     let background = if form.transparent { ColorRgba::TRANSPARENT } else { ColorRgba::new(r, g, b, a) };
     let doc = Document::blank(form.width, form.height, background);
-    file::create_project(app, ctx, &form.name, vec![Page::new("Page 1", doc)]);
+    let presentation = TYPES[form.kind].0 == Some("presentation");
+    file::create_project(app, ctx, &form.name, vec![Page::new("Page 1", doc)], presentation);
 }

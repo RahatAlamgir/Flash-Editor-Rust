@@ -4,6 +4,24 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Presentations: Animation tab, slide transitions, slideshow (plan: 07-animation.md)
+
+Done (stage A of the plan):
+- **Project type.** Projects can be presentations (saved in the file as `ProjectType`). New Project > Presentation, the online
+  Presentation templates (rebuilt, see the templates CHANGELOG) and File > Presentation (on / off) set it.
+- **Animation tab** (shown only for presentations, between Filter and View): a transition for the shown slide (None, Fade, Push,
+  Wipe, Cover, Uncover, Zoom, Split), direction, duration, "On click or key", "After N s", Apply to All, Preview Transition,
+  From Beginning, From Current Slide. Choosing a transition plays a preview at once. Every change is one undo step.
+- **Slideshow.** F5 (from start), Ctrl+F5 (from this slide): full screen; click / Right / Space / Enter / Page Down = next, Left /
+  Backspace / Page Up / right-click = back, Esc = stop; automatic advance when "After" is set; a click skips a running movement.
+- **PowerPoint export** writes `<p:transition>` for each slide (fade, push, wipe, cover, pull, zoom, split; speed, advance on
+  click, advance time), in the editable and the picture export. Unit tests cover the XML and the save / open round trip.
+Checked by screenshots: the tab appears for a Presentation project and not for others; the slideshow opens full screen.
+NOT checked by eye: how each of the 8 transitions looks while moving (the preview is too short to catch with the screenshot
+tool), and opening the exported .pptx in PowerPoint.
+Not done (stage B): object animations (entrance / emphasis / exit effects, the animation pane, `<p:timing>` export). Waiting for
+the user to confirm.
+
 ## 2026-11-28 · Toolbox cleanup
 
 Removed the tools Paint Bucket (G), Eyedropper (I), Hand (H) and Zoom (Z), with their options and code. Panning still works with

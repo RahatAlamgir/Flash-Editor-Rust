@@ -9,6 +9,7 @@ mod canvas;
 mod commands;
 mod dialogs;
 mod panels;
+mod slideshow;
 mod templates;
 mod text_edit;
 mod tools;

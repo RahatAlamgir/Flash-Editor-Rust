@@ -100,6 +100,8 @@ pub struct PptxSlide {
     next_id: u32,
     /// The pictures used by this slide (the first one is relationship rId2).
     pub media: Vec<Media>,
+    /// `<p:transition>` of the slide (empty = none).
+    transition: String,
 }
 
 fn mark(px: f64) -> String {
@@ -140,7 +142,7 @@ fn xfrm(p: Place) -> String {
 
 impl PptxSlide {
     pub fn new() -> Self {
-        Self { xml: String::new(), next_id: 2, media: Vec::new() }
+        Self { xml: String::new(), next_id: 2, media: Vec::new(), transition: String::new() }
     }
 
     /// The shapes as XML; `scale` (slides too big for PowerPoint are shrunk) is applied to every position and size.
@@ -157,6 +159,15 @@ impl PptxSlide {
         }
         out.push_str(rest);
         out
+    }
+
+    /// How the slideshow arrives at this slide (PowerPoint's own transition elements).
+    pub fn set_transition(&mut self, t: &crate::document::Transition) {
+        self.transition = transition_xml(t);
+    }
+
+    pub(crate) fn transition_xml(&self) -> &str {
+        &self.transition
     }
 
     fn id(&mut self) -> u32 {
@@ -252,6 +263,66 @@ impl PptxSlide {
             "<p:sp><p:nvSpPr><p:cNvPr id=\"{id}\" name=\"{}\"/><p:cNvSpPr txBox=\"1\"/><p:nvPr/></p:nvSpPr><p:spPr>{}<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/></p:spPr><p:txBody><a:bodyPr wrap=\"none\" lIns=\"0\" tIns=\"0\" rIns=\"0\" bIns=\"0\" rtlCol=\"0\" anchor=\"t\"><a:noAutofit/></a:bodyPr><a:lstStyle/>{paragraphs}</p:txBody></p:sp>",
             escape(name),
             xfrm(place)
+        );
+    }
+}
+
+/// `<p:transition>` for a page's transition. PowerPoint names the way the picture moves (a page "from the left" moves right).
+pub fn transition_xml(t: &crate::document::Transition) -> String {
+    use crate::document::{TransitionDirection as D, TransitionKind as K};
+    let moving = match t.direction {
+        D::Left => "r",
+        D::Right => "l",
+        D::Up => "d",
+        D::Down => "u",
+    };
+    let inner = match t.kind {
+        K::None => return String::new(),
+        K::Fade => "<p:fade/>".to_owned(),
+        K::Push => format!("<p:push dir=\"{moving}\"/>"),
+        K::Wipe => format!("<p:wipe dir=\"{moving}\"/>"),
+        K::Cover => format!("<p:cover dir=\"{moving}\"/>"),
+        K::Uncover => format!("<p:pull dir=\"{moving}\"/>"),
+        K::Zoom => "<p:zoom dir=\"in\"/>".to_owned(),
+        K::Split => "<p:split orient=\"vert\" dir=\"out\"/>".to_owned(),
+    };
+    let speed = if t.duration <= 0.5 {
+        "fast"
+    } else if t.duration <= 1.2 {
+        "med"
+    } else {
+        "slow"
+    };
+    let mut attrs = format!(" spd=\"{speed}\"");
+    if !t.on_click {
+        attrs.push_str(" advClick=\"0\"");
+    }
+    if let Some(after) = t.after {
+        attrs.push_str(&format!(" advTm=\"{}\"", (after * 1000.0).round() as i64));
+    }
+    format!("<p:transition{attrs}>{inner}</p:transition>")
+}
+
+#[cfg(test)]
+mod transition_tests {
+    use super::transition_xml;
+    use crate::document::{Transition, TransitionDirection, TransitionKind};
+
+    #[test]
+    fn transitions_become_powerpoint_elements() {
+        assert_eq!("", transition_xml(&Transition::default()));
+        let fade = Transition { kind: TransitionKind::Fade, duration: 0.4, ..Transition::default() };
+        assert_eq!("<p:transition spd=\"fast\"><p:fade/></p:transition>", transition_xml(&fade));
+        let push = Transition {
+            kind: TransitionKind::Push,
+            direction: TransitionDirection::Left,
+            duration: 2.0,
+            on_click: false,
+            after: Some(3.0),
+        };
+        assert_eq!(
+            "<p:transition spd=\"slow\" advClick=\"0\" advTm=\"3000\"><p:push dir=\"r\"/></p:transition>",
+            transition_xml(&push)
         );
     }
 }

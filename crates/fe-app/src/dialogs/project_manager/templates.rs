@@ -350,7 +350,7 @@ fn show_mine(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp, names: 
         match file::template_pages(&name) {
             Ok(pages) => {
                 app.manager.open = false;
-                file::create_project(app, ctx, &name, pages);
+                file::create_project(app, ctx, &name, pages, false);
             }
             Err(err) => crate::ai::outcome::tell(app, "Templates", format!("Could not open the template: {err}")),
         }

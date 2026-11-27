@@ -85,6 +85,7 @@ pub fn on_opened(app: &mut FlashApp, path: PathBuf, result: Result<OpenedFile, S
             let pages = content.pages.len();
             let mut project = Project::from_pages(stem(&path), content.pages, content.active_page);
             project.path = Some(path.clone());
+            project.presentation = content.presentation;
             add_project(app, project);
             app.settings.add_recent(&path);
             app.status = format!("Opened {} ({pages} page{}).", stem(&path), if pages == 1 { "" } else { "s" });
@@ -164,10 +165,11 @@ pub fn save_as(app: &mut FlashApp, ctx: &egui::Context, index: usize, then: Afte
 pub fn save_to(app: &mut FlashApp, ctx: &egui::Context, index: usize, path: PathBuf, then: AfterSave) {
     let project = &app.projects[index];
     let (pages, active) = (project.pages().to_vec(), project.active_index());
+    let presentation = project.presentation;
     let (uid, position) = (project.uid(), project.history().position());
     app.status = format!("Saving {}...", stem(&path));
     app.jobs.spawn(ctx, move || {
-        let result = project::save(&pages, active, &path).map_err(|e| e.to_string());
+        let result = project::save_as(&pages, active, presentation, &path).map_err(|e| e.to_string());
         JobDone::Saved { project: uid, path, position, result, then }
     });
 }
@@ -281,13 +283,15 @@ pub fn quit(app: &mut FlashApp, ctx: &egui::Context) {
 }
 
 /// File > New project: makes the project, saves it at once in the projects folder (like the C# version).
-pub fn create_project(app: &mut FlashApp, ctx: &egui::Context, name: &str, pages: Vec<Page>) {
+pub fn create_project(app: &mut FlashApp, ctx: &egui::Context, name: &str, pages: Vec<Page>, presentation: bool) {
     let folder = app.settings.projects_folder();
     if let Err(err) = std::fs::create_dir_all(&folder) {
         app.status = format!("Cannot create the projects folder {}: {err}", folder.display());
     }
     let path = new_project_path(&folder, name);
-    add_project(app, Project::from_pages(stem(&path), pages, 0));
+    let mut project = Project::from_pages(stem(&path), pages, 0);
+    project.presentation = presentation;
+    add_project(app, project);
     let index = app.active_project;
     save_to(app, ctx, index, path, AfterSave::Nothing);
 }
@@ -298,9 +302,10 @@ pub fn save_as_template(app: &mut FlashApp, name: &str) {
     let name = clean_name(name);
     let path = folder.join(format!("{name}.{}", project::EXTENSION));
     let project = app.project();
-    let result = std::fs::create_dir_all(&folder)
-        .map_err(|e| e.to_string())
-        .and_then(|()| project::save(project.pages(), project.active_index(), &path).map_err(|e| e.to_string()));
+    let result = std::fs::create_dir_all(&folder).map_err(|e| e.to_string()).and_then(|()| {
+        project::save_as(project.pages(), project.active_index(), project.presentation, &path)
+            .map_err(|e| e.to_string())
+    });
     app.status = match result {
         Ok(()) => format!("Saved as the template \"{name}\". It is in Project Manager > Templates > My templates."),
         Err(err) => format!("Could not save the template: {err}"),

@@ -21,13 +21,16 @@ pub struct Hit {
 const MAX: usize = 9;
 
 /// The commands that match what was typed: every word has to appear in the name, the tab or the group, best first.
-pub fn find(query: &str, anchor: Rect) -> Vec<Hit> {
+pub fn find(query: &str, anchor: Rect, presentation: bool) -> Vec<Hit> {
     let words: Vec<String> = query.split_whitespace().map(str::to_lowercase).collect();
     if words.is_empty() {
         return Vec::new();
     }
     let mut hits: Vec<(Hit, String)> = Vec::new();
     for (tab, t) in TABS.iter().enumerate() {
+        if t.name == "Animation" && !presentation {
+            continue;
+        }
         for (group, g) in t.groups.iter().enumerate() {
             for (item, i) in g.items.iter().enumerate() {
                 let title = i.label.trim_end_matches(" \u{25BE}").to_owned();
@@ -105,7 +108,7 @@ pub fn show(ui: &mut Ui, row: Rect, state: &mut RibbonState) -> Option<RibbonAct
     if state.search.is_empty() || !state.search_open {
         return None;
     }
-    let hits = find(&state.search, rect);
+    let hits = find(&state.search, rect, state.presentation);
     if hits.is_empty() {
         return None;
     }
@@ -188,7 +191,7 @@ mod tests {
     use super::*;
 
     fn titles(query: &str) -> Vec<String> {
-        find(query, Rect::NOTHING).into_iter().map(|h| h.title).collect()
+        find(query, Rect::NOTHING, true).into_iter().map(|h| h.title).collect()
     }
 
     #[test]
@@ -204,7 +207,7 @@ mod tests {
 
     #[test]
     fn file_drawer_commands_are_found_too() {
-        let hits = find("batch", Rect::NOTHING);
+        let hits = find("batch", Rect::NOTHING, true);
         assert!(hits.iter().any(|h| h.place == "File" && matches!(h.action, RibbonAction::DrawerItem(_))));
     }
 }

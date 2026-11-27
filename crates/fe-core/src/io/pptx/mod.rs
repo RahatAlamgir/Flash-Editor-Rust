@@ -10,7 +10,8 @@ use std::io::Write;
 use zip::CompressionMethod;
 use zip::write::SimpleFileOptions;
 
-pub use editable::{EditableOptions, build_editable, save_editable};
+pub use editable::{EditableOptions, build_editable, build_editable_with, save_editable, save_editable_with};
+pub use slide::transition_xml;
 pub use slide::{Media, Place, PptxSlide, ShapeLook, TextLook, escape};
 
 use super::{IoError, encode, format::ImageFileFormat};
@@ -64,8 +65,9 @@ const GROUP_HEAD: &str = "<p:nvGrpSpPr><p:cNvPr id=\"1\" name=\"\"/><p:cNvGrpSpP
 
 fn slide_xml(slide: &PptxSlide, scale: f64) -> String {
     format!(
-        "{DECL}<p:sld xmlns:a=\"{NS_A}\" xmlns:r=\"{NS_R}\" xmlns:p=\"{NS_P}\"><p:cSld><p:spTree>{GROUP_HEAD}{}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>",
-        slide.to_xml(scale)
+        "{DECL}<p:sld xmlns:a=\"{NS_A}\" xmlns:r=\"{NS_R}\" xmlns:p=\"{NS_P}\"><p:cSld><p:spTree>{GROUP_HEAD}{}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>{}</p:sld>",
+        slide.to_xml(scale),
+        slide.transition_xml()
     )
 }
 
@@ -158,6 +160,17 @@ pub fn build_pictures(
     lossless: bool,
     matte: Option<ColorRgba>,
 ) -> Result<Vec<u8>, IoError> {
+    build_pictures_with(pages, quality, lossless, matte, &[])
+}
+
+/// Like `build_pictures`, with a slide transition for each slide (a shorter list leaves the rest without one).
+pub fn build_pictures_with(
+    pages: &[PixelBuffer],
+    quality: u8,
+    lossless: bool,
+    matte: Option<ColorRgba>,
+    transitions: &[crate::document::Transition],
+) -> Result<Vec<u8>, IoError> {
     let Some(first) = pages.first() else {
         return Err(IoError::CannotSave("A presentation needs at least one slide.".into()));
     };
@@ -176,6 +189,9 @@ pub fn build_pictures(
             Place { x: 0.0, y: 0.0, w: f64::from(first.width()), h: f64::from(first.height()), ..Place::default() },
             1.0,
         );
+        if let Some(t) = transitions.get(i) {
+            slide.set_transition(t);
+        }
         slides.push(slide);
     }
     build_slides(&slides, first.width(), first.height())
@@ -200,7 +216,19 @@ pub fn save_pictures(
     lossless: bool,
     matte: Option<ColorRgba>,
 ) -> Result<(), IoError> {
-    write_file(path.as_ref(), build_pictures(pages, quality, lossless, matte)?)
+    save_pictures_with(pages, path, quality, lossless, matte, &[])
+}
+
+/// Like `save_pictures`, with a slide transition for each slide.
+pub fn save_pictures_with(
+    pages: &[PixelBuffer],
+    path: impl AsRef<std::path::Path>,
+    quality: u8,
+    lossless: bool,
+    matte: Option<ColorRgba>,
+    transitions: &[crate::document::Transition],
+) -> Result<(), IoError> {
+    write_file(path.as_ref(), build_pictures_with(pages, quality, lossless, matte, transitions)?)
 }
 
 #[cfg(test)]

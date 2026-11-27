@@ -48,6 +48,7 @@ pub fn open_from(reader: impl Read + Seek) -> Result<ProjectContent, IoError> {
         ));
     }
     let active_page = manifest.active_page;
+    let presentation = manifest.project_type.eq_ignore_ascii_case("presentation");
     let manifest_version = manifest.version;
     let entries = if manifest.pages.is_empty() {
         vec![PageEntry {
@@ -96,7 +97,7 @@ pub fn open_from(reader: impl Read + Seek) -> Result<ProjectContent, IoError> {
         return Err(damaged("no pages"));
     }
     let active_page = active_page.min(pages.len() - 1);
-    Ok(ProjectContent { pages, active_page })
+    Ok(ProjectContent { pages, active_page, presentation })
 }
 
 fn build_page(
@@ -120,6 +121,9 @@ fn build_page(
     let mut page = Page::new(entry.name.clone(), doc);
     page.vertical_guides = entry.vertical_guides.clone();
     page.horizontal_guides = entry.horizontal_guides.clone();
+    if let Some(t) = &entry.transition {
+        page.transition = t.into();
+    }
     Ok(page)
 }
 

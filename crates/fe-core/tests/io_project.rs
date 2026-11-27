@@ -125,7 +125,7 @@ fn a_new_project_round_trips_masks_restore_and_off_canvas_pixels() {
     top.set_mask(Some(mask), 300, 200).expect("size");
     top.restore = Some(fe_core::imaging::TileMap::from_buffer(&solid(300, 200, ColorRgba::rgb(9, 9, 9)), 0, 0));
     doc.push_layer(top);
-    let content = ProjectContent { pages: vec![Page::new("Page 1", doc)], active_page: 0 };
+    let content = ProjectContent { pages: vec![Page::new("Page 1", doc)], active_page: 0, presentation: false };
     let again = round_trip(&content);
     let layer = &again.pages[0].doc.layers()[1];
     assert_eq!(ColorRgba::rgb(1, 2, 3), layer.pixels().pixel(320, -10));
@@ -146,4 +146,31 @@ fn painting_on_an_object_layer_turns_it_into_pixels() {
     let mut layer = content.pages[0].doc.layers().iter().find(|l| l.object().is_some()).expect("an object").clone();
     layer.pixels_mut().set_pixel(1, 1, ColorRgba::BLACK);
     assert!(layer.object().is_none());
+}
+
+#[test]
+fn presentation_flag_and_slide_transitions_are_saved() {
+    use fe_core::document::{Transition, TransitionDirection, TransitionKind};
+    let mut first = Page::new("One", Document::blank(320, 180, ColorRgba::WHITE));
+    first.transition = Transition {
+        kind: TransitionKind::Push,
+        direction: TransitionDirection::Up,
+        duration: 1.5,
+        on_click: false,
+        after: Some(4.0),
+    };
+    let second = Page::new("Two", Document::blank(320, 180, ColorRgba::WHITE));
+    let bytes = project::to_bytes_as(&[first, second], 0, true).expect("saves");
+    let again = project::open_from(std::io::Cursor::new(bytes)).expect("opens");
+    assert!(again.presentation);
+    assert_eq!(TransitionKind::Push, again.pages[0].transition.kind);
+    assert_eq!(TransitionDirection::Up, again.pages[0].transition.direction);
+    assert_eq!(
+        (1.5, false, Some(4.0)),
+        (again.pages[0].transition.duration, again.pages[0].transition.on_click, again.pages[0].transition.after)
+    );
+    assert!(again.pages[1].transition.is_default());
+    // A project that is not a presentation stays one that is not.
+    let plain = project::to_bytes(&again.pages, 0).expect("saves");
+    assert!(!project::open_from(std::io::Cursor::new(plain)).expect("opens").presentation);
 }

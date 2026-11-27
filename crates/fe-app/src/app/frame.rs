@@ -33,6 +33,7 @@ impl eframe::App for FlashApp {
             dialogs::show(&ctx, self);
         }
         self.eyedropper.paint(&ctx);
+        crate::slideshow::show(&ctx, self);
         autosave::tick(self, &ctx);
         settings_sync::save_if_changed(self);
         update_title(self, ui);

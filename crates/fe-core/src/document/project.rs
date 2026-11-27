@@ -16,11 +16,19 @@ pub struct Page {
     pub vertical_guides: Vec<f64>,
     /// y positions of horizontal guide lines (canvas pixels).
     pub horizontal_guides: Vec<f64>,
+    /// How the slideshow arrives at this page (presentations).
+    pub transition: super::Transition,
 }
 
 impl Page {
     pub fn new(name: impl Into<String>, doc: Document) -> Self {
-        Self { name: name.into(), doc, vertical_guides: Vec::new(), horizontal_guides: Vec::new() }
+        Self {
+            name: name.into(),
+            doc,
+            vertical_guides: Vec::new(),
+            horizontal_guides: Vec::new(),
+            transition: super::Transition::default(),
+        }
     }
 }
 
@@ -35,6 +43,8 @@ pub struct Project {
     pages: Vec<Page>,
     active_page: usize,
     history: History,
+    /// A presentation: the Animation tab (slide transitions, slideshow) is available.
+    pub presentation: bool,
 }
 
 impl Project {
@@ -57,6 +67,7 @@ impl Project {
             pages,
             active_page,
             history: History::default(),
+            presentation: false,
         }
     }
 
