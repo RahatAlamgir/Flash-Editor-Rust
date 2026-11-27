@@ -33,7 +33,6 @@ pub enum EffectColor {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ColorTarget {
     Foreground,
-    Background,
     /// Edit > Fill Color: fills the selection (or the layer) once picked.
     Fill,
     /// The fill of the selected shape.
@@ -67,6 +66,10 @@ pub struct ColorPicker {
     /// The square's picture and the hue it was drawn for.
     square: Option<(TextureHandle, f64)>,
     hue_strip: Option<TextureHandle>,
+    /// Shown over another dialog (the New Project window) instead of alone.
+    nested: bool,
+    /// The Eyedropper button was clicked.
+    wants_eyedropper: bool,
 }
 
 fn color32(c: ColorRgba) -> Color32 {
@@ -76,8 +79,7 @@ fn color32(c: ColorRgba) -> Color32 {
 impl ColorPicker {
     pub fn new(target: ColorTarget, initial: ColorRgba) -> Self {
         let title = match target {
-            ColorTarget::Foreground => "Foreground Color",
-            ColorTarget::Background => "Background Color",
+            ColorTarget::Foreground => "Paint Color",
             ColorTarget::Fill => "Fill with which color?",
             ColorTarget::ShapeFill => "Fill Color",
             ColorTarget::ShapeStroke => "Border Color",
@@ -100,8 +102,17 @@ impl ColorPicker {
             rgb: Default::default(),
             square: None,
             hue_strip: None,
+            nested: false,
+            wants_eyedropper: false,
         };
         picker.set_color(initial);
+        picker
+    }
+
+    /// A picker that returns its color to the window that opened it (see `show_nested`) instead of applying it.
+    pub fn nested(title: &'static str, initial: ColorRgba) -> Self {
+        let mut picker = Self::new(ColorTarget::Foreground, initial);
+        (picker.title, picker.nested) = (title, true);
         picker
     }
 
@@ -191,7 +202,8 @@ fn show_window(ctx: &egui::Context, picker: &mut ColorPicker, settings: &mut Set
     let mut result = None;
     let square = picker.square_texture(ctx);
     let hue = picker.hue_texture(ctx);
-    let modal = super::frame::modal(ctx, "color-picker", |ui| {
+    let nested = picker.nested;
+    let body = |ui: &mut Ui| {
         ui.label(RichText::new(picker.title).heading());
         ui.add_space(8.0);
         ui.horizontal_top(|ui| {
@@ -257,6 +269,13 @@ fn show_window(ctx: &egui::Context, picker: &mut ColorPicker, settings: &mut Set
                 if rgb_changed {
                     picker.commit_text(false);
                 }
+                ui.add_space(8.0);
+                let eyedropper = ui
+                    .add(egui::Button::new("Eyedropper").min_size(vec2(150.0, 26.0)))
+                    .on_hover_text("Click a color anywhere in the window to use it (Esc cancels)");
+                if eyedropper.clicked() {
+                    picker.wants_eyedropper = true;
+                }
             });
         });
 
@@ -311,25 +330,48 @@ fn show_window(ctx: &egui::Context, picker: &mut ColorPicker, settings: &mut Set
                 result = Some(Some(picker.color()));
             }
         });
-    });
+    };
+    let modal = if nested {
+        super::frame::modal_over(ctx, "color-picker-nested", body)
+    } else {
+        super::frame::modal(ctx, "color-picker", body)
+    };
     if result.is_none() && modal.should_close() {
         result = Some(None);
     }
     result
 }
 
-/// Shows the picker; when it is closed with OK, uses the color and remembers it as a recent color.
-/// Returns false once the picker is closed.
-pub fn show(ctx: &egui::Context, app: &mut FlashApp, picker: &mut ColorPicker) -> bool {
-    let Some(answer) = show_window(ctx, picker, &mut app.settings) else { return true };
-    if let Some(color) = answer {
+/// Draws the picker once, with the eyedropper hooked in. `Some(Some(color))` = OK, `Some(None)` = Cancel.
+fn draw(ctx: &egui::Context, app: &mut FlashApp, picker: &mut ColorPicker) -> Option<Option<ColorRgba>> {
+    if let Some(color) = app.eyedropper.result.take() {
+        picker.set_color(color);
+    }
+    let answer = show_window(ctx, picker, &mut app.settings);
+    if std::mem::take(&mut picker.wants_eyedropper) {
+        app.eyedropper.start();
+    }
+    if let Some(Some(color)) = answer {
         let hex = color.to_hex();
         app.settings.recent_colors.retain(|h| !h.eq_ignore_ascii_case(&hex));
         app.settings.recent_colors.insert(0, hex);
         app.settings.recent_colors.truncate(MAX_RECENT);
+    }
+    answer
+}
+
+/// A picker opened by another window (New Project): draws it and returns the answer; nothing is applied.
+pub fn show_nested(ctx: &egui::Context, app: &mut FlashApp, picker: &mut ColorPicker) -> Option<Option<ColorRgba>> {
+    draw(ctx, app, picker)
+}
+
+/// Shows the picker; when it is closed with OK, uses the color and remembers it as a recent color.
+/// Returns false once the picker is closed.
+pub fn show(ctx: &egui::Context, app: &mut FlashApp, picker: &mut ColorPicker) -> bool {
+    let Some(answer) = draw(ctx, app, picker) else { return true };
+    if let Some(color) = answer {
         match picker.target {
             ColorTarget::Foreground => app.foreground = color,
-            ColorTarget::Background => app.background = color,
             ColorTarget::Fill => crate::commands::selection::fill(app, color),
             ColorTarget::TextColor => {
                 crate::commands::text::change_text(app, "Text Color", |t| t.color = color);

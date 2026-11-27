@@ -4,6 +4,28 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Toolbox cleanup
+
+Removed the tools Paint Bucket (G), Eyedropper (I), Hand (H) and Zoom (Z), with their options and code. Panning still works with
+Space + drag or the middle mouse button; zooming with the mouse wheel and View > Zoom In / Zoom Out (Ctrl+plus / Ctrl+minus).
+The color-picker's own Eyedropper button stays (it is a different thing).
+The two overlapping squares (foreground / background, swap, default colors, keys X and D) became one square, the **paint color**
+(tooltip "Paint color"), because it is still used by the Brush, the Curve pen, the Mask Brush, the starting color of new text and
+icons, and Adjust > Recolor. The background color had no use left (only the Bucket / Eyedropper and the default matte of
+JPEG export, which is now always white), so it is gone. No "fill with foreground / background" commands exist; Edit > Fill Color
+(which opens the color picker) is unchanged.
+
+## 2026-11-28 · One color picker everywhere, with an eyedropper
+
+Done: the New Project background used a basic built-in picker (no swatches, no compare). It now opens the program's own color
+picker (new / current compare, hex and RGB, brand, recent, saved and quick swatches), shown over the New Project window.
+New **Eyedropper** button in that picker, so every place that picks a color has it (toolbox colors, fill, shape, text, effects,
+gradient, charts / codes, Brand Kit, New Project). How it works: the dialogs are hidden for a moment, the program takes a
+picture of its own window, shows it full size with a magnifier (11 x 11 pixels, hex value) at the mouse, and the clicked pixel
+becomes the color. Esc or right-click cancels. It picks from anything inside the Flash Editor window (not from other programs).
+Files: `app/eyedropper.rs`, `dialogs/color_picker.rs`, `dialogs/new_project.rs`.
+Checked by screenshots: picking the blue slider knob gave #4CC2FF in the picker. The magnifier itself was not seen in a screenshot.
+
 ## 2026-11-28 · Preview for every template, big catalogs, project types
 
 Done:

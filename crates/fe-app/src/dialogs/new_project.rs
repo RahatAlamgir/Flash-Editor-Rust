@@ -6,6 +6,7 @@ use fe_core::document::{Document, Page};
 use fe_core::imaging::ColorRgba;
 use fe_ui_kit::theme::colors;
 
+use super::ColorPicker;
 use crate::app::FlashApp;
 use crate::commands::file;
 
@@ -57,6 +58,8 @@ pub struct NewProjectForm {
     pub color: [u8; 4],
     /// No color at all: the page starts see-through.
     pub transparent: bool,
+    /// The color picker, while it is open.
+    picker: Option<ColorPicker>,
     /// "Browse templates" was clicked: show the online templates of this type (`None` = all) instead of creating.
     pub browse: Option<Option<String>>,
 }
@@ -77,14 +80,17 @@ impl NewProjectForm {
             height,
             color: [255, 255, 255, 255],
             transparent: false,
+            picker: None,
             browse: None,
         }
     }
 }
 
 /// Shows the window. `Some(true)` = Create, `Some(false)` = Cancel, `None` = still open.
-pub fn show(ctx: &egui::Context, form: &mut NewProjectForm) -> Option<bool> {
+pub fn show(ctx: &egui::Context, app: &mut FlashApp, form: &mut NewProjectForm) -> Option<bool> {
     let mut result = None;
+    // While the color picker is open it takes the Esc key; this window must not close too.
+    let picker_was_open = form.picker.is_some();
     let modal = super::frame::modal(ctx, "new-project", |ui| {
         ui.set_width(440.0);
         ui.label(RichText::new("New Project").heading());
@@ -127,9 +133,18 @@ pub fn show(ctx: &egui::Context, form: &mut NewProjectForm) -> Option<bool> {
         label(ui, "Background");
         ui.horizontal(|ui| {
             ui.add_enabled_ui(!form.transparent, |ui| {
-                let mut c = egui::Color32::from_rgb(form.color[0], form.color[1], form.color[2]);
-                if ui.color_edit_button_srgba(&mut c).changed() {
-                    form.color = [c.r(), c.g(), c.b(), 255];
+                let (rect, response) = ui.allocate_exact_size(egui::vec2(56.0, 26.0), egui::Sense::click());
+                let [r, g, b, _] = form.color;
+                ui.painter().rect(
+                    rect,
+                    4,
+                    egui::Color32::from_rgb(r, g, b),
+                    egui::Stroke::new(1.0, colors::DIVIDER),
+                    egui::StrokeKind::Inside,
+                );
+                if response.on_hover_text("Click to choose the color").clicked() {
+                    let [r, g, b, a] = form.color;
+                    form.picker = Some(ColorPicker::nested("Background color", ColorRgba::new(r, g, b, a)));
                 }
             });
             ui.checkbox(&mut form.transparent, "Transparent");
@@ -153,7 +168,14 @@ pub fn show(ctx: &egui::Context, form: &mut NewProjectForm) -> Option<bool> {
             });
         });
     });
-    if result.is_none() && modal.should_close() {
+    if let Some(mut picker) = form.picker.take() {
+        match super::color_picker::show_nested(ctx, app, &mut picker) {
+            Some(Some(color)) => form.color = [color.r, color.g, color.b, 255],
+            Some(None) => {}
+            None => form.picker = Some(picker),
+        }
+    }
+    if result.is_none() && modal.should_close() && !picker_was_open {
         result = Some(false);
     }
     result

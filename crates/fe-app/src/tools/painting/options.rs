@@ -1,4 +1,4 @@
-//! Settings of the painting tools (C# `BrushOptions`, `BucketOptions`).
+//! Settings of the painting tools (C# `BrushOptions`).
 
 use fe_core::paint::brush::{BrushSettings, BrushType};
 
@@ -58,21 +58,6 @@ impl BrushOptions {
             50.0
         })
         .clamp(1.0, 1000.0);
-    }
-}
-
-/// Paint Bucket settings.
-#[derive(Clone, Debug)]
-pub struct BucketOptions {
-    /// 0 = exactly that color, 255 = everything.
-    pub tolerance: f64,
-    /// Only connected pixels (otherwise every similar pixel).
-    pub contiguous: bool,
-}
-
-impl Default for BucketOptions {
-    fn default() -> Self {
-        Self { tolerance: 32.0, contiguous: true }
     }
 }
 

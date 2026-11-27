@@ -2,6 +2,7 @@
 
 pub mod autosave;
 pub mod clipboard;
+pub mod eyedropper;
 mod flash_app;
 mod frame;
 pub mod jobs;

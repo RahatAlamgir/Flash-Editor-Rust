@@ -94,15 +94,10 @@ pub fn handle(ui: &Ui, app: &mut FlashApp) {
             delete_key(app);
         } else if key == Key::Escape && mods.is_none() {
             selection::deselect(app);
-        } else if mods.is_none() {
-            if key == Key::X {
-                std::mem::swap(&mut app.foreground, &mut app.background);
-            } else if key == Key::D {
-                app.foreground = fe_core::imaging::ColorRgba::BLACK;
-                app.background = fe_core::imaging::ColorRgba::WHITE;
-            } else if let Some(letter) = letter_of(key) {
-                app.tools.select_by_shortcut(letter);
-            }
+        } else if mods.is_none()
+            && let Some(letter) = letter_of(key)
+        {
+            app.tools.select_by_shortcut(letter);
         }
     }
 }

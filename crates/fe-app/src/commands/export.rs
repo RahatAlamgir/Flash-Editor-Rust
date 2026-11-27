@@ -88,7 +88,7 @@ fn open_form(app: &mut FlashApp, all: bool) {
         return;
     }
     let flat = compositor::flatten(app.doc());
-    let mut form = ExportForm::new(flat, ImageFileFormat::Png, 90, app.background, project_name(app));
+    let mut form = ExportForm::new(flat, ImageFileFormat::Png, 90, ColorRgba::WHITE, project_name(app));
     form.all_pages = all;
     app.dialog = Some(Dialog::Export(Box::new(form)));
 }
@@ -340,7 +340,7 @@ pub fn finish_pages(app: &mut FlashApp, kind: PagesKind, values: fe_core::effect
     } else {
         Vec::new()
     };
-    let matte = app.background;
+    let matte = ColorRgba::WHITE;
     job::start(app, title, move |_| {
         let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
         let count = if documents.is_empty() { pages.len() } else { documents.len() };

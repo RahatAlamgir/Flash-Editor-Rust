@@ -48,15 +48,6 @@ pub fn show(ui: &mut Ui, tools: &mut ToolState) -> bool {
             brush_options(ui, tools);
             true
         }
-        ToolKind::Bucket => {
-            let o = &mut tools.paint.bucket;
-            label(ui, "Tolerance");
-            number_slider(ui, &mut o.tolerance, 0.0..=255.0, "", 110.0, 58.0);
-            ui.add_space(16.0);
-            ui.checkbox(&mut o.contiguous, "Contiguous")
-                .on_hover_text("On: fill only connected pixels. Off: fill every similar pixel in the layer.");
-            true
-        }
         ToolKind::CloneStamp
         | ToolKind::HealingBrush
         | ToolKind::SpotHealing

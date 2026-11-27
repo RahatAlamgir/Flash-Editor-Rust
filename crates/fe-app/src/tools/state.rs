@@ -16,7 +16,7 @@ pub struct ToolState {
     pub select: SelectTools,
     /// The Select / Move tool's state.
     pub mover: MoveTool,
-    /// Brush, Eraser, Mask Brush, Paint Bucket and Eyedropper state and settings.
+    /// Brush, Eraser and Mask Brush state and settings.
     pub paint: PaintTools,
     /// The Curve tool's state.
     pub curve: super::curve::CurveTool,

@@ -1,4 +1,4 @@
-//! Mouse input on the canvas: wheel zoom, panning (Space, middle button or the Hand tool), the Zoom tool,
+//! Mouse input on the canvas: wheel zoom, panning (Space or the middle button),
 //! moving guides with the Select / Move tool, and pulling new guides out of the rulers.
 
 use egui::{CursorIcon, Event, Id, Key, MouseWheelUnit, PointerButton, Pos2, Rect, Sense, Ui};
@@ -10,8 +10,6 @@ use crate::tools::{Pointer, ToolKind};
 
 /// Screen distance at which a guide can be grabbed (C# `GuideGrabDistance`).
 const GUIDE_GRAB: f32 = 4.0;
-/// Zoom tool step (C# `ZoomTool.Step`).
-const ZOOM_TOOL_STEP: f32 = 1.5;
 
 /// Handles input over `viewport`; returns the pointer position when it is over the canvas.
 pub fn handle(ui: &mut Ui, app: &mut FlashApp, viewport: Rect, key: (usize, usize)) -> Option<Pos2> {
@@ -63,7 +61,7 @@ pub fn handle(ui: &mut Ui, app: &mut FlashApp, viewport: Rect, key: (usize, usiz
     }
 
     // Panning.
-    let pan_with_primary = space || tool == ToolKind::Hand;
+    let pan_with_primary = space;
     if response.dragged_by(PointerButton::Middle) || (pan_with_primary && response.dragged_by(PointerButton::Primary)) {
         view.pan_by(response.drag_delta());
         ui.set_cursor_icon(CursorIcon::Grabbing);
@@ -71,26 +69,13 @@ pub fn handle(ui: &mut Ui, app: &mut FlashApp, viewport: Rect, key: (usize, usiz
         ui.set_cursor_icon(CursorIcon::Grab);
     }
 
-    // Zoom tool: click = in, Alt+click or right-click = out.
-    if tool == ToolKind::Zoom && !space {
-        if let Some(p) = response.interact_pointer_pos().filter(|_| response.clicked()) {
-            let factor = if ui.input(|i| i.modifiers.alt) { 1.0 / ZOOM_TOOL_STEP } else { ZOOM_TOOL_STEP };
-            view.zoom_at(p - viewport.min, view.zoom * factor);
-        } else if let Some(p) = response.interact_pointer_pos().filter(|_| response.secondary_clicked()) {
-            view.zoom_at(p - viewport.min, view.zoom / ZOOM_TOOL_STEP);
-        }
-        if response.hovered() {
-            ui.set_cursor_icon(CursorIcon::ZoomIn);
-        }
-    }
-
     if tool == ToolKind::Move && app.aids.guides && !space {
         move_guides(ui, app, &response, viewport, transform);
     }
 
     // Everything else goes to the active tool (not while panning, zooming or moving a guide).
-    let panning = space || tool == ToolKind::Hand || response.dragged_by(PointerButton::Middle);
-    let busy = app.canvas.guide_drag.is_some() || app.canvas.ruler_drag.is_some() || tool == ToolKind::Zoom;
+    let panning = space || response.dragged_by(PointerButton::Middle);
+    let busy = app.canvas.guide_drag.is_some() || app.canvas.ruler_drag.is_some();
     let gesture =
         app.tools.mover.is_moving() || app.tools.paint.is_painting() || ui.input(|i| i.pointer.primary_down());
     if !panning
@@ -115,9 +100,7 @@ pub fn handle(ui: &mut Ui, app: &mut FlashApp, viewport: Rect, key: (usize, usiz
     if crate::tools::uses_crosshair(tool) && response.hovered() && !panning {
         ui.set_cursor_icon(CursorIcon::Crosshair);
     }
-    if !matches!(tool, ToolKind::Zoom | ToolKind::Eyedropper) {
-        super::context_menu::show(&response, app);
-    }
+    super::context_menu::show(&response, app);
     hover
 }
 

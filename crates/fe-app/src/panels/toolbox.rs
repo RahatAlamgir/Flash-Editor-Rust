@@ -5,7 +5,7 @@ use egui::{Align, Area, Color32, Frame, Id, Layout, Order, Rect, Sense, Stroke, 
 use fe_core::imaging::ColorRgba;
 use fe_ui_kit::icons;
 use fe_ui_kit::theme::{colors, metrics};
-use fe_ui_kit::widgets::{icon_button, tool_button};
+use fe_ui_kit::widgets::tool_button;
 
 use crate::app::FlashApp;
 use crate::tools::catalog::GROUPS;
@@ -83,46 +83,14 @@ fn group_list(ui: &mut Ui, app: &mut FlashApp, index: usize, button: Rect) {
     }
 }
 
-/// Foreground / background color squares with the swap and reset buttons.
+/// The paint color: used by the Brush, the Curve pen and as the starting color of new text and icons.
 fn color_swatches(ui: &mut Ui, app: &mut FlashApp) {
-    ui.horizontal(|ui| {
-        ui.spacing_mut().item_spacing.x = 0.0;
-        ui.add_space((metrics::TOOLBOX_W - 2.0 * metrics::ICON_BUTTON) / 2.0);
-        if icon_button(ui, "Swap", "Swap colors (X)").clicked() {
-            std::mem::swap(&mut app.foreground, &mut app.background);
-        }
-        if reset_button(ui).clicked() {
-            app.foreground = ColorRgba::BLACK;
-            app.background = ColorRgba::WHITE;
-        }
-    });
-    let (rect, _) = ui.allocate_exact_size(Vec2::splat(42.0), Sense::hover());
-    let back = Rect::from_min_size(rect.max - Vec2::splat(26.0), Vec2::splat(26.0));
-    let front = Rect::from_min_size(rect.min, Vec2::splat(26.0));
-    let back_clicked = swatch(ui, back, app.background, Color32::from_gray(0xBB), "Background color (click to change)");
-    let front_clicked =
-        swatch(ui, front, app.foreground, Color32::from_gray(0xEE), "Foreground color (click to change)");
-    use crate::dialogs::{ColorPicker, ColorTarget, Dialog};
-    if front_clicked {
+    let (rect, _) = ui.allocate_exact_size(Vec2::splat(30.0), Sense::hover());
+    let clicked = swatch(ui, rect, app.foreground, Color32::from_gray(0xEE), "Paint color (click to change)");
+    if clicked {
+        use crate::dialogs::{ColorPicker, ColorTarget, Dialog};
         app.dialog = Some(Dialog::Color(ColorPicker::new(ColorTarget::Foreground, app.foreground)));
-    } else if back_clicked {
-        app.dialog = Some(Dialog::Color(ColorPicker::new(ColorTarget::Background, app.background)));
     }
-}
-
-/// The "default colors" button: a small black square over a small white one.
-fn reset_button(ui: &mut Ui) -> egui::Response {
-    let (rect, response) = ui.allocate_exact_size(Vec2::splat(metrics::ICON_BUTTON), Sense::click());
-    let painter = ui.painter();
-    if response.hovered() {
-        painter.rect_filled(rect, metrics::RADIUS, colors::HOVER);
-    }
-    let small = Vec2::splat(9.0);
-    let edge = Stroke::new(0.5, Color32::from_gray(0x88));
-    let c = rect.center();
-    painter.rect(Rect::from_min_size(c - vec2(1.0, 1.0), small), 0, Color32::WHITE, edge, egui::StrokeKind::Inside);
-    painter.rect(Rect::from_min_size(c - vec2(8.0, 8.0), small), 0, Color32::BLACK, edge, egui::StrokeKind::Inside);
-    response.on_hover_text("Default colors: black / white (D)")
 }
 
 /// A color square; true when clicked. The background square is only clickable where the front one does not

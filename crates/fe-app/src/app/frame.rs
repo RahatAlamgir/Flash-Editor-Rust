@@ -22,12 +22,17 @@ impl eframe::App for FlashApp {
         finished_jobs(self, &ctx);
         dropped_files(self, ui);
         drive_bench(self, ui, frame);
+        self.eyedropper.tick(&ctx);
         keyboard::handle(ui, self);
         layout::show(self, ui);
         panels::popups::show(ui, self);
-        panels::file_drawer::show(&ctx, self);
-        project_manager::show(&ctx, self);
-        dialogs::show(&ctx, self);
+        if !self.eyedropper.active() {
+            // While the eyedropper takes its picture no dialog is drawn, so none is in the picture.
+            panels::file_drawer::show(&ctx, self);
+            project_manager::show(&ctx, self);
+            dialogs::show(&ctx, self);
+        }
+        self.eyedropper.paint(&ctx);
         autosave::tick(self, &ctx);
         settings_sync::save_if_changed(self);
         update_title(self, ui);

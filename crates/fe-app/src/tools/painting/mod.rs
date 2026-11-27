@@ -1,7 +1,5 @@
-//! The painting tools: Brush, Eraser, Mask Brush (`stroke.rs`), Paint Bucket and Eyedropper (`fill_pick.rs`),
-//! their settings (`options.rs`) and the pictures of the brush types for the options bar (`previews.rs`).
+//! The painting tools: Brush, Eraser, Mask Brush (`stroke.rs`), their settings (`options.rs`) and the pictures of the brush types for the options bar (`previews.rs`).
 
-mod fill_pick;
 pub mod options;
 pub mod previews;
 mod stroke;
@@ -9,7 +7,7 @@ mod stroke;
 use egui::Key;
 use fe_core::imaging::PointD;
 
-pub use options::{BrushOptions, BucketOptions};
+pub use options::BrushOptions;
 
 use super::{Pointer, ToolKind};
 use crate::app::FlashApp;
@@ -20,13 +18,9 @@ pub struct PaintTools {
     pub brush: BrushOptions,
     pub eraser: BrushOptions,
     pub mask: BrushOptions,
-    pub bucket: BucketOptions,
     stroke: Option<stroke::ActiveStroke>,
     /// Where the last stroke ended (Shift+click draws a straight line from there).
     last_end: Option<PointD>,
-    /// The eyedropper is picking while the button is held, the background color with Alt or right-click.
-    picking: bool,
-    pick_background: bool,
     pub previews: previews::BrushPreviews,
 }
 
@@ -60,8 +54,6 @@ impl PaintTools {
 pub fn pointer(app: &mut FlashApp, tool: ToolKind, p: &Pointer) -> bool {
     match tool {
         ToolKind::Brush | ToolKind::Eraser | ToolKind::MaskBrush => stroke::pointer(app, tool, p),
-        ToolKind::Bucket => fill_pick::bucket(app, p),
-        ToolKind::Eyedropper => fill_pick::eyedropper(app, p),
         _ => return false,
     }
     true

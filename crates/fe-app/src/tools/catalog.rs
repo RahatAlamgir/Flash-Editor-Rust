@@ -22,11 +22,7 @@ pub enum ToolKind {
     Patch,
     DodgeBurn,
     BlurSharpen,
-    Bucket,
-    Eyedropper,
     Text,
-    Hand,
-    Zoom,
     MaskBrush,
     PerspectiveCrop,
     Liquify,
@@ -50,11 +46,7 @@ pub const GROUPS: &[&[ToolKind]] = &[
     &[CloneStamp],
     &[DodgeBurn],
     &[BlurSharpen, Liquify],
-    &[Bucket],
-    &[Eyedropper],
     &[Text],
-    &[Hand],
-    &[Zoom],
 ];
 
 impl ToolKind {
@@ -79,11 +71,7 @@ impl ToolKind {
             Patch => "Patch",
             DodgeBurn => "Dodge / Burn",
             BlurSharpen => "Blur / Sharpen",
-            Bucket => "Paint Bucket",
-            Eyedropper => "Eyedropper",
             Text => "Text",
-            Hand => "Hand",
-            Zoom => "Zoom",
             MaskBrush => "Mask Brush",
             PerspectiveCrop => "Perspective Crop",
             Liquify => "Liquify",
@@ -114,11 +102,7 @@ impl ToolKind {
             Patch => "Patch",
             DodgeBurn => "Tone",
             BlurSharpen => "BlurSharpen",
-            Bucket => "Bucket",
-            Eyedropper => "Eyedropper",
             Text => "Text",
-            Hand => "Hand",
-            Zoom => "Zoom",
             MaskBrush => "MaskBrush",
             PerspectiveCrop => "PerspectiveCrop",
             Liquify => "Liquify",
@@ -144,11 +128,7 @@ impl ToolKind {
             SpotHealing | HealingBrush | Patch | RemoveBrush => 'J',
             DodgeBurn => 'O',
             BlurSharpen | Liquify => 'Q',
-            Bucket => 'G',
-            Eyedropper => 'I',
             Text => 'T',
-            Hand => 'H',
-            Zoom => 'Z',
             MaskBrush => 'K',
         }
     }
@@ -182,9 +162,6 @@ impl ToolKind {
             Curve => {
                 "Click = corner, click and drag = smooth curve. Click the first point to close the shape, double-click or Enter to end a line. Select a curve to edit it: drag points and handles, double-click a point to make it smooth / sharp, double-click the line to add a point, Delete removes a point."
             }
-            Hand => "Drag to move the view. Hold Space with any tool to do the same.",
-            Zoom => "Click to zoom in, Alt+click to zoom out. The mouse wheel zooms too.",
-            Eyedropper => "Click to pick the foreground color. Alt+click or right-click picks the background color.",
             _ => "The settings of this tool arrive in a later step of the Rust version.",
         }
     }

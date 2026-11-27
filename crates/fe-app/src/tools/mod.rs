@@ -66,8 +66,6 @@ pub fn uses_crosshair(tool: ToolKind) -> bool {
             Brush
                 | Eraser
                 | MaskBrush
-                | Bucket
-                | Eyedropper
                 | Curve
                 | Crop
                 | PerspectiveCrop

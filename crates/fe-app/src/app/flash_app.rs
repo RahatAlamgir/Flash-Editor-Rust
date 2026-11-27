@@ -27,7 +27,8 @@ pub struct FlashApp {
     pub projects: Vec<Project>,
     pub active_project: usize,
     pub foreground: ColorRgba,
-    pub background: ColorRgba,
+    /// The eyedropper of the color picker.
+    pub eyedropper: super::eyedropper::Eyedropper,
     /// Text on the left of the status bar.
     pub status: String,
     /// The pixel under the mouse, for the status bar.
@@ -96,7 +97,7 @@ impl FlashApp {
             projects: vec![Self::blank_project()],
             active_project: 0,
             foreground: ColorRgba::BLACK,
-            background: ColorRgba::WHITE,
+            eyedropper: Default::default(),
             status: "Nothing selected. Click a shape, text, image or painted area to select it.".into(),
             cursor_text: String::new(),
             history_expanded: false,

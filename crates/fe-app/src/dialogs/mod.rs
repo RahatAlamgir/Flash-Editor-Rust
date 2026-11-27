@@ -78,7 +78,7 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
             Some(answer) => run(ctx, app, answer),
             None => app.dialog = Some(Dialog::Ask(ask)),
         },
-        Dialog::NewProject(mut form) => match new_project::show(ctx, &mut form) {
+        Dialog::NewProject(mut form) => match new_project::show(ctx, app, &mut form) {
             Some(true) => new_project::create(ctx, app, &form),
             Some(false) => {
                 if let Some(kind) = form.browse.take() {

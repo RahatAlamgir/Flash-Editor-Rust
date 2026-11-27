@@ -17,7 +17,6 @@ pub struct Pointer {
     /// The left button is held.
     pub down: bool,
     /// The right button went down this frame over the canvas.
-    pub secondary_pressed: bool,
     /// The second click of a double-click ended this frame.
     pub double_click: bool,
     pub mods: Modifiers,
@@ -37,7 +36,6 @@ impl Pointer {
                 pressed: hovered && i.pointer.primary_pressed(),
                 released: i.pointer.primary_released(),
                 down: i.pointer.primary_down(),
-                secondary_pressed: hovered && i.pointer.secondary_pressed(),
                 double_click: hovered && i.pointer.button_double_clicked(PointerButton::Primary),
                 mods: i.modifiers,
                 zoom: transform.zoom as f64,
