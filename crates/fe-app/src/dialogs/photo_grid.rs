@@ -1,7 +1,7 @@
 //! Insert > Photo Grid (C# `PhotoGridDialog`): pick a collage layout; it is added as empty frames to fill with
 //! pictures. A small preview shows the frames on a canvas of the same shape.
 
-use egui::{Color32, Id, Rect, RichText, Sense, Stroke, pos2, vec2};
+use egui::{Color32, Rect, RichText, Sense, Stroke, pos2, vec2};
 use fe_core::objects::COLLAGE_LAYOUTS;
 use fe_ui_kit::theme::colors;
 use fe_ui_kit::widgets::number_slider;
@@ -33,7 +33,7 @@ impl PhotoGridForm {
 /// `Some(true)` = Add, `Some(false)` = Cancel, `None` = still open.
 pub fn show(ctx: &egui::Context, form: &mut PhotoGridForm) -> Option<bool> {
     let mut result = None;
-    let modal = egui::Modal::new(Id::NULL.with("photo-grid")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "photo-grid", |ui| {
         ui.set_width(440.0);
         ui.label(RichText::new("Photo Grid").heading());
         ui.add_space(6.0);

@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use egui::{Color32, ColorImage, Id, RichText, Sense, TextureHandle, TextureOptions, vec2};
+use egui::{Color32, ColorImage, RichText, Sense, TextureHandle, TextureOptions, vec2};
 use fe_core::imaging::PixelBuffer;
 use fe_core::sheets::{SheetPiece, SplitSettings};
 use fe_core::transform::{ResampleMode, resize};
@@ -94,7 +94,7 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, f: &mut SplitSheetForm) -> 
         let image = ColorImage::from_rgba_unmultiplied([small.width() as usize, small.height() as usize], small.data());
         f.texture = Some(ctx.load_texture("split-sheet", image, TextureOptions::LINEAR));
     }
-    let modal = egui::Modal::new(Id::NULL.with("split-sheet")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "split-sheet", |ui| {
         ui.set_width(860.0);
         ui.label(RichText::new("Split Asset Sheet").heading());
         let intro = if f.selection.is_some() {
@@ -146,7 +146,8 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, f: &mut SplitSheetForm) -> 
                         ui.label("Folder");
                         ui.add(egui::TextEdit::singleline(&mut f.folder).desired_width(140.0));
                         if ui.button("...").clicked()
-                            && let Some(folder) = rfd::FileDialog::new().set_title("Folder for the pieces").pick_folder()
+                            && let Some(folder) =
+                                rfd::FileDialog::new().set_title("Folder for the pieces").pick_folder()
                         {
                             f.folder = folder.display().to_string();
                         }
@@ -161,8 +162,17 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, f: &mut SplitSheetForm) -> 
         ui.horizontal(|ui| {
             let found = f.pieces.as_ref().is_some_and(|p| !p.is_empty());
             let valid = (f.as_layers || f.save_files)
-                && (!f.save_files || (!f.folder.trim().is_empty() && !f.name.trim().is_empty() && !f.name.contains(['\\', '/', ':', '*', '?', '"', '<', '>', '|'])));
-            if ui.add_enabled(found && valid, egui::Button::new("Split").fill(colors::ACCENT).min_size(vec2(100.0, 28.0))).clicked() {
+                && (!f.save_files
+                    || (!f.folder.trim().is_empty()
+                        && !f.name.trim().is_empty()
+                        && !f.name.contains(['\\', '/', ':', '*', '?', '"', '<', '>', '|'])));
+            if ui
+                .add_enabled(
+                    found && valid,
+                    egui::Button::new("Split").fill(colors::ACCENT).min_size(vec2(100.0, 28.0)),
+                )
+                .clicked()
+            {
                 result = Some(true);
             }
             if ui.add(egui::Button::new("Cancel").min_size(vec2(90.0, 28.0))).clicked() {

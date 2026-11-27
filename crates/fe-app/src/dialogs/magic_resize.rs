@@ -1,6 +1,6 @@
 //! The Magic Resize window (C# `MagicResizeDialog`): the new size, from a list or your own.
 
-use egui::{Id, RichText, vec2};
+use egui::{RichText, vec2};
 use fe_ui_kit::theme::colors;
 
 use super::new_project::PRESETS;
@@ -30,11 +30,13 @@ fn number(ui: &mut egui::Ui, v: &mut u32) -> bool {
 /// `Some(true)` = OK, `Some(false)` = Cancel, `None` = open.
 pub fn show(ctx: &egui::Context, f: &mut MagicResizeForm) -> Option<bool> {
     let mut result = None;
-    let modal = egui::Modal::new(Id::NULL.with("magic-resize")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "magic-resize", |ui| {
         ui.set_width(420.0);
         ui.label(RichText::new("Magic Resize").heading());
         ui.add_space(4.0);
-        ui.label(RichText::new(format!("This page is {} x {} px.", f.current.0, f.current.1)).color(colors::SUBTLE_TEXT));
+        ui.label(
+            RichText::new(format!("This page is {} x {} px.", f.current.0, f.current.1)).color(colors::SUBTLE_TEXT),
+        );
         ui.add(
             egui::Label::new(
                 RichText::new("The design becomes the new size and keeps its layout: everything keeps its proportions and moves to the same relative place; a background covers the new canvas.")
@@ -46,14 +48,17 @@ pub fn show(ctx: &egui::Context, f: &mut MagicResizeForm) -> Option<bool> {
         ui.add_space(8.0);
         ui.horizontal(|ui| {
             ui.label("Size");
-            egui::ComboBox::from_id_salt("magic-preset").width(300.0).selected_text(PRESETS[f.preset].0).show_ui(ui, |ui| {
-                for (i, (name, w, h)) in PRESETS.iter().enumerate() {
-                    if ui.selectable_value(&mut f.preset, i, *name).clicked() && *w > 0 {
-                        f.width = *w;
-                        f.height = *h;
+            egui::ComboBox::from_id_salt("magic-preset").width(300.0).selected_text(PRESETS[f.preset].0).show_ui(
+                ui,
+                |ui| {
+                    for (i, (name, w, h)) in PRESETS.iter().enumerate() {
+                        if ui.selectable_value(&mut f.preset, i, *name).clicked() && *w > 0 {
+                            f.width = *w;
+                            f.height = *h;
+                        }
                     }
-                }
-            });
+                },
+            );
         });
         ui.horizontal(|ui| {
             ui.label("Width");

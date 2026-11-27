@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use egui::{Color32, ColorImage, Id, RichText, Sense, TextureHandle, TextureOptions, vec2};
+use egui::{Color32, ColorImage, RichText, Sense, TextureHandle, TextureOptions, vec2};
 use fe_core::imaging::{ColorRgba, PixelBuffer, PixelRect};
 use fe_core::io::ImageFileFormat;
 use fe_core::io::export::{ExportSettings, format_file_size};
@@ -178,7 +178,7 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, f: &mut ExportForm) -> Opti
         f.thumb = Some(texture_of(ctx, "export-source", &small));
     }
     let title = if f.all_pages { "Export All Pages" } else { "Export" };
-    let modal = egui::Modal::new(Id::NULL.with("export")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "export", |ui| {
         ui.set_width(780.0);
         ui.label(RichText::new(title).heading());
         ui.add_space(6.0);

@@ -1,6 +1,6 @@
 //! The AI Upscale / Clean Up window: size and strength.
 
-use egui::{Id, RichText, vec2};
+use egui::{RichText, vec2};
 use fe_ui_kit::theme::colors;
 use fe_ui_kit::widgets::number_slider;
 
@@ -9,7 +9,7 @@ use crate::ai::upscale::UpscaleForm;
 /// Shows the window. `Some(true)` = OK, `Some(false)` = Cancel, `None` = still open.
 pub fn show(ctx: &egui::Context, form: &mut UpscaleForm) -> Option<bool> {
     let mut result = None;
-    let modal = egui::Modal::new(Id::NULL.with("ai-upscale")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "ai-upscale", |ui| {
         ui.set_width(380.0);
         ui.label(RichText::new("AI Upscale / Clean Up").heading());
         ui.add_space(6.0);

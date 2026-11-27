@@ -2,7 +2,7 @@
 //! The colors appear first in every color picker; the fonts appear as quick buttons when a text is selected.
 //! Changes are kept at once (there is nothing to save or cancel).
 
-use egui::{Color32, Id, RichText, Sense, Stroke, vec2};
+use egui::{Color32, RichText, Sense, Stroke, vec2};
 use fe_core::imaging::ColorRgba;
 use fe_ui_kit::theme::colors;
 
@@ -23,7 +23,7 @@ fn hex(c: ColorRgba) -> String {
 /// Shows the dialog. False once it is closed.
 pub fn show(ctx: &egui::Context, app: &mut FlashApp) -> bool {
     let mut open = true;
-    let modal = egui::Modal::new(Id::NULL.with("brand-kit")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "brand-kit", |ui| {
         ui.set_width(460.0);
         ui.label(RichText::new("Brand Kit").heading());
         ui.add_space(6.0);

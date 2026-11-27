@@ -1,7 +1,7 @@
 //! Insert > Icons, Badges and Graphics (C# `IconPickerDialog`): a grid of pictures with categories and a search box.
 //! Click one to put it in the middle of the picture.
 
-use egui::{Color32, Id, Rect, RichText, Sense, Stroke, vec2};
+use egui::{Color32, Rect, RichText, Sense, Stroke, vec2};
 use fe_core::library::{badges, graphics, icons};
 use fe_ui_kit::icons::glyphs;
 use fe_ui_kit::theme::colors;
@@ -60,7 +60,7 @@ fn category_color(category: &str) -> Color32 {
 /// `Some(Some(pick))` = something was picked, `Some(None)` = closed, `None` = still open.
 pub fn show(ctx: &egui::Context, picker: &mut IconPicker, previews: &mut Previews) -> Option<Option<Pick>> {
     let mut result = None;
-    let modal = egui::Modal::new(Id::NULL.with("icon-picker")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "icon-picker", |ui| {
         ui.set_width(640.0);
         ui.label(RichText::new("Icons, badges and graphics").heading());
         ui.add_space(8.0);
@@ -105,7 +105,8 @@ pub fn show(ctx: &egui::Context, picker: &mut IconPicker, previews: &mut Preview
                 match picker.page {
                     Page::Icons => {
                         for (i, icon) in icons::ALL.iter().enumerate() {
-                            if wanted.is_some_and(|w| w != icon.category) || !matches(&query, icon.name, icon.category) {
+                            if wanted.is_some_and(|w| w != icon.category) || !matches(&query, icon.name, icon.category)
+                            {
                                 continue;
                             }
                             count += 1;
@@ -125,7 +126,8 @@ pub fn show(ctx: &egui::Context, picker: &mut IconPicker, previews: &mut Preview
                     }
                     Page::Badges => {
                         for info in &badges::ALL {
-                            if wanted.is_some_and(|w| w != info.category) || !matches(&query, info.name, info.category) {
+                            if wanted.is_some_and(|w| w != info.category) || !matches(&query, info.name, info.category)
+                            {
                                 continue;
                             }
                             count += 1;
@@ -136,7 +138,8 @@ pub fn show(ctx: &egui::Context, picker: &mut IconPicker, previews: &mut Preview
                     }
                     Page::Graphics => {
                         for info in &graphics::ALL {
-                            if wanted.is_some_and(|w| w != info.category) || !matches(&query, info.name, info.category) {
+                            if wanted.is_some_and(|w| w != info.category) || !matches(&query, info.name, info.category)
+                            {
                                 continue;
                             }
                             count += 1;
@@ -151,9 +154,15 @@ pub fn show(ctx: &egui::Context, picker: &mut IconPicker, previews: &mut Preview
         ui.add_space(8.0);
         let hint = match (count, picker.page) {
             (0, _) => "Nothing matches. Try another word.",
-            (_, Page::Icons) => "Click an icon to put it in the middle of your picture. It is text: change its color, size, outline and shadow in Properties.",
-            (_, Page::Badges) => "Click a badge to put it in the middle of your picture. It is a group: ungroup it (Ctrl+Shift+G) to change the colors and words.",
-            (_, Page::Graphics) => "Click a graphic to put it in the middle of your picture. It is a group of shapes: ungroup it (Ctrl+Shift+G) to recolor or change its parts.",
+            (_, Page::Icons) => {
+                "Click an icon to put it in the middle of your picture. It is text: change its color, size, outline and shadow in Properties."
+            }
+            (_, Page::Badges) => {
+                "Click a badge to put it in the middle of your picture. It is a group: ungroup it (Ctrl+Shift+G) to change the colors and words."
+            }
+            (_, Page::Graphics) => {
+                "Click a graphic to put it in the middle of your picture. It is a group of shapes: ungroup it (Ctrl+Shift+G) to recolor or change its parts."
+            }
         };
         ui.add(egui::Label::new(RichText::new(hint).size(11.5).color(colors::SUBTLE_TEXT)).wrap());
         ui.add_space(10.0);

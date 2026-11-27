@@ -8,6 +8,7 @@ pub mod color_picker;
 pub mod effect;
 pub mod export;
 mod export_for;
+pub mod frame;
 mod icon_picker;
 mod magic_resize;
 mod new_project;

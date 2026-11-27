@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use egui::{Id, RichText, vec2};
+use egui::{RichText, vec2};
 use fe_core::io::ImageFileFormat;
 use fe_core::io::batch::{BatchOptions, find_pictures};
 use fe_ui_kit::theme::colors;
@@ -70,7 +70,7 @@ fn limit(ui: &mut egui::Ui, value: &mut u32) {
 /// `Some(true)` = Convert, `Some(false)` = Cancel, `None` = open.
 pub fn show(ctx: &egui::Context, f: &mut BatchForm) -> Option<bool> {
     let mut result = None;
-    let modal = egui::Modal::new(Id::NULL.with("batch")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "batch", |ui| {
         ui.set_width(520.0);
         ui.label(RichText::new("Batch Convert").heading());
         ui.add_space(4.0);
@@ -88,7 +88,10 @@ pub fn show(ctx: &egui::Context, f: &mut BatchForm) -> Option<bool> {
             ui.horizontal(|ui| {
                 ui.label(label);
                 let current = if which == 0 { &mut f.input } else { &mut f.output };
-                ui.label(RichText::new(current.as_ref().map_or("(not chosen)".into(), |p| p.display().to_string())).color(colors::SUBTLE_TEXT));
+                ui.label(
+                    RichText::new(current.as_ref().map_or("(not chosen)".into(), |p| p.display().to_string()))
+                        .color(colors::SUBTLE_TEXT),
+                );
                 if ui.button("Browse...").clicked()
                     && let Some(folder) = rfd::FileDialog::new().set_title(label).pick_folder()
                 {
@@ -131,7 +134,13 @@ pub fn show(ctx: &egui::Context, f: &mut BatchForm) -> Option<bool> {
         if ui.checkbox(&mut f.subfolders, "Include subfolders").changed() {
             recount = true;
         }
-        ui.label(RichText::new("Pictures are made smaller to fit the limits, keeping their proportions; they are never enlarged.").size(11.5).color(colors::SUBTLE_TEXT));
+        ui.label(
+            RichText::new(
+                "Pictures are made smaller to fit the limits, keeping their proportions; they are never enlarged.",
+            )
+            .size(11.5)
+            .color(colors::SUBTLE_TEXT),
+        );
         if recount {
             f.count();
         }
@@ -142,7 +151,10 @@ pub fn show(ctx: &egui::Context, f: &mut BatchForm) -> Option<bool> {
         ui.add_space(10.0);
         ui.horizontal(|ui| {
             let ready = f.options().is_some() && f.found != Some(0);
-            if ui.add_enabled(ready, egui::Button::new("Convert").fill(colors::ACCENT).min_size(vec2(100.0, 28.0))).clicked() {
+            if ui
+                .add_enabled(ready, egui::Button::new("Convert").fill(colors::ACCENT).min_size(vec2(100.0, 28.0)))
+                .clicked()
+            {
                 result = Some(true);
             }
             if ui.add(egui::Button::new("Cancel").min_size(vec2(90.0, 28.0))).clicked() {

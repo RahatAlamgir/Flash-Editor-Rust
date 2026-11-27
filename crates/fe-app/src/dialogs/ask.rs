@@ -3,7 +3,7 @@
 
 use std::path::PathBuf;
 
-use egui::{Id, RichText};
+use egui::RichText;
 use fe_ui_kit::theme::colors;
 
 /// What a button does.
@@ -46,7 +46,7 @@ impl Ask {
 /// Shows the question; returns the answer when a button was clicked (Esc = the last button).
 pub fn show(ctx: &egui::Context, ask: &Ask) -> Option<Answer> {
     let mut answer = None;
-    let modal = egui::Modal::new(Id::unique("ask")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "ask", |ui| {
         ui.set_max_width(420.0);
         ui.label(RichText::new(&ask.title).heading().color(colors::TEXT));
         ui.add_space(8.0);

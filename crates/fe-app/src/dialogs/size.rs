@@ -1,6 +1,6 @@
 //! Image Size, Canvas Size, Rotate and Straighten (C# `ImageSizeDialog`, `CanvasSizeDialog`, `ParametersDialog`).
 
-use egui::{Id, RichText, vec2};
+use egui::{RichText, vec2};
 use fe_core::effects::{Param, Values};
 use fe_core::transform::ResampleMode;
 use fe_ui_kit::theme::colors;
@@ -36,12 +36,15 @@ fn number(ui: &mut egui::Ui, v: &mut u32) -> bool {
 /// `Some(true)` = OK, `Some(false)` = Cancel, `None` = open.
 pub fn show_image_size(ctx: &egui::Context, f: &mut ImageSizeForm) -> Option<bool> {
     let mut result = None;
-    let modal = egui::Modal::new(Id::NULL.with("image-size")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "image-size", |ui| {
         ui.set_width(380.0);
         ui.label(RichText::new("Image Size").heading());
         ui.add_space(6.0);
         let mp = f64::from(f.original.0) * f64::from(f.original.1) / 1e6;
-        ui.label(RichText::new(format!("Current size: {} x {} px ({mp:.2} megapixels)", f.original.0, f.original.1)).color(colors::SUBTLE_TEXT));
+        ui.label(
+            RichText::new(format!("Current size: {} x {} px ({mp:.2} megapixels)", f.original.0, f.original.1))
+                .color(colors::SUBTLE_TEXT),
+        );
         ui.add_space(8.0);
         let ratio = f64::from(f.original.0) / f64::from(f.original.1);
         egui::Grid::new("image-size-grid").num_columns(2).spacing([12.0, 8.0]).show(ui, |ui| {
@@ -57,7 +60,10 @@ pub fn show_image_size(ctx: &egui::Context, f: &mut ImageSizeForm) -> Option<boo
             ui.end_row();
             ui.label("Percent");
             let mut pct = f64::from(f.width) / f64::from(f.original.0) * 100.0;
-            if ui.add(egui::DragValue::new(&mut pct).range(1.0..=1600.0).speed(1.0).suffix(" %").max_decimals(1)).changed() {
+            if ui
+                .add(egui::DragValue::new(&mut pct).range(1.0..=1600.0).speed(1.0).suffix(" %").max_decimals(1))
+                .changed()
+            {
                 f.width = ((f64::from(f.original.0) * pct / 100.0).round() as u32).clamp(1, MAX_SIDE);
                 f.height = ((f64::from(f.original.1) * pct / 100.0).round() as u32).clamp(1, MAX_SIDE);
             }
@@ -119,11 +125,13 @@ impl CanvasSizeForm {
 
 pub fn show_canvas_size(ctx: &egui::Context, f: &mut CanvasSizeForm) -> Option<bool> {
     let mut result = None;
-    let modal = egui::Modal::new(Id::NULL.with("canvas-size")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "canvas-size", |ui| {
         ui.set_width(380.0);
         ui.label(RichText::new("Canvas Size").heading());
         ui.add_space(6.0);
-        ui.label(RichText::new(format!("Current canvas: {} x {} px", f.original.0, f.original.1)).color(colors::SUBTLE_TEXT));
+        ui.label(
+            RichText::new(format!("Current canvas: {} x {} px", f.original.0, f.original.1)).color(colors::SUBTLE_TEXT),
+        );
         ui.add_space(8.0);
         egui::Grid::new("canvas-size-grid").num_columns(2).spacing([12.0, 8.0]).show(ui, |ui| {
             ui.label("Width (px)");
@@ -229,7 +237,7 @@ pub fn show_image_op(ctx: &egui::Context, f: &mut ImageOpForm) -> Option<bool> {
         ),
     };
     let mut result = None;
-    let modal = egui::Modal::new(Id::NULL.with("image-op")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "image-op", |ui| {
         ui.set_width(320.0);
         ui.label(RichText::new(title).heading());
         ui.add_space(8.0);

@@ -9,7 +9,7 @@ pub mod templates;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use egui::{Id, RichText, TextureHandle};
+use egui::{RichText, TextureHandle};
 use fe_ui_kit::theme::colors;
 
 pub use entry::Entry;
@@ -60,7 +60,7 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
     }
     let mut chosen: Option<(PathBuf, CardAction)> = None;
     let mut top_action = None;
-    let modal = egui::Modal::new(Id::unique("project-manager")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "project-manager", |ui| {
         let screen = ctx.content_rect();
         ui.set_width((screen.width() - 160.0).clamp(500.0, 1180.0));
         ui.set_height((screen.height() - 160.0).clamp(400.0, 820.0));

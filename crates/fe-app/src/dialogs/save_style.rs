@@ -1,12 +1,12 @@
 //! Properties > Styles > Save this look: asks for the name of the look.
 
-use egui::{Id, RichText};
+use egui::RichText;
 use fe_ui_kit::theme::colors;
 
 /// `Some(true)` = Save, `Some(false)` = Cancel, `None` = still open.
 pub fn show(ctx: &egui::Context, name: &mut String) -> Option<bool> {
     let mut result = None;
-    let modal = egui::Modal::new(Id::unique("save-style")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "save-style", |ui| {
         ui.set_width(340.0);
         ui.label(RichText::new("Save This Look").heading());
         ui.add_space(8.0);

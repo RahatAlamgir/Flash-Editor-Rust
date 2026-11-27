@@ -1,9 +1,7 @@
 //! The color picker (C# `ColorPickerDialog`): a saturation / brightness square, a hue strip, hex and RGB boxes,
 //! new / current swatches, Brand Kit colors, recent colors, the user's own swatches and quick swatches.
 
-use egui::{
-    Color32, ColorImage, Id, Pos2, Rect, RichText, Sense, Stroke, TextureHandle, TextureOptions, Ui, pos2, vec2,
-};
+use egui::{Color32, ColorImage, Pos2, Rect, RichText, Sense, Stroke, TextureHandle, TextureOptions, Ui, pos2, vec2};
 use fe_core::imaging::{ColorRgba, color_math};
 use fe_ui_kit::theme::colors;
 
@@ -193,7 +191,7 @@ fn show_window(ctx: &egui::Context, picker: &mut ColorPicker, settings: &mut Set
     let mut result = None;
     let square = picker.square_texture(ctx);
     let hue = picker.hue_texture(ctx);
-    let modal = egui::Modal::new(Id::unique("color-picker")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "color-picker", |ui| {
         ui.label(RichText::new(picker.title).heading());
         ui.add_space(8.0);
         ui.horizontal_top(|ui| {

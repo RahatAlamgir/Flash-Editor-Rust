@@ -2,7 +2,7 @@
 //! "Start from" (Blank or one of the user's saved templates, marked with a star). The ready-made layouts of the
 //! C# version (Title slide, Quote card...) need editable text and shapes; they arrive with Phase 10.
 
-use egui::{ComboBox, DragValue, Id, RichText};
+use egui::{ComboBox, DragValue, RichText};
 use fe_core::document::{Document, Page};
 use fe_core::imaging::ColorRgba;
 use fe_ui_kit::theme::colors;
@@ -76,7 +76,7 @@ impl NewProjectForm {
 /// Shows the window. `Some(true)` = Create, `Some(false)` = Cancel, `None` = still open.
 pub fn show(ctx: &egui::Context, form: &mut NewProjectForm) -> Option<bool> {
     let mut result = None;
-    let modal = egui::Modal::new(Id::unique("new-project")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "new-project", |ui| {
         ui.set_width(380.0);
         ui.label(RichText::new("New Project").heading());
         ui.add_space(8.0);

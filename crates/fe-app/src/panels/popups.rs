@@ -233,15 +233,21 @@ fn undo_steps_dialog(ui: &mut Ui, app: &mut FlashApp) {
     }
     let mut open = true;
     let mut steps = app.project().history().max_steps() as f64;
-    egui::Window::new("Undo Steps").open(&mut open).collapsible(false).resizable(false).show(ui.ctx(), |ui| {
-        ui.label("How many changes Ctrl+Z can take back, for each project:");
-        ui.add_space(6.0);
-        number_slider(ui, &mut steps, MIN_STEPS as f64..=MAX_STEPS as f64, "steps", 180.0, 48.0);
-        ui.add_space(6.0);
-        ui.label(
-            RichText::new("More steps need more memory. The newest steps are always kept.").color(colors::SUBTLE_TEXT),
-        );
-    });
+    egui::Window::new("Undo Steps")
+        .frame(crate::dialogs::frame::titled_frame(ui.ctx()))
+        .open(&mut open)
+        .collapsible(false)
+        .resizable(false)
+        .show(ui.ctx(), |ui| {
+            ui.label("How many changes Ctrl+Z can take back, for each project:");
+            ui.add_space(6.0);
+            number_slider(ui, &mut steps, MIN_STEPS as f64..=MAX_STEPS as f64, "steps", 180.0, 48.0);
+            ui.add_space(6.0);
+            ui.label(
+                RichText::new("More steps need more memory. The newest steps are always kept.")
+                    .color(colors::SUBTLE_TEXT),
+            );
+        });
     let steps = steps.round() as usize;
     if steps != app.project().history().max_steps() {
         for project in &mut app.projects {

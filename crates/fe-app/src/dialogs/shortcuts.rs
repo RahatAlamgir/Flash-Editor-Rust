@@ -60,7 +60,9 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, f: &mut ShortcutsForm) -> b
     let mut reset = None;
     egui::Window::new("Keyboard Shortcuts")
         .open(&mut open)
-        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .pivot(egui::Align2::CENTER_CENTER)
+        .default_pos(ctx.content_rect().center())
+        .frame(super::frame::titled_frame(ctx))
         .collapsible(false)
         .resizable(false)
         .default_width(560.0)

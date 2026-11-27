@@ -12,6 +12,17 @@ Problems / questions for the user: ...
 
 ---
 
+## 2026-11-27 · UI polish (before Phase 16) · Dialog padding and dragging
+
+Done: new `dialogs/frame.rs` gives every dialog (all modal windows, Project Manager, Remove Background / effect sliders, AI
+Models, Keyboard Shortcuts, Undo Steps) 22 px of padding, rounded corners and a dimmed backdrop (modal ones). All can be moved
+by dragging any empty part; a moved dialog reopens where it was left while the program runs. Change `PADDING` in `frame.rs`
+to adjust the room everywhere. Clicking the dimmed area no longer closes a dialog (only Esc / Cancel), so a stray click or drag
+cannot lose typed work.
+Measured: `scripts\check.ps1` passes. Hand-checked Magic Resize and Project Manager; the other dialogs not each looked at.
+Next: more polish items from the user, then Phase 16.
+Problems / questions for the user: none.
+
 ## 2026-11-27 · Phase 15 · The rest of the UI
 
 Done: **File drawer** (slides in from the left with a dimmed background; Project, Save, Pages, Export, App; shortcuts shown;

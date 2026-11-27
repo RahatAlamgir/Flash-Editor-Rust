@@ -25,7 +25,7 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) -> bool {
     let mut click = None;
     let busy = app.ai.job.is_some();
     let folder = app.ai.store.folder().display().to_string();
-    egui::Window::new("AI Models").anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0]).open(&mut open).collapsible(false).resizable(false).default_width(520.0).show(ctx, |ui| {
+    egui::Window::new("AI Models").pivot(egui::Align2::CENTER_CENTER).default_pos(ctx.content_rect().center()).frame(crate::dialogs::frame::titled_frame(ctx)).open(&mut open).collapsible(false).resizable(false).default_width(520.0).show(ctx, |ui| {
         ui.add(
             egui::Label::new(
                 RichText::new(

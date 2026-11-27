@@ -1,6 +1,6 @@
 //! The small settings windows of File > Export as PDF and Export as Animated GIF (C# `ShowParameters`).
 
-use egui::{Id, RichText, vec2};
+use egui::{RichText, vec2};
 use fe_core::effects::{Param, Values};
 use fe_ui_kit::theme::colors;
 
@@ -113,7 +113,7 @@ pub fn show(ctx: &egui::Context, f: &mut PagesForm) -> Option<bool> {
         ),
     };
     let mut result = None;
-    let modal = egui::Modal::new(Id::NULL.with("pages-export")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "pages-export", |ui| {
         ui.set_width(380.0);
         ui.label(RichText::new(title).heading());
         ui.add_space(6.0);

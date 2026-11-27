@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use egui::{ColorImage, Id, RichText, TextureHandle, TextureOptions, vec2};
+use egui::{ColorImage, RichText, TextureHandle, TextureOptions, vec2};
 use fe_core::imaging::{ColorRgba, PixelBuffer};
 use fe_core::io::ImageFileFormat;
 use fe_core::io::export::{ExportFit, ExportPreset, PRESETS, compose};
@@ -68,7 +68,7 @@ const FORMATS: [(ImageFileFormat, &str); 3] = [
 pub fn show(ctx: &egui::Context, f: &mut ExportForForm) -> Option<bool> {
     let mut result = None;
     let before = (f.preset, f.fit, f.format, f.transparent);
-    let modal = egui::Modal::new(Id::NULL.with("export-for")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "export-for", |ui| {
         ui.set_width(640.0);
         ui.label(RichText::new("Export For").heading());
         ui.add_space(4.0);

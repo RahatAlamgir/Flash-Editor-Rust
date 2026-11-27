@@ -1,7 +1,7 @@
 //! The window of an adjustment or filter with settings (C# `ParametersDialog`): one slider per setting, a live
 //! preview on the picture, OK / Cancel / Reset. Also used for Rotate and Straighten (no preview).
 
-use egui::{Align2, Color32, Id, RichText, vec2};
+use egui::{RichText, vec2};
 use fe_core::effects::{Param, Values};
 use fe_ui_kit::theme::colors;
 use fe_ui_kit::widgets::number_slider;
@@ -39,34 +39,32 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, s: &mut EffectSession) -> O
     let mut result = None;
     let mut changed = s.fresh;
     s.fresh = false;
-    let area = egui::Area::new(Id::NULL.with("effect-area")).anchor(Align2::RIGHT_BOTTOM, vec2(-330.0, -80.0));
-    let modal =
-        egui::Modal::new(Id::NULL.with("effect")).backdrop_color(Color32::TRANSPARENT).area(area).show(ctx, |ui| {
-            ui.set_width(300.0);
-            ui.label(RichText::new(s.effect.name).heading());
+    let modal = super::frame::floating(ctx, "effect", vec2(-330.0, -80.0), |ui| {
+        ui.set_width(300.0);
+        ui.label(RichText::new(s.effect.name).heading());
+        ui.add_space(6.0);
+        if !s.note.is_empty() {
+            ui.add(egui::Label::new(RichText::new(s.note).size(11.5).color(colors::SUBTLE_TEXT)).wrap());
             ui.add_space(6.0);
-            if !s.note.is_empty() {
-                ui.add(egui::Label::new(RichText::new(s.note).size(11.5).color(colors::SUBTLE_TEXT)).wrap());
-                ui.add_space(6.0);
+        }
+        changed |= param_rows(ui, s.effect.params, &mut s.values);
+        ui.add_space(6.0);
+        ui.horizontal(|ui| {
+            if ui.add(egui::Button::new("OK").fill(colors::ACCENT).min_size(vec2(80.0, 28.0))).clicked() {
+                result = Some(true);
             }
-            changed |= param_rows(ui, s.effect.params, &mut s.values);
-            ui.add_space(6.0);
-            ui.horizontal(|ui| {
-                if ui.add(egui::Button::new("OK").fill(colors::ACCENT).min_size(vec2(80.0, 28.0))).clicked() {
-                    result = Some(true);
-                }
-                if ui.add(egui::Button::new("Cancel").min_size(vec2(80.0, 28.0))).clicked() {
-                    result = Some(false);
-                }
-                if ui.add(egui::Button::new("Reset").min_size(vec2(64.0, 28.0))).clicked() {
-                    s.values = s.defaults.clone();
-                    changed = true;
-                }
-                if s.busy() {
-                    ui.spinner();
-                }
-            });
+            if ui.add(egui::Button::new("Cancel").min_size(vec2(80.0, 28.0))).clicked() {
+                result = Some(false);
+            }
+            if ui.add(egui::Button::new("Reset").min_size(vec2(64.0, 28.0))).clicked() {
+                s.values = s.defaults.clone();
+                changed = true;
+            }
+            if s.busy() {
+                ui.spinner();
+            }
         });
+    });
     if result.is_none() && modal.should_close() {
         result = Some(false);
     }

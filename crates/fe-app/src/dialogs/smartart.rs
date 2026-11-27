@@ -1,7 +1,7 @@
 //! Insert > SmartArt (C# `SmartArtDialog`): pick a diagram from the pictures, type your words (one per line), choose
 //! colors.
 
-use egui::{Color32, Id, Rect, RichText, Sense, Stroke, vec2};
+use egui::{Color32, Rect, RichText, Sense, Stroke, vec2};
 use fe_core::library::smartart::{self, CATEGORIES, LAYOUTS};
 use fe_ui_kit::theme::colors;
 
@@ -50,7 +50,7 @@ impl Default for SmartArtForm {
 pub fn show(ctx: &egui::Context, form: &mut SmartArtForm, previews: &mut Previews) -> Option<Option<SmartArtChoice>> {
     let mut result = None;
     let schemes = smartart::schemes();
-    let modal = egui::Modal::new(Id::NULL.with("smartart")).show(ctx, |ui| {
+    let modal = super::frame::modal(ctx, "smartart", |ui| {
         ui.set_width(660.0);
         ui.label(RichText::new("SmartArt").heading());
         ui.add_space(6.0);
@@ -90,11 +90,8 @@ pub fn show(ctx: &egui::Context, form: &mut SmartArtForm, previews: &mut Preview
                     }
                     let (rect, response) = ui.allocate_exact_size(vec2(138.0, 152.0), Sense::click());
                     let chosen = form.selected == i;
-                    let stroke = if chosen {
-                        Stroke::new(2.0, colors::ACCENT)
-                    } else {
-                        Stroke::new(1.0, colors::DIVIDER)
-                    };
+                    let stroke =
+                        if chosen { Stroke::new(2.0, colors::ACCENT) } else { Stroke::new(1.0, colors::DIVIDER) };
                     let fill = if response.hovered() { colors::HOVER } else { colors::PANEL_HEADER };
                     ui.painter().rect(rect, 6, fill, stroke, egui::StrokeKind::Inside);
                     let picture = Rect::from_min_size(rect.min + vec2(13.0, 6.0), vec2(112.0, 112.0));
