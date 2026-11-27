@@ -39,6 +39,21 @@ pub fn open_dialog(app: &mut FlashApp, ctx: &egui::Context) {
     }
 }
 
+/// File > Place Image as Layer: a picture file becomes a new layer on the shown page.
+pub fn place_image(app: &mut FlashApp, ctx: &egui::Context) {
+    let mut all: Vec<&str> = Vec::new();
+    all.extend(format::COMMON_EXTENSIONS);
+    all.extend(format::WINDOWS_EXTENSIONS);
+    let picked = rfd::FileDialog::new()
+        .set_title("Place a picture as a layer")
+        .add_filter("Pictures", &all)
+        .set_directory(app.settings.projects_folder())
+        .pick_files();
+    for path in picked.unwrap_or_default() {
+        open_path(app, ctx, &path, true);
+    }
+}
+
 /// Opens a file in the background. `as_layers`: pictures are added to the shown page (Ctrl+drop).
 pub fn open_path(app: &mut FlashApp, ctx: &egui::Context, path: &Path, as_layers: bool) {
     let is_project = project::is_project(path);

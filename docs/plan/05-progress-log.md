@@ -12,6 +12,31 @@ Problems / questions for the user: ...
 
 ---
 
+## 2026-11-27 · Phase 15 · The rest of the UI
+
+Done: **File drawer** (slides in from the left with a dimmed background; Project, Save, Pages, Export, App; shortcuts shown;
+Esc or a click outside closes it) replaces the File list. **Command search** (the box at the top right): type words, the matching
+ribbon buttons and drawer items are listed with their tab; arrow keys, Enter or a click run one. **Keyboard shortcuts** (F1, or
+Settings > Shortcuts): every command and tool in a list, click one and press the new keys, Backspace removes it, a key already
+taken is moved with a message, reset one or all; kept in `settingspp.json` in the same form as the C# version. Commands now run
+from one table, so a shortcut, the drawer and the search always do the same thing. **Online Templates** in the Project Manager
+(Templates button): search, one button per project type, cards with pictures loaded 4 at a time, Use template / double-click /
+Enter; the catalog comes from the GitHub repository (or the `FLASHEDITOR_TEMPLATES` folder or address), every download is checked
+(size + SHA-256) and saved so it works offline; Esc goes back to the projects. Also: Quick Tour (shown once on first start, and on the
+Settings tab), About, Place Image as Layer, Adjustment menu (Levels, Curves, Adjustment layer, Gradient background), tab rename by
+double-click, the 5 ready-made "Start from" layouts in New project, and **Remove by Color** (the colour-based background removal
+that Phase 13 left out; it makes the same editable cut-out and message as the AI version).
+Checked against C#: Remove by Color gives the same transparency on the tutorial photo (C# decoded picture as input; JPEG
+decoders differ by a level or two). Tested: key names read back from C# settings text, shortcut conflicts / reset / tool keys, command
+search, the template catalog (sorting, categories, words, checked download, offline copy, swapped file refused), layouts.
+Tried by hand in the window: File drawer, search, shortcut list, Templates browser end to end (from a local test folder: a
+template was downloaded, saved and opened as a new project).
+Not the same as C#: right-click menus have no icons; the drawer items are in a fixed list (the C# one is a window layout); the
+templates were not tried against the real GitHub repository (no internet use in my tests).
+Checklist walk: every row is ticked except "Installers" (Phase 16).
+Next: Phase 16 (polish, speed, installers).
+Problems / questions for the user: none.
+
 ## 2026-11-25 · Phase 14 · Import and export
 
 Done: File menu: Export Picture (Ctrl+Alt+S), Export For, Export All Pages, Export as PDF / Animated GIF / PowerPoint / SVG /

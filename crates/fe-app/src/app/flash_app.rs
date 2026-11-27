@@ -80,6 +80,8 @@ pub struct FlashApp {
     pub text_edit: Option<crate::text_edit::TextEditor>,
     /// The AI: models, the running job.
     pub ai: crate::ai::AiState,
+    /// A project tab whose name is being typed (double-click on the tab): which tab, and the text so far.
+    pub tab_rename: Option<(usize, String)>,
 }
 
 impl FlashApp {
@@ -128,6 +130,7 @@ impl FlashApp {
             styles: None,
             text_edit: None,
             ai: Default::default(),
+            tab_rename: None,
         };
         super::settings_sync::apply(&mut app);
         app

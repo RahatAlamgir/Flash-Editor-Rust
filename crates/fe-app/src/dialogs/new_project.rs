@@ -51,6 +51,8 @@ pub struct NewProjectForm {
     pub background: Background,
     /// `None` = Blank; otherwise a user template name.
     pub template: Option<String>,
+    /// A ready-made layout ("Blank", "Title slide"...) when no user template is chosen.
+    pub layout: &'static str,
     templates: Vec<String>,
     background_color: ColorRgba,
 }
@@ -64,6 +66,7 @@ impl NewProjectForm {
             height: 720,
             background: Background::White,
             template: None,
+            layout: fe_core::library::layouts::BLANK,
             templates: file::user_templates(),
             background_color,
         }
@@ -95,16 +98,22 @@ pub fn show(ctx: &egui::Context, form: &mut NewProjectForm) -> Option<bool> {
         });
         ui.add_space(8.0);
         label(ui, "Start from");
-        let selected = form.template.as_ref().map_or("Blank".to_owned(), |t| format!("★ {t}"));
+        let selected = form.template.as_ref().map_or_else(|| form.layout.to_owned(), |t| format!("★ {t}"));
         ComboBox::from_id_salt("new-template").width(360.0).selected_text(selected).show_ui(ui, |ui| {
-            ui.selectable_value(&mut form.template, None, "Blank");
+            for layout in fe_core::library::layouts::NAMES {
+                if ui.selectable_label(form.template.is_none() && form.layout == layout, layout).clicked() {
+                    form.template = None;
+                    form.layout = layout;
+                }
+            }
+            ui.separator();
             for t in form.templates.clone() {
                 ui.selectable_value(&mut form.template, Some(t.clone()), format!("★ {t}"));
             }
         });
         ui.label(
             RichText::new(
-                "Blank = an empty picture. Your own templates (File > Save as Template) are marked with a star.",
+                "Blank = an empty picture. The ready-made layouts keep every word, shape and color editable. Your own templates (File > Save as Template) are marked with a star.",
             )
             .size(11.0)
             .color(colors::SUBTLE_TEXT),
@@ -159,7 +168,9 @@ pub fn create(ctx: &egui::Context, app: &mut FlashApp, form: &NewProjectForm) {
                 Background::Transparent => ColorRgba::TRANSPARENT,
                 Background::Color => form.background_color,
             };
-            vec![Page::new("Page 1", Document::blank(form.width, form.height, background))]
+            let mut doc = Document::blank(form.width, form.height, background);
+            fe_core::library::layouts::apply(&mut doc, form.layout);
+            vec![Page::new("Page 1", doc)]
         }
     };
     file::create_project(app, ctx, &form.name, pages);

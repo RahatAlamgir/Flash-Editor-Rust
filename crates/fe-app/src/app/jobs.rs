@@ -53,6 +53,18 @@ pub enum JobDone {
         version: u64,
         result: Result<std::sync::Arc<Vec<fe_core::sheets::SheetPiece>>, String>,
     },
+    /// The online template list (Project Manager > Templates).
+    TemplateCatalog(Result<crate::templates::Catalog, String>),
+    /// The small picture of one template.
+    TemplateThumb {
+        id: String,
+        image: Option<egui::ColorImage>,
+    },
+    /// A template's project file, checked.
+    TemplateFile {
+        name: String,
+        result: Result<Vec<u8>, String>,
+    },
     /// A live preview of an effect.
     EffectPreview {
         generation: u64,

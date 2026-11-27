@@ -18,6 +18,7 @@ pub mod project_manager;
 pub mod remove_bg;
 mod save_style;
 mod save_template;
+mod shortcuts;
 mod size;
 mod smartart;
 mod split_sheet;
@@ -33,6 +34,7 @@ pub use magic_resize::MagicResizeForm;
 pub use new_project::NewProjectForm;
 pub use pages_export::PagesForm;
 pub use photo_grid::{PhotoGridForm, PhotoGridSettings};
+pub use shortcuts::ShortcutsForm;
 pub use size::{CanvasSizeForm, ImageOp, ImageOpForm, ImageSizeForm};
 pub use smartart::SmartArtForm;
 pub use split_sheet::SplitSheetForm;
@@ -58,6 +60,7 @@ pub enum Dialog {
     RemoveBg(Box<crate::ai::remove_bg::RemoveBgSession>),
     Upscale(crate::ai::upscale::UpscaleForm),
     AiModels,
+    Shortcuts(ShortcutsForm),
     Export(Box<export::ExportForm>),
     ExportFor(Box<ExportForForm>),
     Pages(PagesForm),
@@ -185,6 +188,11 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
             Some(false) => {}
             None => app.dialog = Some(Dialog::SplitSheet(form)),
         },
+        Dialog::Shortcuts(mut form) => {
+            if shortcuts::show(ctx, app, &mut form) && app.dialog.is_none() {
+                app.dialog = Some(Dialog::Shortcuts(form));
+            }
+        }
         Dialog::AiModels => {
             if crate::ai::models_dialog::show(ctx, app) {
                 // A question opened from inside (a failed download...) takes over.

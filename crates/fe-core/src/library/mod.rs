@@ -4,5 +4,6 @@
 pub mod badges;
 pub mod graphics;
 pub mod icons;
+pub mod layouts;
 mod maker;
 pub mod smartart;

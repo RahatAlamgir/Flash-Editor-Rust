@@ -1,5 +1,6 @@
 //! Ribbon, toolbox, options / hint bar, project tabs, right panels, page strip, status bar and pop-ups.
 
+pub mod file_drawer;
 pub mod hint_bar;
 pub mod pages;
 pub mod popups;
@@ -12,7 +13,9 @@ pub mod toolbox;
 pub mod view_aids_bar;
 
 use crate::app::FlashApp;
-use crate::commands::{edit, insert as ins, layers as cmd, mask, objects as obj, pages as page_cmd, selection as sel};
+use crate::commands::{
+    edit, file, insert as ins, layers as cmd, mask, objects as obj, pages as page_cmd, selection as sel,
+};
 use ribbon::{RibbonAction, model::TABS};
 
 /// Whether a ribbon button can be used right now (dimmed when not). Buttons of later phases stay usable so
@@ -62,6 +65,7 @@ fn effect_for(label: &str) -> Option<&'static fe_core::effects::Effect> {
         "Add Noise" => &e::ADD_NOISE,
         "Pixelate" => &e::PIXELATE,
         "Vignette" => &e::VIGNETTE,
+        "Remove by Color" => &e::REMOVE_BY_COLOR,
         "Emboss" => &e::EMBOSS,
         "Find Edges" => &e::FIND_EDGES,
         _ => return None,
@@ -72,6 +76,7 @@ fn effect_for(label: &str) -> Option<&'static fe_core::effects::Effect> {
 pub fn handle_ribbon_action(app: &mut FlashApp, ctx: &egui::Context, action: RibbonAction) {
     match action {
         RibbonAction::File => app.file_menu = !app.file_menu,
+        RibbonAction::DrawerItem(index) => file_drawer::run_flat(app, ctx, index),
         RibbonAction::Button { tab, group, item, rect } => {
             let entry = &TABS[tab].groups[group].items[item];
             match entry.label {
@@ -107,7 +112,7 @@ pub fn handle_ribbon_action(app: &mut FlashApp, ctx: &egui::Context, action: Rib
                     app.dialog = Some(crate::dialogs::Dialog::PhotoGrid(form));
                 }
                 "Fill Frames" => crate::commands::frames::fill_frames(app),
-                "Layer Mask ▾" | "Shapes ▾" | "Frame ▾" | "Chart ▾" | "Barcode ▾" => {
+                "Layer Mask ▾" | "Shapes ▾" | "Frame ▾" | "Chart ▾" | "Barcode ▾" | "Adjustment ▾" => {
                     app.ribbon_menu = Some((tab, group, item, rect));
                 }
                 "QR Code" => ins::add_qr(app),
@@ -174,6 +179,12 @@ pub fn handle_ribbon_action(app: &mut FlashApp, ctx: &egui::Context, action: Rib
                 "Flatten Image" => cmd::flatten(app),
                 "Order ▾" => app.ribbon_menu = Some((tab, group, item, rect)),
                 "Undo Steps" => app.undo_dialog = true,
+                "Place Image" => file::place_image(app, ctx),
+                "Quick Tour" => crate::commands::tour::show_tour(app),
+                "About" => crate::commands::tour::show_about(app),
+                "Shortcuts" => {
+                    crate::app::shortcuts::run(app, ctx, "Keyboard shortcuts");
+                }
                 "Zoom In" => app.current_view_mut().zoom_in(),
                 "Zoom Out" => app.current_view_mut().zoom_out(),
                 "Fit on Screen" => app.current_view_mut().fit(),

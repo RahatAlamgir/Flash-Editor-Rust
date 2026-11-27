@@ -23,6 +23,7 @@ internal static class Program
             case "make": Make(args[1]); return 0;
             case "summary": Console.Write(Summary(args[1])); return 0;
             case "io": MakeIo(args[1]); return 0;
+            case "bgcolor": BgColor(args[1], args[2]); return 0;
             case "readdoc": Console.Write(ReadDoc(args[1])); return 0;
             default: Console.Error.WriteLine("unknown command " + args[0]); return 2;
         }
@@ -106,6 +107,21 @@ internal static class Program
         File.WriteAllBytes(Path.Combine(folder, "anim.gif"), FlashEditor.Core.IO.GifEncoder.EncodeAnimation(new[] { flat, flat }, 500, true));
         File.WriteAllBytes(Path.Combine(folder, "page-flat.rgba"), flat.Data);
         Console.WriteLine($"{doc.Width}x{doc.Height}, {doc.Layers.Count} layers");
+    }
+
+    /// <summary>Runs Remove by Color (default settings) on a picture and writes the result as raw RGBA bytes.</summary>
+    private static void BgColor(string input, string output)
+    {
+        var image = FlashEditor.Core.IO.ImageDecoder.Load(input);
+        var effect = new FlashEditor.Core.Effects.Background.BackgroundRemovalEffect();
+        var result = effect.Apply(image, effect.CreateDefaultValues());
+        var rgba = new byte[result.Data.Length];
+        for (int i = 0; i < rgba.Length; i += 4) { rgba[i] = result.Data[i + 2]; rgba[i + 1] = result.Data[i + 1]; rgba[i + 2] = result.Data[i]; rgba[i + 3] = result.Data[i + 3]; }
+        File.WriteAllBytes(output, rgba);
+        var source = new byte[image.Data.Length];   // the picture as C# decoded it, so Rust starts from the same pixels
+        for (int i = 0; i < source.Length; i += 4) { source[i] = image.Data[i + 2]; source[i + 1] = image.Data[i + 1]; source[i + 2] = image.Data[i]; source[i + 3] = image.Data[i + 3]; }
+        File.WriteAllBytes(output + ".input", source);
+        Console.WriteLine($"{result.Width}x{result.Height}");
     }
 
     /// <summary>Opens a .psd or .svg file with the C# reader and prints what it sees.</summary>

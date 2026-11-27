@@ -4,6 +4,7 @@
 
 mod card;
 pub mod entry;
+pub mod templates;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -28,6 +29,8 @@ pub struct ManagerState {
     pub search: String,
     textures: HashMap<PathBuf, TextureHandle>,
     renaming: Option<(PathBuf, String)>,
+    /// The online template browser.
+    pub templates: templates::TemplatesState,
 }
 
 /// Opens the Project Manager and reads the project list in the background.
@@ -62,12 +65,21 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
         ui.set_width((screen.width() - 160.0).clamp(500.0, 1180.0));
         ui.set_height((screen.height() - 160.0).clamp(400.0, 820.0));
         ui.horizontal(|ui| {
-            ui.label(RichText::new("Projects").heading());
+            let in_templates = app.manager.templates.view;
+            ui.label(RichText::new(if in_templates { "Templates" } else { "Projects" }).heading());
             ui.add_space(16.0);
-            ui.add(egui::TextEdit::singleline(&mut app.manager.search).hint_text("Search").desired_width(220.0));
+            if in_templates {
+                ui.label(RichText::new("Pick a ready-made design and make it your own").color(colors::SUBTLE_TEXT));
+            } else {
+                ui.add(egui::TextEdit::singleline(&mut app.manager.search).hint_text("Search").desired_width(220.0));
+            }
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui.button("Close").clicked() {
                     top_action = Some("close");
+                }
+                let toggle = if app.manager.templates.view { "‹  Projects" } else { "Templates" };
+                if ui.button(toggle).on_hover_text("Ready-made designs from the internet").clicked() {
+                    top_action = Some("templates");
                 }
                 if ui.button("Open file...").clicked() {
                     top_action = Some("open");
@@ -77,6 +89,11 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
                 }
             });
         });
+        if app.manager.templates.view {
+            ui.separator();
+            templates::show(ui, ctx, app);
+            return;
+        }
         ui.horizontal(|ui| {
             let folder = app.settings.projects_folder();
             ui.label(
@@ -123,6 +140,7 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
     finish_rename(app, ctx);
     match top_action {
         Some("close") => app.manager.open = false,
+        Some("templates") => app.manager.templates.view = !app.manager.templates.view,
         Some("open") => {
             app.manager.open = false;
             file::open_dialog(app, ctx);
@@ -143,7 +161,11 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
         run(app, ctx, &path, action);
     }
     if modal.should_close() && app.manager.renaming.is_none() {
-        app.manager.open = false;
+        if app.manager.templates.view {
+            app.manager.templates.view = false; // Esc goes back to the projects
+        } else {
+            app.manager.open = false;
+        }
     }
 }
 

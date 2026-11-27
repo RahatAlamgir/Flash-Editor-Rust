@@ -60,7 +60,7 @@ pub fn start(app: &mut FlashApp) {
     pending::run(app, Pending::RemoveBackground);
 }
 
-fn visible_count(pixels: &PixelBuffer) -> usize {
+pub fn visible_count(pixels: &PixelBuffer) -> usize {
     pixels.data().iter().skip(3).step_by(4).filter(|a| **a > 127).count()
 }
 
@@ -193,25 +193,25 @@ pub fn commit(app: &mut FlashApp, session: RemoveBgSession) {
     let before_count = visible_count(&session.original);
     let after_count = visible_count(result);
     show_pixels(app, session.layer, result, &session.all_pixels);
-    make_cut_out(app, &session, result);
+    make_cut_out(app, session.layer, &session.original, result);
     app.project_mut().record(TITLE, session.before);
-    report(app, before_count, after_count);
+    report(app, before_count, after_count, true);
 }
 
 /// Turns the layer into a picture object that remembers the original (C# `MakeCutOutObject`).
-fn make_cut_out(app: &mut FlashApp, session: &RemoveBgSession, result: &PixelBuffer) {
+pub fn make_cut_out(app: &mut FlashApp, id: LayerId, original: &PixelBuffer, result: &PixelBuffer) {
     let canvas = app.doc().bounds();
-    let Some(layer) = app.project_mut().active_page_mut().doc.layer_mut(session.layer) else { return };
+    let Some(layer) = app.project_mut().active_page_mut().doc.layer_mut(id) else { return };
     if layer.has_hidden_pixels(canvas) {
         return;
     }
-    let area = session.original.visible_bounds().union(&result.visible_bounds());
+    let area = original.visible_bounds().union(&result.visible_bounds());
     if area.is_empty() {
         return;
     }
     let b = ObjectBox::new(f64::from(area.x), f64::from(area.y), f64::from(area.width), f64::from(area.height), 0.0);
     let name = layer.name.clone();
-    let object = StoredObject::new_cutout(b, &result.crop(area), &session.original.crop(area), &name);
+    let object = StoredObject::new_cutout(b, &result.crop(area), &original.crop(area), &name);
     object_ops::set_object(layer, object, canvas);
 }
 
@@ -221,7 +221,8 @@ pub fn cancel(app: &mut FlashApp, session: RemoveBgSession) {
     app.status = "Remove Background cancelled.".into();
 }
 
-fn report(app: &mut FlashApp, before: usize, after: usize) {
+/// Says how much became transparent (and explains when almost nothing did). `ai`: the AI version, else Remove by Color.
+pub fn report(app: &mut FlashApp, before: usize, after: usize, ai: bool) {
     let share = if before == 0 { 0.0 } else { (before - after.min(before)) as f64 / before as f64 };
     app.status = format!(
         "Remove Background: {:.0}% of the layer became transparent. Missed a spot? Use the Refine brush (R): Restore paints parts back, Remove takes more away.",
@@ -235,11 +236,25 @@ fn report(app: &mut FlashApp, before: usize, after: usize) {
     } else {
         ""
     };
-    outcome::tell(
-        app,
-        TITLE,
-        format!(
-            "Almost nothing was removed.\n\n{reason}The AI treated the whole picture as the subject. This happens when there is no clear main subject (e.g. a landscape) or the picture is already cut out. Try a negative \"Shrink / grow edge\" value."
-        ),
-    );
+    if ai {
+        outcome::tell(
+            app,
+            TITLE,
+            format!(
+                "Almost nothing was removed.
+
+{reason}The AI treated the whole picture as the subject. This happens when there is no clear main subject (e.g. a landscape) or the picture is already cut out. Try a negative \"Shrink / grow edge\" value."
+            ),
+        );
+    } else {
+        outcome::tell(
+            app,
+            "Remove Background",
+            format!(
+                "Almost nothing was removed.
+
+{reason}This tool removes the background color found along the edges of the picture. It works on plain or simple backgrounds (studio, wall, sky, product photos). If the edges of your picture are very busy (a room, trees, a crowd), try a higher Tolerance, or remove parts by hand with the Lasso (L) and Delete, or with the Eraser (E). For photos, use the AI version: Image > Remove Background (AI)."
+            ),
+        );
+    }
 }

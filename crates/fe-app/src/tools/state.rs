@@ -26,6 +26,8 @@ pub struct ToolState {
     pub retouch: super::retouch::RetouchTools,
     /// Remove Brush, Click Select and Refine.
     pub ai: super::ai_tools::AiTools,
+    /// Tool keys the user changed (None = no key).
+    pub key_overrides: std::collections::HashMap<ToolKind, Option<char>>,
     /// The Text tool's settings.
     pub text: super::text::TextTool,
 }
@@ -44,6 +46,7 @@ impl Default for ToolState {
             crop: Default::default(),
             retouch: Default::default(),
             ai: Default::default(),
+            key_overrides: Default::default(),
             text: Default::default(),
         }
     }
@@ -89,10 +92,15 @@ impl ToolState {
         self.open_group = None;
     }
 
+    /// The key that selects a tool now (the user may have changed it).
+    pub fn key_of(&self, tool: ToolKind) -> Option<char> {
+        self.key_overrides.get(&tool).copied().unwrap_or_else(|| Some(tool.shortcut()))
+    }
+
     /// Handles a tool key (like "B"): picks the next tool with that key. Returns false when no tool has it.
     pub fn select_by_shortcut(&mut self, key: char) -> bool {
         let key = key.to_ascii_uppercase();
-        let matches: Vec<ToolKind> = ToolKind::all().filter(|t| t.shortcut() == key).collect();
+        let matches: Vec<ToolKind> = ToolKind::all().filter(|t| self.key_of(*t) == Some(key)).collect();
         if matches.is_empty() {
             return false;
         }

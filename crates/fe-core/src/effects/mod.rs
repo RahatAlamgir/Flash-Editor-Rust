@@ -6,6 +6,7 @@
 
 mod adjust;
 mod apply;
+mod background;
 mod blur;
 mod enhance;
 mod filters;
@@ -104,6 +105,7 @@ pub use adjust::{
     AUTO_LEVELS, BRIGHTNESS_CONTRAST, EXPOSURE_GAMMA, GRAYSCALE, HUE_SATURATION, INVERT, POSTERIZE, SEPIA,
     TEMPERATURE_TINT, THRESHOLD, VIBRANCE,
 };
+pub use background::REMOVE_BY_COLOR;
 pub use enhance::ENHANCE;
 pub use filters::{
     ADD_NOISE, EMBOSS, FIND_EDGES, GAUSSIAN_BLUR, MOTION_BLUR, PIXELATE, REDUCE_NOISE, SHARPEN, VIGNETTE,

@@ -39,6 +39,10 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
 }
 
 fn project_tab(ui: &mut Ui, app: &mut FlashApp, index: usize) {
+    if app.tab_rename.as_ref().is_some_and(|(i, _)| *i == index) {
+        rename_tab(ui, app, index);
+        return;
+    }
     let project = &app.projects[index];
     let title = if project.is_dirty() { format!("{} *", project.name) } else { project.name.clone() };
     let font = FontId::proportional(12.5);
@@ -70,7 +74,31 @@ fn project_tab(ui: &mut Ui, app: &mut FlashApp, index: usize) {
     ui.painter().text(close.center(), Align2::CENTER_CENTER, glyphs::CLOSE, glyphs::font(9.0), color);
     if close_response.on_hover_text("Close this project (Ctrl+W)").clicked() || response.middle_clicked() {
         crate::commands::file::close_project(app, index);
+    } else if response.double_clicked() {
+        app.active_project = index;
+        app.tab_rename = Some((index, app.projects[index].name.clone()));
     } else if response.clicked() {
         app.active_project = index;
+    }
+}
+
+/// The tab as a text box: Enter keeps the new name, Esc (or clicking elsewhere) leaves the old one.
+fn rename_tab(ui: &mut Ui, app: &mut FlashApp, index: usize) {
+    let Some((_, text)) = app.tab_rename.as_mut() else { return };
+    let (rect, _) = ui.allocate_exact_size(vec2(180.0, metrics::PROJECT_TAB), Sense::hover());
+    let edit = ui.put(rect.shrink2(vec2(2.0, 3.0)), egui::TextEdit::singleline(text).desired_width(176.0));
+    if !edit.has_focus() && !edit.lost_focus() {
+        edit.request_focus();
+    }
+    let (enter, escape) = ui.input(|i| (i.key_pressed(egui::Key::Enter), i.key_pressed(egui::Key::Escape)));
+    if escape {
+        app.tab_rename = None;
+    } else if (enter || edit.lost_focus())
+        && let Some((_, name)) = app.tab_rename.take()
+    {
+        let name = crate::app::settings::clean_name(&name);
+        if !name.is_empty() && name != app.projects[index].name {
+            app.projects[index].name = name;
+        }
     }
 }

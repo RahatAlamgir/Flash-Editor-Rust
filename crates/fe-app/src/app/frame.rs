@@ -25,6 +25,7 @@ impl eframe::App for FlashApp {
         keyboard::handle(ui, self);
         layout::show(self, ui);
         panels::popups::show(ui, self);
+        panels::file_drawer::show(&ctx, self);
         project_manager::show(&ctx, self);
         dialogs::show(&ctx, self);
         autosave::tick(self, &ctx);
@@ -51,6 +52,7 @@ fn first_frame(app: &mut FlashApp, ctx: &egui::Context) {
     }
     let files = std::mem::take(&mut app.startup.files);
     crate::commands::tutorial::first_start(app);
+    crate::commands::tour::on_first_run(app);
     if files.is_empty() {
         project_manager::open(app, ctx);
     }
@@ -73,6 +75,9 @@ fn finished_jobs(app: &mut FlashApp, ctx: &egui::Context) {
                 crate::commands::export::on_preview(app, version, settings, result);
             }
             JobDone::SheetPieces { version, result } => crate::commands::split_sheet::on_pieces(app, version, result),
+            JobDone::TemplateCatalog(result) => project_manager::templates::on_catalog(app, result),
+            JobDone::TemplateThumb { id, image } => project_manager::templates::on_thumb(app, ctx, id, image),
+            JobDone::TemplateFile { name, result } => project_manager::templates::on_file(app, ctx, &name, result),
             JobDone::EffectPreview { generation, tiles } => {
                 crate::commands::effects::on_preview(app, ctx, generation, tiles);
             }

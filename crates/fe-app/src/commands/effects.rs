@@ -73,6 +73,19 @@ pub fn run(app: &mut FlashApp, effect: &'static Effect) {
     let all_pixels = layer.pixels().clone();
     let original = Arc::new(all_pixels.to_buffer(canvas));
     let selection = app.doc().selected_area().cloned();
+    if std::ptr::eq(effect, &effects::REMOVE_BY_COLOR) && crate::ai::remove_bg::visible_count(&original) == 0 {
+        let name = app.doc().layer(id).map(|l| l.name.clone()).unwrap_or_default();
+        crate::ai::outcome::tell(
+            app,
+            "Remove Background",
+            format!(
+                "The selected layer \"{name}\" is empty, so there is nothing to remove.
+
+Click the layer that contains your picture in the Layers panel, then try again."
+            ),
+        );
+        return;
+    }
     if effect.params.is_empty() {
         let tiles = processed(&original, &all_pixels, effect, &effect.defaults(), selection.as_ref());
         app.project_mut().edit(effect.name, None, |doc| {
@@ -148,6 +161,18 @@ pub fn commit(app: &mut FlashApp, session: EffectSession) {
     let tiles =
         processed(&session.original, &session.all_pixels, session.effect, &session.values, session.selection.as_ref());
     show_pixels(app, session.layer, tiles);
+    if std::ptr::eq(session.effect, &effects::REMOVE_BY_COLOR) {
+        // Like the AI version: the layer becomes a picture that remembers the original, so the Refine brush can restore.
+        let after = app.doc().layer(session.layer).map(|l| l.pixels().to_buffer(app.doc().bounds()));
+        if let Some(after) = after {
+            let (before_count, after_count) =
+                (crate::ai::remove_bg::visible_count(&session.original), crate::ai::remove_bg::visible_count(&after));
+            crate::ai::remove_bg::make_cut_out(app, session.layer, &session.original, &after);
+            app.project_mut().record(session.effect.name, session.before);
+            crate::ai::remove_bg::report(app, before_count, after_count, false);
+            return;
+        }
+    }
     app.project_mut().record(session.effect.name, session.before);
     app.status = format!("{} applied.", session.effect.name);
 }

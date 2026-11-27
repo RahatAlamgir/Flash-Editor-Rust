@@ -22,4 +22,5 @@ pub mod selection;
 pub mod split_sheet;
 pub mod styles;
 pub mod text;
+pub mod tour;
 pub mod tutorial;

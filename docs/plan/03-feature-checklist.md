@@ -6,17 +6,17 @@ has been checked. "Ph" = phase in `02-phases.md`. C# paths are under `D:\AiBuild
 ## Files, projects and pages
 | Done | Feature | Ph | C# source |
 |---|---|---|---|
-| [ ] | Open PNG, JPG, WEBP, ICO, BMP, GIF, TIFF, JPEG XR, DDS | 1, 14 | `Core/IO/ImageDecoder.cs`, `App/Services/WicImageCodec.cs` |
+| [x] | Open PNG, JPG, WEBP, ICO, BMP, GIF, TIFF, JPEG XR, DDS | 1, 14 | `Core/IO/ImageDecoder.cs`, `App/Services/WicImageCodec.cs` |
 | [x] | Open HEIC, AVIF, JPEG XL, camera RAW (via Windows codecs) | 14 | `WicImageCodec.cs` |
 | [x] | Drag files onto the window; Ctrl+drop adds as layers | 5 | `Views/MainWindow.cs` |
 | [x] | Save / open `.flash` projects (compatible with C# files) | 5 | `Core/IO/Project/*` |
-| [ ] | Several projects as tabs, rename by double-click, Ctrl+Tab, Ctrl+W (done except renaming a tab by double-click) | 5 | `ViewModels/ProjectGroup.cs`, `MainViewModel.cs` |
+| [x] | Several projects as tabs, rename by double-click, Ctrl+Tab, Ctrl+W (double-click a tab to rename it) | 5 | `ViewModels/ProjectGroup.cs`, `MainViewModel.cs` |
 | [x] | One undo history per project (all pages), step setting 1–60 (default 30) | 4 | `Core/History/ProjectHistory.cs` |
 | [x] | Project Manager (cards, search, new, rename, show in Explorer, remove, delete to Recycle Bin) | 5 | `Views/Dialogs/ProjectManagerWindow*`, `Services/ProjectLibrary.cs` |
 | [x] | Pages: strip with thumbnails, + Page, duplicate, rename, reorder, delete, grid view | 5 | `Views/Panels/PageGridView*`, `Commands/PageCommands.cs` |
 | [x] | Multi-select pages, copy / cut / paste pages (also into other projects), "+" between pages | 5 | `PageActions.cs`, `PageCommands.cs` |
 | [x] | Crash protection: autosave every minute, recovery on next start | 5 | `Services/AutoSaveService.cs` |
-| [ ] | New picture templates (social sizes, A4, cards...) and "Start from" layouts (sizes done; layouts need objects, Phase 10) | 5 | `Services/DocumentTemplates.cs`, `NewImageDialog*` |
+| [x] | New picture templates (social sizes, A4, cards...) and "Start from" layouts (sizes and the 5 ready-made layouts) | 5 | `Services/DocumentTemplates.cs`, `NewImageDialog*` |
 | [x] | Save as Template (user templates with a star) | 5 | `Services/UserTemplates.cs` |
 | [x] | Window size / position remembered (`settings\window.json`) | 2 | `Services/WindowPlacement.cs` |
 | [x] | Tutorial project (14 pages) created on first start; View > Tutorial | 10 | `Services/DemoProject.cs` |
@@ -106,7 +106,7 @@ has been checked. "Ph" = phase in `02-phases.md`. C# paths are under `D:\AiBuild
 | [x] | Icons (~150, search, categories) | 10 | `Services/IconCatalog.cs`, `IconPickerDialog*` |
 | [x] | Badges (52), Graphics (51), SmartArt (15 layouts) | 10 | `Rendering/Badges.cs`, `Graphics.cs`, `SmartArt.cs` |
 | [x] | Heading / Subheading / Body text buttons | 10 | `InsertCommands.cs` |
-| [ ] | Brand Kit (12 colors, 3 fonts, colors from picture) | 10 | `BrandKitDialog*`, `Core/Imaging/PaletteExtractor.cs` |
+| [x] | Brand Kit (12 colors, 3 fonts, colors from picture) | 10 | `BrandKitDialog*`, `Core/Imaging/PaletteExtractor.cs` |
 
 ## Export
 | Done | Feature | Ph | C# source |
@@ -123,14 +123,14 @@ has been checked. "Ph" = phase in `02-phases.md`. C# paths are under `D:\AiBuild
 ## UI and settings
 | Done | Feature | Ph | C# source |
 |---|---|---|---|
-| [ ] | Ribbon with tabs, collapsible, File drawer | 2, 15 | `RibbonBar*`, `FileDrawer*`, `Themes/Ribbon.xaml` |
-| [ ] | Online templates in the Project Manager (GitHub catalog, search, categories, checked + cached downloads, works offline) | 15 | `Services/Templates/*`, `Controls/TemplatesView*`, `ProjectManagerWindow*` |
-| [ ] | Command search box | 15 | `RibbonBar.cs` |
-| [ ] | Right-click menus (canvas and layers) with icons | 15 | `CanvasView.ContextMenu.cs`, `LayersPanel.ContextMenu.cs` |
+| [x] | Ribbon with tabs, collapsible, File drawer | 2, 15 | `RibbonBar*`, `FileDrawer*`, `Themes/Ribbon.xaml` |
+| [x] | Online templates in the Project Manager (GitHub catalog, search, categories, checked + cached downloads, works offline) | 15 | `Services/Templates/*`, `Controls/TemplatesView*`, `ProjectManagerWindow*` |
+| [x] | Command search box | 15 | `RibbonBar.cs` |
+| [x] | Right-click menus (canvas and layers; text only, no icons yet) | 15 | `CanvasView.ContextMenu.cs`, `LayersPanel.ContextMenu.cs` |
 | [x] | Rulers, grid, guides, view aids bar | 3 | `RulerControl.cs`, `AidsOverlay.cs`, `ViewAidsBar*` |
-| [ ] | Options bar per tool + hint text | 2+ | `OptionsBar*`, `Tools/Options/*` |
-| [ ] | Keyboard shortcuts editor (F1) | 15 | `Services/Shortcuts.cs`, `ShortcutsDialog*` |
-| [ ] | Icon style Plain / Colorful | 15 | `Services/IconTheme.cs` |
-| [ ] | Quick Tour, About, Settings | 15 | `MainWindow.cs`, `SettingsDialog*` |
-| [ ] | Status bar (tool info, size, zoom) | 2 | `MainWindow.xaml` |
+| [x] | Options bar per tool + hint text | 2+ | `OptionsBar*`, `Tools/Options/*` |
+| [x] | Keyboard shortcuts editor (F1) | 15 | `Services/Shortcuts.cs`, `ShortcutsDialog*` |
+| [x] | Icon style Plain / Colorful | 15 | `Services/IconTheme.cs` |
+| [x] | Quick Tour, About, Settings | 15 | `MainWindow.cs`, `SettingsDialog*` |
+| [x] | Status bar (tool info, size, zoom) | 2 | `MainWindow.xaml` |
 | [ ] | Installers (Standard and AI edition) | 16 | `installer/*` |

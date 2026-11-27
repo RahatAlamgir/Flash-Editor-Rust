@@ -1,11 +1,12 @@
 //! The top row of the ribbon: File button, tab names, search box and the hide / show arrow
 //! (C# `RibbonTabControl`, `RibbonTab`, `RibbonFileButton` styles).
 
-use egui::{Align2, Color32, FontId, Id, Rect, Sense, Stroke, TextEdit, Ui, UiBuilder, Vec2, pos2, vec2};
+use egui::{Align2, Color32, FontId, Id, Rect, Sense, Stroke, Ui, pos2, vec2};
 use fe_ui_kit::icons::glyphs;
 use fe_ui_kit::theme::{colors, metrics};
 
 use super::model::TABS;
+use super::search;
 use super::{RibbonAction, RibbonState};
 
 const TAB_FONT: f32 = 12.5;
@@ -20,8 +21,7 @@ pub fn show(ui: &mut Ui, row: Rect, state: &mut RibbonState) -> Option<RibbonAct
     }
     tabs(ui, row, state);
     collapse_button(ui, row, state);
-    search_box(ui, row, state);
-    action
+    action.or(search::show(ui, row, state))
 }
 
 fn file_button(ui: &mut Ui, row: Rect) -> bool {
@@ -103,29 +103,6 @@ fn collapse_button(ui: &mut Ui, row: Rect, state: &mut RibbonState) {
     }
     let glyph = if state.collapsed { glyphs::CHEVRON_DOWN } else { glyphs::CHEVRON_UP };
     painter.text(rect.center(), Align2::CENTER_CENTER, glyph, glyphs::font(11.0), colors::SUBTLE_TEXT);
-}
-
-fn search_box(ui: &mut Ui, row: Rect, state: &mut RibbonState) {
-    let rect = Rect::from_min_size(
-        pos2(row.right() - 40.0 - metrics::SEARCH_W, row.top() + 3.0),
-        vec2(metrics::SEARCH_W, 24.0),
-    );
-    let mut child = ui.new_child(UiBuilder::new().max_rect(rect));
-    let edit = TextEdit::singleline(&mut state.search)
-        .hint_text(egui::RichText::new("Search commands").color(colors::SUBTLE_TEXT))
-        .font(FontId::proportional(12.0))
-        .margin(egui::Margin { left: 26, right: 6, top: 4, bottom: 4 })
-        .desired_width(metrics::SEARCH_W);
-    child
-        .add_sized(Vec2::new(metrics::SEARCH_W, 24.0), edit)
-        .on_hover_text("Type what you want to do, for example rotate, blur or export");
-    ui.painter().text(
-        pos2(rect.left() + 9.0, rect.center().y),
-        Align2::LEFT_CENTER,
-        glyphs::SEARCH,
-        glyphs::font(11.0),
-        colors::SUBTLE_TEXT,
-    );
 }
 
 fn top_corners() -> egui::CornerRadius {

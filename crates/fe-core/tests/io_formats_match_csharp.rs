@@ -178,3 +178,35 @@ fn write_files_for_the_csharp_reader() {
     psd::save(&psd::open(fixture("features.psd")).expect("opens"), folder.join("features-rust.psd")).expect("saved");
     svg::save(&pages[2].doc, folder.join("page-rust.svg")).expect("saved");
 }
+
+#[test]
+fn remove_by_color_matches_the_csharp_result_on_a_photo() {
+    use fe_core::effects::REMOVE_BY_COLOR;
+    // The photo as the C# program decoded it (JPEG decoders differ by a level or two, which moves the edge).
+    let tee = PixelBuffer::from_raw(
+        440,
+        439,
+        std::fs::read(fixture("tee-remove-by-color.rgba.input")).expect("the C# input"),
+    )
+    .expect("size");
+    let expected = std::fs::read(fixture("tee-remove-by-color.rgba")).expect("the C# result");
+    let ours = REMOVE_BY_COLOR.apply(&tee, &REMOVE_BY_COLOR.defaults());
+    assert_eq!(ours.data().len(), expected.len());
+    // The alpha channel (what the effect changes) matches within 2 / 255 on nearly every pixel; colors are untouched.
+    let alpha_diff: Vec<u8> = ours
+        .data()
+        .iter()
+        .skip(3)
+        .step_by(4)
+        .zip(expected.iter().skip(3).step_by(4))
+        .map(|(a, b)| a.abs_diff(*b))
+        .collect();
+    let worst = alpha_diff.iter().copied().max().unwrap_or(0);
+    let off = alpha_diff.iter().filter(|d| **d > 2).count();
+    assert!(
+        off * 1000 < alpha_diff.len(),
+        "{off} of {} pixels differ by more than 2 (worst {worst})",
+        alpha_diff.len()
+    );
+    assert_eq!(&ours.data()[..3], &expected[..3], "colors stay");
+}

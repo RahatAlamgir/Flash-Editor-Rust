@@ -11,94 +11,8 @@ use crate::app::FlashApp;
 use crate::commands::{layers as cmd, mask};
 
 pub fn show(ui: &mut Ui, app: &mut FlashApp) {
-    file_menu(ui, app);
     ribbon_menu(ui, app);
     undo_steps_dialog(ui, app);
-}
-
-/// The list under the File button (the sliding File drawer of the C# version comes in Phase 15).
-fn file_menu(ui: &mut Ui, app: &mut FlashApp) {
-    if !app.file_menu {
-        return;
-    }
-    let anchor = egui::Rect::from_min_size(egui::pos2(6.0, 3.0), egui::vec2(66.0, 24.0));
-    let mut open = true;
-    let mut chosen = None;
-    popup_below(ui, Id::unique("file-menu"), anchor, &mut open, |ui| {
-        ui.set_min_width(250.0);
-        let items = [
-            ("New project...", "Ctrl+N"),
-            ("Open...", "Ctrl+O"),
-            ("Project Manager", ""),
-            ("", ""),
-            ("Save", "Ctrl+S"),
-            ("Save As...", "Ctrl+Shift+S"),
-            ("Save as Template...", ""),
-            ("", ""),
-            ("Export Picture...", "Ctrl+Alt+S"),
-            ("Export For...", ""),
-            ("Export All Pages...", ""),
-            ("Export as PDF...", ""),
-            ("Export as Animated GIF...", ""),
-            ("Export as PowerPoint...", ""),
-            ("Export as SVG...", ""),
-            ("Export as Photoshop (PSD)...", ""),
-            ("Batch Convert...", ""),
-            ("", ""),
-            ("Add Page", "Ctrl+Alt+N"),
-            ("Close Project", "Ctrl+W"),
-            ("", ""),
-            ("Exit", "Alt+F4"),
-        ];
-        for (text, keys) in items {
-            if text.is_empty() {
-                ui.separator();
-            } else if ui.add(egui::Button::new(text).shortcut_text(keys).frame(false)).clicked() {
-                chosen = Some(text);
-            }
-        }
-    });
-    if !open || chosen.is_some() {
-        app.file_menu = false;
-    }
-    let ctx = ui.ctx().clone();
-    match chosen {
-        Some("New project...") => {
-            app.dialog = Some(crate::dialogs::Dialog::NewProject(crate::dialogs::NewProjectForm::new(app.background)));
-        }
-        Some("Open...") => crate::commands::file::open_dialog(app, &ctx),
-        Some("Project Manager") => crate::dialogs::project_manager::open(app, &ctx),
-        Some("Save") => crate::commands::file::save(app, &ctx),
-        Some("Save As...") => {
-            let index = app.active_project;
-            crate::commands::file::save_as(app, &ctx, index, crate::app::jobs::AfterSave::Nothing);
-        }
-        Some("Save as Template...") => {
-            app.dialog = Some(crate::dialogs::Dialog::SaveTemplate(app.project().name.clone()))
-        }
-        Some("Export Picture...") => crate::commands::export::open_export(app),
-        Some("Export For...") => crate::commands::export::open_export_for(app),
-        Some("Export All Pages...") => crate::commands::export::open_export_all(app),
-        Some("Export as PDF...") => {
-            crate::commands::export::open_pages_export(app, crate::commands::export::PagesKind::Pdf)
-        }
-        Some("Export as Animated GIF...") => {
-            crate::commands::export::open_pages_export(app, crate::commands::export::PagesKind::Gif);
-        }
-        Some("Export as PowerPoint...") => {
-            crate::commands::export::open_pages_export(app, crate::commands::export::PagesKind::Pptx);
-        }
-        Some("Export as SVG...") => crate::commands::export::export_document(app, true),
-        Some("Export as Photoshop (PSD)...") => crate::commands::export::export_document(app, false),
-        Some("Batch Convert...") => crate::commands::export::open_batch(app),
-        Some("Add Page") => crate::commands::pages::add_after_current(app),
-        Some("Close Project") => {
-            let index = app.active_project;
-            crate::commands::file::close_project(app, index);
-        }
-        Some("Exit") => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
-        _ => {}
-    }
 }
 
 fn ribbon_menu(ui: &mut Ui, app: &mut FlashApp) {
@@ -183,6 +97,26 @@ fn ribbon_menu(ui: &mut Ui, app: &mut FlashApp) {
             for kind in fe_core::codes::BarcodeKind::ALL {
                 if ui.add(egui::Button::new(kind.name()).frame(false)).on_hover_text(kind.describe()).clicked() {
                     barcode = Some(kind);
+                }
+            }
+        }
+        if label == "Adjustment ▾" {
+            for (text, tip, value) in [
+                ("Add Levels Layer", "Black point, white point and middle tones, as a layer you can change later", 20),
+                (
+                    "Add Curves Layer",
+                    "Bend the tone curve of all colors or of red, green or blue, as a layer you can change later",
+                    21,
+                ),
+                (
+                    "Add Adjustment Layer",
+                    "Brightness, contrast, saturation and hue for everything below it, without changing any picture",
+                    22,
+                ),
+                ("Add Gradient Background", "A gradient behind everything", 23),
+            ] {
+                if ui.add(egui::Button::new(text).frame(false)).on_hover_text(tip).clicked() {
+                    chosen = Some(value);
                 }
             }
         }
@@ -281,6 +215,10 @@ fn ribbon_menu(ui: &mut Ui, app: &mut FlashApp) {
         Some(15) => mask::toggle(app),
         Some(16) => mask::apply(app),
         Some(17) => mask::delete(app),
+        Some(20) => crate::commands::adjustments::add_levels(app),
+        Some(21) => crate::commands::adjustments::add_curves(app),
+        Some(22) => crate::commands::adjustments::add_basic(app),
+        Some(23) => crate::commands::objects::gradient_background(app),
         _ => {}
     }
     if !open || chosen.is_some() {

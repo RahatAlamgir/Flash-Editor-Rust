@@ -21,6 +21,18 @@ pub fn apply(app: &mut FlashApp) {
     for project in &mut app.projects {
         project.history_mut().set_max_steps(steps);
     }
+    apply_tool_keys(app);
+}
+
+/// Gives every tool the key the settings say (the normal key, or the one the user chose).
+pub fn apply_tool_keys(app: &mut FlashApp) {
+    app.tools.key_overrides.clear();
+    for tool in crate::tools::ToolKind::all() {
+        let key = super::shortcuts::tool_key(&app.settings, tool);
+        if key != Some(tool.shortcut()) {
+            app.tools.key_overrides.insert(tool, key);
+        }
+    }
 }
 
 /// Copies the app's choices into the settings and writes the file when something changed.

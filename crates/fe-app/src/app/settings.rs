@@ -33,6 +33,8 @@ pub struct Settings {
     pub projects_folder: String,
     /// Projects opened or saved lately, newest first.
     pub recent: Vec<String>,
+    /// Keyboard shortcuts the user changed ("cmd:Save project" = "Ctrl+S", "tool:Brush" = "B"; "" = none).
+    pub shortcuts: std::collections::BTreeMap<String, String>,
 }
 
 impl Default for Settings {
@@ -58,6 +60,7 @@ impl Default for Settings {
             snap_to_guides: true,
             projects_folder: String::new(),
             recent: Vec::new(),
+            shortcuts: std::collections::BTreeMap::new(),
         }
     }
 }
