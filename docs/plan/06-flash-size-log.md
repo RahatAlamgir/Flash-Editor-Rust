@@ -4,6 +4,30 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Presentations stage B: object animations
+
+Done:
+- **Two tabs** for presentations: **Transitions** (the slide transition, as before) and **Animations** (new).
+- **Animations tab:** "Add Animation" (a list of 17 effects: Entrance = Appear, Fade In, Fly In, Float In, Zoom In, Wipe In,
+  Grow & Turn; Emphasis = Pulse, Spin, Grow / Shrink, Teeter; Exit = Disappear, Fade Out, Fly Out, Float Out, Zoom Out, Wipe Out)
+  adds the effect to the selected layer; Start (On click / With previous / After previous), Duration, Delay and, for Fly and Wipe,
+  the direction; Move Earlier / Later, Remove; **Animation Pane** (a window listing the slide's animations in order with the
+  layer, effect, start and click number; click one to choose it; the cross removes it); **Preview Animations** (plays the slide
+  once inside the window); From Beginning / From Current Slide. Every change is one undo step.
+- **Slideshow** plays them: a click plays the next animation step, and when the slide has no more, goes to the next slide. Steps
+  that do not start on a click play by themselves when the slide appears. Going back shows the earlier slide as it ended.
+  Layers with an entrance effect are hidden until it plays.
+- **Saved** in the `.fe` file per page (`Animations`, each pointing at its layer by position); copying a page keeps them on the
+  copied layers; a deleted layer's animations are ignored.
+- **PowerPoint export** (the editable option) writes `<p:timing>`: click steps, with-previous / after-previous, delay, duration,
+  and each effect with PowerPoint's own behaviors (visibility, fade, wipe, fly, zoom, spin, scale). Tests check the XML is
+  well formed with unique ids.
+Limits: an animated layer is drawn as a normal picture (its blend mode and mask are not applied while it animates); in the
+picture-mode PowerPoint export there are no object animations (the whole slide is one picture); slides that use blend modes or
+adjustment layers are exported as one picture too, so they have no animations either. Effects apply to one layer at a time.
+Checked by screenshots: the tabs, adding Fly In to a layer, the pane, the timing boxes, the animation preview. NOT checked: how
+each effect looks while moving, and opening the exported .pptx in PowerPoint (the exact XML may need a fix there).
+
 ## 2026-11-28 · Presentations: Animation tab, slide transitions, slideshow (plan: 07-animation.md)
 
 Done (stage A of the plan):

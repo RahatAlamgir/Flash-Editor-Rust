@@ -335,11 +335,8 @@ pub fn finish_pages(app: &mut FlashApp, kind: PagesKind, values: fe_core::effect
         return;
     };
     let pages = if kind == PagesKind::Pptx && values.on("editable") { Vec::new() } else { flatten_pages(app) };
-    let documents: Vec<fe_core::document::Document> = if kind == PagesKind::Pptx && values.on("editable") {
-        app.project().pages().iter().map(|p| p.doc.clone()).collect()
-    } else {
-        Vec::new()
-    };
+    let documents: Vec<fe_core::document::Page> =
+        if kind == PagesKind::Pptx && values.on("editable") { app.project().pages().to_vec() } else { Vec::new() };
     let matte = ColorRgba::WHITE;
     let transitions: Vec<fe_core::document::Transition> = app.project().pages().iter().map(|p| p.transition).collect();
     job::start(app, title, move |_| {
@@ -363,12 +360,11 @@ pub fn finish_pages(app: &mut FlashApp, kind: PagesKind, values: fe_core::effect
                         &transitions,
                     )
                 } else {
-                    let refs: Vec<&fe_core::document::Document> = documents.iter().collect();
-                    fe_core::io::pptx::save_editable_with(
+                    let refs: Vec<&fe_core::document::Page> = documents.iter().collect();
+                    fe_core::io::pptx::save_editable_pages(
                         &refs,
                         &path,
                         fe_core::io::pptx::EditableOptions { quality, matte: Some(matte) },
-                        &transitions,
                     )
                 };
                 saved.map(|()| {

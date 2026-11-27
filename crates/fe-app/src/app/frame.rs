@@ -26,6 +26,7 @@ impl eframe::App for FlashApp {
         keyboard::handle(ui, self);
         layout::show(self, ui);
         panels::popups::show(ui, self);
+        panels::animation_pane::show(&ctx, self);
         if !self.eyedropper.active() {
             // While the eyedropper takes its picture no dialog is drawn, so none is in the picture.
             panels::file_drawer::show(&ctx, self);

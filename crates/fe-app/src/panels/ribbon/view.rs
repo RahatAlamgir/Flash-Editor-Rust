@@ -17,7 +17,7 @@ pub fn show(
     aids: &mut ViewAids,
     enabled: &dyn Fn(&str) -> bool,
 ) -> Option<RibbonAction> {
-    if !state.presentation && TABS.get(state.tab).is_some_and(|t| t.name == "Animation") {
+    if !state.presentation && TABS.get(state.tab).is_some_and(|t| super::is_presentation_tab(t.name)) {
         state.tab = 0;
     }
     let width = ui.available_width();
@@ -60,7 +60,7 @@ fn buttons(
                 }
                 for (i, item) in group.items.iter().enumerate() {
                     let checked = (item.toggle && toggle_value(aids, item.label).is_some_and(|v| *v))
-                        || (tab.name == "Animation" && super::animation::is_current(state, item.label));
+                        || (super::is_presentation_tab(tab.name) && super::animation::is_current(state, item.label));
                     let color = if state.colorful { color_of(item.color) } else { colors::ICON };
                     let response = ribbon_button(
                         ui,

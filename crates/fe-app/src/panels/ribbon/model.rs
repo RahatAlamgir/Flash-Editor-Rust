@@ -289,7 +289,7 @@ pub const TABS: &[RibbonTab] = &[
         ],
     },
     RibbonTab {
-        name: "Animation",
+        name: "Transitions",
         groups: &[
             RibbonGroup {
                 name: "Transition to this slide",
@@ -310,6 +310,31 @@ pub const TABS: &[RibbonTab] = &[
             RibbonGroup {
                 name: "Apply",
                 items: &[b('\u{E8F4}', "Apply to All", Purple), b('\u{E768}', "Preview Transition", Green)],
+            },
+            RibbonGroup {
+                name: "Slideshow",
+                items: &[b('\u{E7F4}', "From Beginning", Red), b('\u{E768}', "From Current Slide", Red)],
+            },
+        ],
+    },
+    RibbonTab {
+        name: "Animations",
+        groups: &[
+            // Drawn by hand (`animation.rs`): the list of effects to add.
+            RibbonGroup { name: "Add animation", items: &[] },
+            // Drawn by hand: start, duration, delay, direction of the chosen animation.
+            RibbonGroup { name: "Animation timing", items: &[] },
+            RibbonGroup {
+                name: "Order",
+                items: &[
+                    b('\u{E70E}', "Move Earlier", Blue),
+                    b('\u{E70D}', "Move Later", Blue),
+                    b('\u{E74D}', "Remove Animation", Red),
+                ],
+            },
+            RibbonGroup {
+                name: "View",
+                items: &[b('\u{E8FD}', "Animation Pane", Sky), b('\u{E768}', "Preview Animations", Green)],
             },
             RibbonGroup {
                 name: "Slideshow",

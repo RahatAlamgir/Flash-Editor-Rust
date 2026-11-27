@@ -3,6 +3,7 @@
 
 use serde::{Deserialize, Deserializer, Serialize};
 
+use crate::document::animation::{Effect, Start};
 use crate::document::{AdjustmentKind, AdjustmentStyle, CurvePoint, Transition, TransitionDirection, TransitionKind};
 
 pub const FORMAT_NAME: &str = "flash-project";
@@ -53,7 +54,34 @@ pub struct PageEntry {
     /// Left out when it is the plain default.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub transition: Option<TransitionEntry>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub animations: Vec<AnimationEntry>,
     pub layers: Vec<LayerEntry>,
+}
+
+/// One object animation as saved: the layer is its position in the page's layer list.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase", default)]
+pub struct AnimationEntry {
+    pub layer: usize,
+    pub effect: String,
+    pub start: String,
+    pub direction: String,
+    pub duration: f32,
+    pub delay: f32,
+}
+
+impl Default for AnimationEntry {
+    fn default() -> Self {
+        Self {
+            layer: 0,
+            effect: Effect::default().key().into(),
+            start: Start::default().name().into(),
+            direction: TransitionDirection::default().key().into(),
+            duration: 0.5,
+            delay: 0.0,
+        }
+    }
 }
 
 /// A page's slide transition as saved.

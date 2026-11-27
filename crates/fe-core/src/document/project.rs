@@ -18,6 +18,8 @@ pub struct Page {
     pub horizontal_guides: Vec<f64>,
     /// How the slideshow arrives at this page (presentations).
     pub transition: super::Transition,
+    /// Effects on the layers during the slideshow, in the order they play.
+    pub animations: Vec<super::animation::Animation>,
 }
 
 impl Page {
@@ -28,7 +30,13 @@ impl Page {
             vertical_guides: Vec::new(),
             horizontal_guides: Vec::new(),
             transition: super::Transition::default(),
+            animations: Vec::new(),
         }
+    }
+
+    /// The animations whose layer still exists (a deleted layer leaves its animations behind until they are cleaned).
+    pub fn valid_animations(&self) -> Vec<super::animation::Animation> {
+        self.animations.iter().filter(|a| self.doc.index_of(a.layer).is_some()).copied().collect()
     }
 }
 

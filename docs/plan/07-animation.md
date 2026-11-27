@@ -20,7 +20,7 @@ ticked for the first version: they are stage B below, to be confirmed.
    advance settings, in both the editable and the picture export.
 6. The online Presentation templates are rebuilt with the project type (the build tool sets it from the catalog type).
 
-## Stage B (after confirming)
+## Stage B (done 2026-11-28, see the log)
 
 Object animations: Entrance / Emphasis / Exit effects per object, start (On click / With previous / After previous), duration,
 delay, an Animation pane (ordered list), preview, slideshow playback, `<p:timing>` export.

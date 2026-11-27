@@ -28,7 +28,7 @@ pub fn find(query: &str, anchor: Rect, presentation: bool) -> Vec<Hit> {
     }
     let mut hits: Vec<(Hit, String)> = Vec::new();
     for (tab, t) in TABS.iter().enumerate() {
-        if t.name == "Animation" && !presentation {
+        if super::is_presentation_tab(t.name) && !presentation {
             continue;
         }
         for (group, g) in t.groups.iter().enumerate() {

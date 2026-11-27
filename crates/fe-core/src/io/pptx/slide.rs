@@ -102,6 +102,10 @@ pub struct PptxSlide {
     pub media: Vec<Media>,
     /// `<p:transition>` of the slide (empty = none).
     transition: String,
+    /// `<p:timing>` of the slide: the object animations (empty = none).
+    timing: String,
+    /// The shape ids each layer was written as (first, one past the last).
+    layer_shapes: Vec<(crate::document::LayerId, u32, u32)>,
 }
 
 fn mark(px: f64) -> String {
@@ -142,7 +146,14 @@ fn xfrm(p: Place) -> String {
 
 impl PptxSlide {
     pub fn new() -> Self {
-        Self { xml: String::new(), next_id: 2, media: Vec::new(), transition: String::new() }
+        Self {
+            xml: String::new(),
+            next_id: 2,
+            media: Vec::new(),
+            transition: String::new(),
+            timing: String::new(),
+            layer_shapes: Vec::new(),
+        }
     }
 
     /// The shapes as XML; `scale` (slides too big for PowerPoint are shrunk) is applied to every position and size.
@@ -168,6 +179,31 @@ impl PptxSlide {
 
     pub(crate) fn transition_xml(&self) -> &str {
         &self.transition
+    }
+
+    /// The id the next shape will get.
+    pub(crate) fn next_shape_id(&self) -> u32 {
+        self.next_id.max(2)
+    }
+
+    /// Remembers which shapes a layer became (for the animations).
+    pub(crate) fn note_layer(&mut self, layer: crate::document::LayerId, first: u32, end: u32) {
+        if end > first {
+            self.layer_shapes.push((layer, first, end));
+        }
+    }
+
+    /// The object animations of the slide (they need the layers' shapes to be noted already).
+    pub fn set_animations(&mut self, animations: &[crate::document::animation::Animation]) {
+        let shapes = &self.layer_shapes;
+        let spids = |layer: crate::document::LayerId| -> Vec<u32> {
+            shapes.iter().filter(|(l, ..)| *l == layer).flat_map(|(_, a, b)| *a..*b).collect()
+        };
+        self.timing = super::timing::timing_xml(animations, &spids);
+    }
+
+    pub(crate) fn timing_xml(&self) -> &str {
+        &self.timing
     }
 
     fn id(&mut self) -> u32 {

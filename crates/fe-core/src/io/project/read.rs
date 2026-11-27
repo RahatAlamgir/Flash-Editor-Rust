@@ -10,7 +10,8 @@ use rayon::prelude::*;
 use super::manifest::{CURRENT_VERSION, FORMAT_NAME, LayerEntry, Manifest, PageEntry};
 use super::png_stream::{decode_bands, decode_to_tiles};
 use super::{MANIFEST_ENTRY, ProjectContent};
-use crate::document::{AdjustmentStyle, Document, Layer, LayerMask, Page};
+use crate::document::animation::{Animation, Effect, Start};
+use crate::document::{AdjustmentStyle, Document, Layer, LayerMask, Page, TransitionDirection};
 use crate::imaging::{BlendMode, PixelRect};
 use crate::io::IoError;
 use crate::io::decode::check_size;
@@ -124,6 +125,21 @@ fn build_page(
     if let Some(t) = &entry.transition {
         page.transition = t.into();
     }
+    page.animations = entry
+        .animations
+        .iter()
+        .filter_map(|a| {
+            let layer = page.doc.layers().get(a.layer)?.id();
+            Some(Animation {
+                layer,
+                effect: Effect::from_key(&a.effect),
+                start: Start::from_name(&a.start),
+                direction: TransitionDirection::from_name(&a.direction),
+                duration: a.duration.clamp(0.0, 30.0),
+                delay: a.delay.clamp(0.0, 60.0),
+            })
+        })
+        .collect();
     Ok(page)
 }
 

@@ -10,8 +10,12 @@ use std::io::Write;
 use zip::CompressionMethod;
 use zip::write::SimpleFileOptions;
 
-pub use editable::{EditableOptions, build_editable, build_editable_with, save_editable, save_editable_with};
+pub use editable::{
+    EditableOptions, build_editable, build_editable_pages, build_editable_with, save_editable, save_editable_pages,
+    save_editable_with,
+};
 pub use slide::transition_xml;
+mod timing;
 pub use slide::{Media, Place, PptxSlide, ShapeLook, TextLook, escape};
 
 use super::{IoError, encode, format::ImageFileFormat};
@@ -65,9 +69,10 @@ const GROUP_HEAD: &str = "<p:nvGrpSpPr><p:cNvPr id=\"1\" name=\"\"/><p:cNvGrpSpP
 
 fn slide_xml(slide: &PptxSlide, scale: f64) -> String {
     format!(
-        "{DECL}<p:sld xmlns:a=\"{NS_A}\" xmlns:r=\"{NS_R}\" xmlns:p=\"{NS_P}\"><p:cSld><p:spTree>{GROUP_HEAD}{}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>{}</p:sld>",
+        "{DECL}<p:sld xmlns:a=\"{NS_A}\" xmlns:r=\"{NS_R}\" xmlns:p=\"{NS_P}\"><p:cSld><p:spTree>{GROUP_HEAD}{}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>{}{}</p:sld>",
         slide.to_xml(scale),
-        slide.transition_xml()
+        slide.transition_xml(),
+        slide.timing_xml()
     )
 }
 

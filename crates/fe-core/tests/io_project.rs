@@ -174,3 +174,35 @@ fn presentation_flag_and_slide_transitions_are_saved() {
     let plain = project::to_bytes(&again.pages, 0).expect("saves");
     assert!(!project::open_from(std::io::Cursor::new(plain)).expect("opens").presentation);
 }
+
+#[test]
+fn object_animations_are_saved_with_their_layers() {
+    use fe_core::document::TransitionDirection;
+    use fe_core::document::animation::{Animation, Effect, Start};
+    let mut doc = Document::blank(64, 36, ColorRgba::WHITE);
+    doc.push_layer(Layer::new("Second"));
+    let (first, second) = (doc.layers()[0].id(), doc.layers()[1].id());
+    let mut page = Page::new("One", doc);
+    let mut fly = Animation::new(second, Effect::FlyIn);
+    fly.start = Start::AfterPrevious;
+    fly.direction = TransitionDirection::Down;
+    fly.duration = 1.25;
+    fly.delay = 0.5;
+    page.animations = vec![Animation::new(first, Effect::FadeIn), fly];
+    let bytes = project::to_bytes_as(&[page.clone()], 0, true).expect("saves");
+    let again = project::open_from(std::io::Cursor::new(bytes)).expect("opens");
+    let back = &again.pages[0];
+    assert_eq!(2, back.animations.len());
+    assert_eq!(back.doc.layers()[0].id(), back.animations[0].layer);
+    assert_eq!(back.doc.layers()[1].id(), back.animations[1].layer);
+    assert_eq!((Effect::FlyIn, Start::AfterPrevious), (back.animations[1].effect, back.animations[1].start));
+    assert_eq!(
+        (TransitionDirection::Down, 1.25, 0.5),
+        (back.animations[1].direction, back.animations[1].duration, back.animations[1].delay)
+    );
+    // A copy of the page keeps the animations on the copied layers.
+    let copy = fe_core::document::page_ops::copy_of(&page, "Copy");
+    assert_eq!(2, copy.animations.len());
+    assert_eq!(copy.doc.layers()[1].id(), copy.animations[1].layer);
+    assert_ne!(page.doc.layers()[1].id(), copy.animations[1].layer);
+}

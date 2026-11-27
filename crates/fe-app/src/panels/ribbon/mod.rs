@@ -28,6 +28,20 @@ pub struct RibbonState {
     /// The transition of the shown page (copied in each frame); the options boxes change it and set `transition_changed`.
     pub transition: fe_core::document::Transition,
     pub transition_changed: bool,
+    /// The animation chosen in the Animation pane (a copy; the boxes of the Animations tab change it).
+    pub animation: Option<fe_core::document::animation::Animation>,
+    pub animation_changed: bool,
+    /// An effect picked in "Add animation".
+    pub add_effect: Option<fe_core::document::animation::Effect>,
+    /// The Animation pane is open.
+    pub animation_pane: bool,
+    /// Which animation of the shown page is chosen (position in its list).
+    pub animation_selected: Option<usize>,
+}
+
+/// True for the tabs that only presentations have.
+pub fn is_presentation_tab(name: &str) -> bool {
+    matches!(name, "Transitions" | "Animations")
 }
 
 /// Something the user clicked in the ribbon that the app must handle.

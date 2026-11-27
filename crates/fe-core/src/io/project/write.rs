@@ -11,7 +11,7 @@ use rayon::prelude::*;
 use zip::CompressionMethod;
 use zip::write::SimpleFileOptions;
 
-use super::manifest::{AdjustmentEntry, LayerEntry, Manifest, PageEntry};
+use super::manifest::{AdjustmentEntry, AnimationEntry, LayerEntry, Manifest, PageEntry};
 use super::png_stream::{encode_rows, encode_tiles, recompress_png, use_webp};
 use super::{IMAGE_FOLDER, MANIFEST_ENTRY, PREVIEW_ENTRY, PREVIEW_SIZE};
 use crate::document::{Layer, LayerMask, Page};
@@ -147,6 +147,20 @@ fn page_entry(page: &Page, pictures: &mut Pictures) -> PageEntry {
         vertical_guides: page.vertical_guides.clone(),
         horizontal_guides: page.horizontal_guides.clone(),
         transition: (!page.transition.is_default()).then(|| (&page.transition).into()),
+        animations: page
+            .valid_animations()
+            .iter()
+            .filter_map(|a| {
+                Some(AnimationEntry {
+                    layer: doc.index_of(a.layer)?,
+                    effect: a.effect.key().into(),
+                    start: a.start.name().into(),
+                    direction: a.direction.key().into(),
+                    duration: a.duration,
+                    delay: a.delay,
+                })
+            })
+            .collect(),
         layers: doc.layers().iter().map(|l| layer_entry(l, pictures)).collect(),
     }
 }

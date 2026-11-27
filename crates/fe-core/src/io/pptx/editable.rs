@@ -307,6 +307,7 @@ pub fn build_slide(page: &Document, options: EditableOptions) -> PptxSlide {
             continue;
         }
         let opacity = layer.opacity();
+        let first_shape = ctx.slide.next_shape_id();
         match (layer.object(), layer.effective_mask()) {
             (Some(object), None) => {
                 let pixels = layer.pixels().to_buffer(canvas);
@@ -325,6 +326,8 @@ pub fn build_slide(page: &Document, options: EditableOptions) -> PptxSlide {
                 ctx.picture(&baked.to_buffer(canvas), &layer.name, opacity);
             }
         }
+        let end_shape = ctx.slide.next_shape_id();
+        ctx.slide.note_layer(layer.id(), first_shape, end_shape);
     }
     slide
 }
@@ -367,6 +370,32 @@ pub fn save_editable_with(
     transitions: &[crate::document::Transition],
 ) -> Result<(), IoError> {
     write_file(path.as_ref(), build_editable_with(pages, options, transitions)?)
+}
+
+/// A presentation of every page, text and simple shapes editable, with each page's slide transition and object animations.
+pub fn build_editable_pages(pages: &[&crate::document::Page], options: EditableOptions) -> Result<Vec<u8>, IoError> {
+    let Some(first) = pages.first() else {
+        return Err(IoError::CannotSave("A presentation needs at least one slide.".into()));
+    };
+    let slides: Vec<PptxSlide> = pages
+        .iter()
+        .map(|p| {
+            let mut slide = build_slide(&p.doc, options);
+            slide.set_transition(&p.transition);
+            slide.set_animations(&p.valid_animations());
+            slide
+        })
+        .collect();
+    build_slides(&slides, first.doc.width(), first.doc.height())
+}
+
+/// Saves `build_editable_pages`.
+pub fn save_editable_pages(
+    pages: &[&crate::document::Page],
+    path: impl AsRef<std::path::Path>,
+    options: EditableOptions,
+) -> Result<(), IoError> {
+    write_file(path.as_ref(), build_editable_pages(pages, options)?)
 }
 
 #[cfg(test)]

@@ -1,6 +1,7 @@
 //! Project, Page, Document, Layer, LayerMask and AdjustmentStyle.
 
 mod adjustment;
+pub mod animation;
 pub mod canvas_ops;
 pub mod curve;
 mod document_model;

@@ -106,5 +106,15 @@ pub fn copy_of(page: &Page, name: &str) -> Page {
     copy.vertical_guides = page.vertical_guides.clone();
     copy.horizontal_guides = page.horizontal_guides.clone();
     copy.transition = page.transition;
+    // The copied layers have new ids: the animations follow their layers.
+    copy.animations = page
+        .animations
+        .iter()
+        .filter_map(|a| {
+            let index = page.doc.index_of(a.layer)?;
+            let layer = copy.doc.layers().get(index)?;
+            Some(super::animation::Animation { layer: layer.id(), ..*a })
+        })
+        .collect();
     copy
 }
