@@ -13,6 +13,8 @@ pub enum OpenedFile {
     Picture(PixelBuffer),
     /// A Photoshop or SVG file: a document with layers.
     Document(fe_core::document::Document),
+    /// A PowerPoint file: a page for every slide.
+    Slides(fe_core::io::pptx::Imported),
 }
 
 /// What to do after a save finished.

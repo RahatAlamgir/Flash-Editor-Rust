@@ -8,6 +8,7 @@ mod chart_picker;
 pub mod color_picker;
 pub mod effect;
 pub mod export;
+mod export_crop;
 mod export_for;
 pub mod frame;
 mod icon_picker;

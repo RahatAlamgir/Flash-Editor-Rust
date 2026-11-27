@@ -3,6 +3,7 @@
 //! (`editable.rs`) keeps text and simple shapes as PowerPoint text boxes and shapes.
 
 mod editable;
+mod import;
 mod slide;
 
 use std::io::Write;
@@ -14,6 +15,7 @@ pub use editable::{
     EditableOptions, build_editable, build_editable_pages, build_editable_with, save_editable, save_editable_pages,
     save_editable_with,
 };
+pub use import::{Imported, is_pptx, open_pptx, read_pptx};
 pub use slide::transition_xml;
 mod timing;
 pub use slide::{Media, Place, PptxSlide, ShapeLook, TextLook, escape};

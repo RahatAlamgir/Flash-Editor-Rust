@@ -54,8 +54,9 @@ pub struct ExportForm {
     pub keep_proportions: bool,
     pub mode: ResampleMode,
     pub crop: Option<PixelRect>,
-    aspect: usize,
-    drag_from: Option<(f64, f64)>,
+    /// The shape of the crop box: an index of `ASPECTS`, or one more for "like the picture".
+    pub(super) aspect: usize,
+    pub(super) drag: Option<super::export_crop::Drag>,
     /// Changes with every new setting; a finished file with an older number is ignored.
     pub version: u64,
     refresh_at: Option<f64>,
@@ -84,7 +85,7 @@ impl ExportForm {
             mode: ResampleMode::Lanczos,
             crop: None,
             aspect: 0,
-            drag_from: None,
+            drag: None,
             version: 0,
             refresh_at: Some(0.0),
             busy: false,
@@ -190,11 +191,14 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, f: &mut ExportForm) -> Opti
                     RichText::new(if f.show_result {
                         "The saved result"
                     } else {
-                        "Drag on the picture to crop (optional)"
+                        "Crop: drag the box, its corners or its edges (optional)"
                     })
                     .color(colors::SUBTLE_TEXT),
                 );
                 changed |= picture_area(ui, f);
+                if !f.show_result {
+                    changed |= super::export_crop::controls(ui, f);
+                }
                 ui.horizontal(|ui| {
                     ui.checkbox(&mut f.show_result, "Show the saved result");
                     if f.show_result {
@@ -269,25 +273,6 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, f: &mut ExportForm) -> Opti
                     ui.end_row();
                 });
                 ui.checkbox(&mut f.keep_proportions, "Keep proportions");
-                ui.add_space(6.0);
-                ui.horizontal(|ui| {
-                    ui.label("Crop shape");
-                    egui::ComboBox::from_id_salt("export-aspect")
-                        .width(180.0)
-                        .selected_text(crate::tools::crop::ASPECTS[f.aspect].0)
-                        .show_ui(ui, |ui| {
-                            for (i, (name, _)) in crate::tools::crop::ASPECTS.iter().enumerate() {
-                                ui.selectable_value(&mut f.aspect, i, *name);
-                            }
-                        });
-                    if ui.add_enabled(f.crop.is_some(), egui::Button::new("Reset crop")).clicked() {
-                        f.crop = None;
-                        f.aspect = 0;
-                        f.width = f.source.width();
-                        f.height = f.source.height();
-                        changed = true;
-                    }
-                });
                 ui.add_space(10.0);
                 match (&f.estimate, &f.error) {
                     (_, Some(e)) => {
@@ -395,70 +380,5 @@ fn picture_area(ui: &mut egui::Ui, f: &mut ExportForm) -> bool {
         egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
         Color32::WHITE,
     );
-    let to_image = |p: egui::Pos2| {
-        (
-            (f64::from(p.x - shown.left()) / f64::from(fit)).clamp(0.0, sw),
-            (f64::from(p.y - shown.top()) / f64::from(fit)).clamp(0.0, sh),
-        )
-    };
-    let mut changed = false;
-    if response.drag_started()
-        && let Some(p) = response.interact_pointer_pos()
-    {
-        f.drag_from = Some(to_image(p));
-    }
-    if response.dragged()
-        && let (Some(from), Some(p)) = (f.drag_from, response.interact_pointer_pos())
-    {
-        let to = to_image(p);
-        let mut rect_px = PixelRect::from_corners(
-            from.0.round() as i32,
-            from.1.round() as i32,
-            to.0.round() as i32,
-            to.1.round() as i32,
-        );
-        let ratio = crate::tools::crop::ASPECTS[f.aspect].1;
-        if ratio > 0.0 && !rect_px.is_empty() {
-            // Keep the corner where the drag started.
-            let h = ((f64::from(rect_px.width) / ratio).round() as i32).max(1);
-            let y = if to.1 < from.1 { rect_px.y + rect_px.height - h } else { rect_px.y };
-            rect_px = PixelRect::new(rect_px.x, y, rect_px.width, h);
-        }
-        let rect_px = rect_px.intersect(&f.source.bounds());
-        if rect_px.width >= 2 && rect_px.height >= 2 {
-            f.crop = Some(rect_px);
-            f.width = rect_px.width as u32;
-            f.height = rect_px.height as u32;
-            changed = true;
-        }
-    }
-    if response.drag_stopped() {
-        f.drag_from = None;
-    }
-    if let Some(c) = f.crop {
-        let to_screen = |x: i32, y: i32| egui::pos2(shown.left() + x as f32 * fit, shown.top() + y as f32 * fit);
-        let box_rect = egui::Rect::from_min_max(to_screen(c.x, c.y), to_screen(c.x + c.width, c.y + c.height));
-        let shade = Color32::from_black_alpha(130);
-        let p = ui.painter();
-        p.rect_filled(egui::Rect::from_min_max(shown.min, egui::pos2(shown.max.x, box_rect.top())), 0.0, shade);
-        p.rect_filled(egui::Rect::from_min_max(egui::pos2(shown.min.x, box_rect.bottom()), shown.max), 0.0, shade);
-        p.rect_filled(
-            egui::Rect::from_min_max(
-                egui::pos2(shown.min.x, box_rect.top()),
-                egui::pos2(box_rect.left(), box_rect.bottom()),
-            ),
-            0.0,
-            shade,
-        );
-        p.rect_filled(
-            egui::Rect::from_min_max(
-                egui::pos2(box_rect.right(), box_rect.top()),
-                egui::pos2(shown.max.x, box_rect.bottom()),
-            ),
-            0.0,
-            shade,
-        );
-        p.rect_stroke(box_rect, 0.0, egui::Stroke::new(1.5, Color32::WHITE), egui::StrokeKind::Inside);
-    }
-    changed
+    super::export_crop::handle_box(ui, f, &response, shown, fit)
 }

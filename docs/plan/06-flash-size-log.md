@@ -4,6 +4,30 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · PPTX import: freeform shapes and picture-filled shapes
+
+- **Bug:** a deck from Canva ("Corporate Agile Project Workflow.pptx") lost most of its content: its arrows, cards and pins are
+  freeform shapes (`custGeom`) and its pictures are shapes with a picture fill, and the importer skipped both. Now a freeform
+  becomes one polygon per sub-path (curves flattened) and a picture-filled shape becomes the picture at its place. All 10 slides
+  of that file now match the original look (checked slide by slide with `fe-core/examples/pptx_import.rs`, which saves a PNG of
+  every slide). Pictures that have an SVG twin use the PNG, so large ones can look soft.
+
+## 2026-11-28 · Open PowerPoint (.pptx) files, and a new crop in Export
+
+- **Opening .pptx** (File > Open, the Project Manager's Open, drag and drop): every slide becomes a page, the project is a
+  presentation. New `fe-core/src/io/pptx/import.rs`. Text boxes become text objects (long text is wrapped to the box with the
+  real font widths; text with different looks in one box becomes one object per look), shapes become shapes (about 50 PowerPoint
+  presets, rounded corners, stars, arrows...), lines/arrows/connectors become lines, pictures become pictures (with their crop
+  and flips), tables become cells. The theme colors, the slide master text styles, the placeholders of the layout and the
+  background (color or picture) are followed. Not brought in: charts, SmartArt, videos, curves drawn by hand (these are counted,
+  and the status line says how many). Test: a deck made by our own export opens again with the same shapes, text and places.
+  Not tested against decks made in real PowerPoint (none on this machine).
+- **Export crop redesigned** (`dialogs/export_crop.rs`): the crop box is always on the picture with 8 handles. Drag the inside to
+  move it, a corner or an edge to resize it, drag outside it to start a new one; thirds lines and a size label help placing it.
+  Under the picture: exact numbers X, Y, W, H, the shape list (Free, Square, 4:5, 9:16, 16:9, 3:2, 4:3, Like the picture), and
+  "Whole picture". A shape stays locked while resizing and while typing numbers. The old drag-only box and the "Crop shape" row
+  on the right are gone.
+
 ## 2026-11-28 · Gradient rows cut off, red "ScrollArea" marks, Reshape button
 
 - **Gradient:** the color rows had an empty label that took the whole label column, so the slider and its number box ran past the
