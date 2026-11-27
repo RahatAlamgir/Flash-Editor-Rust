@@ -117,6 +117,7 @@ pub fn add_project(app: &mut FlashApp, mut project: Project) {
     }
     app.projects.push(project);
     app.active_project = app.projects.len() - 1;
+    app.leave_launcher();
 }
 
 /// A picture as a new layer on top of the shown page, centered (Ctrl+drop).

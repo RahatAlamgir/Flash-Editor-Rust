@@ -1,4 +1,4 @@
-//! Folding panels away: a handle in the middle of the panel's edge (a small pill with a chevron) that folds and unfolds the right
+//! Folding panels away: a handle hanging outside the middle of the panel's edge (a small pill with a chevron) that folds and unfolds the right
 //! column and the page strip, and `amount`, which makes the folding glide instead of jump.
 
 use egui::{Context, Id, Painter, Pos2, Rect, Sense, Shape, Stroke, Ui, pos2, vec2};
@@ -46,36 +46,47 @@ fn chevron(painter: &Painter, center: Pos2, way: Way, color: egui::Color32) {
     painter.add(Shape::line(points.to_vec(), Stroke::new(1.8, color)));
 }
 
-fn pill(ui: &mut Ui, rect: Rect, id: &str, way: Way, tip: &str) -> bool {
-    let response = ui.interact(rect, Id::NULL.with(("fold-handle", id)), Sense::click());
-    let (fill, ink) =
-        if response.hovered() { (colors::ACCENT, egui::Color32::WHITE) } else { (colors::PANEL_HEADER, colors::TEXT) };
-    ui.painter().rect(rect, 5, fill, Stroke::new(1.0, colors::DIVIDER), egui::StrokeKind::Inside);
-    chevron(ui.painter(), rect.center(), way, ink);
-    response.on_hover_text(tip).clicked()
+/// Draws one handle in a layer above everything (it hangs over the edge of the panel, on the canvas side). True when clicked.
+fn pill(ctx: &Context, rect: Rect, id: &str, way: Way, tip: &str) -> bool {
+    egui::Area::new(Id::NULL.with(("fold-area", id)))
+        .order(egui::Order::Foreground)
+        .fixed_pos(rect.min)
+        .constrain(false)
+        .show(ctx, |ui| {
+            let (rect, response) = ui.allocate_exact_size(rect.size(), Sense::click());
+            let (fill, ink) = if response.hovered() {
+                (colors::ACCENT, egui::Color32::WHITE)
+            } else {
+                (colors::PANEL_HEADER, colors::TEXT)
+            };
+            ui.painter().rect(rect, 5, fill, Stroke::new(1.0, colors::DIVIDER), egui::StrokeKind::Inside);
+            chevron(ui.painter(), rect.center(), way, ink);
+            response.on_hover_text(tip).clicked()
+        })
+        .inner
 }
 
-/// The handle of the right column, in the middle of its left edge. `folded`: the column is (nearly) folded, so it points the
-/// other way. True when clicked.
-pub fn side_handle(ui: &mut Ui, panel: Rect, folded: bool) -> bool {
-    let rect = Rect::from_center_size(pos2(panel.left() + 8.0, panel.center().y), vec2(14.0, 48.0));
+/// The handle of the right column: outside the column, on the canvas side of its left edge, in the middle. `folded`: the column
+/// is (nearly) folded, so it points the other way. True when clicked.
+pub fn side_handle(ctx: &Context, panel: Rect, folded: bool) -> bool {
+    let rect = Rect::from_center_size(pos2(panel.left() - 7.0, panel.center().y), vec2(14.0, 48.0));
     let (way, tip) = if folded {
         (Way::Left, "Show Properties and Layers")
     } else {
         (Way::Right, "Fold Properties and Layers away")
     };
-    pill(ui, rect, "side", way, tip)
+    pill(ctx, rect, "side", way, tip)
 }
 
-/// The handle of the page strip, in the middle of its top edge. True when clicked.
-pub fn bottom_handle(ui: &mut Ui, panel: Rect, folded: bool) -> bool {
-    let rect = Rect::from_center_size(pos2(panel.center().x, panel.top() + 8.0), vec2(48.0, 14.0));
+/// The handle of the page strip: outside the strip, above its top edge, in the middle. True when clicked.
+pub fn bottom_handle(ctx: &Context, panel: Rect, folded: bool) -> bool {
+    let rect = Rect::from_center_size(pos2(panel.center().x, panel.top() - 7.0), vec2(48.0, 14.0));
     let (way, tip) = if folded {
         (Way::Up, "Show the pages")
     } else {
         (Way::Down, "Fold the pages away (they stay in the project)")
     };
-    pill(ui, rect, "bottom", way, tip)
+    pill(ctx, rect, "bottom", way, tip)
 }
 
 /// The label on the folded page bar (clicking anywhere on the bar also unfolds it). True when clicked.

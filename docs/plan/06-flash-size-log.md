@@ -4,6 +4,55 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Start-up: a small Projects window, like the C# version
+
+- I had misread "only the project manager": it is **its own small window** (as in the C# `ProjectManagerWindow`: 1000 x 680,
+  centered, title "Flash Editor - Projects", app icon), not the big editor window with a box on black. Now the program starts as
+  that small window. Opening or making a project turns it into the editor window (saved size and place, maximized on the first
+  start). **Close** / Esc / the X in the Projects window ends the program, as in C#. The window place saved for the editor is not
+  touched by the small window. Starting with a file on the command line opens the editor directly.
+- (The icon next to the manager's title was tried and removed again on request.)
+- Code: `app/window.rs` (`launcher`), `FlashApp::leave_launcher`, `dialogs/frame.rs::fullscreen`. `scripts/screenshot.ps1` now
+  finds the window whatever its title.
+
+## 2026-11-28 · Start-up screen, Play button, outside fold handles, Grid view fixes
+
+- (Replaced by the entry above.) **Start-up shows only the Project Manager.** If it is closed another way (a cancelled dialog, a file that would not open) it comes back; its **Close** button (or
+  Esc) is the way into the empty editor. Starting with a file on the command line goes straight to the editor.
+  Code: `app.launcher`, `app/layout.rs`.
+- **The tutorial is a presentation.** New tutorial files are saved as presentations; an old plain one is made again, once.
+  `read_info` now also says whether a file is a presentation.
+- **Grid view:** dragging pages did nothing. Cause: the page strip under the Grid view also handled the drop (with its own
+  gap, so every drop went to "first place"). Now only the Grid view handles it while it is open. Also new: a **New page**
+  button in the Grid view header and a "New page" card after the last page.
+- **Fold handles are outside the panels:** the right column's handle hangs on the canvas side of its left edge, the pages
+  handle sits just above the strip (drawn in a layer above the canvas). Both folds are unchanged otherwise.
+- **Play button** (presentations only; a line icon like its neighbours, `Play` in `icons/paths.rs`) in the row above the canvas, next to the Open button and the ruler / grid / snap
+  buttons: plays from the first slide, Ctrl+click from the shown slide. The **New project** button was removed from that
+  row (File > New, Ctrl+N and the Project Manager still make projects).
+- Seen by screenshot: start-up screen, Play button, both handles, Grid view drag (Welcome moved to the 7th place), New page
+  (15 pages). Not checked: the handles' look next to a dialog, folding while the Grid view is open.
+
+## 2026-11-28 · Phase 16: performance pass, memory pass, installer, README
+
+- **Performance (release build, Intel Arc A750):** exe 19.2 MiB (20.1 MB; target "under 20 MB" met in MiB, just over in
+  decimal MB). Window visible 0.17 - 0.25 s after start (target 1 s). Idle CPU 0 - 16 ms in 3 s. `--bench` (4000 x 3000, 10
+  layers, zoom and pan): 16.7 ms per frame average, 95 % 17.2 ms, max 35 ms = steady 60 fps. Not measured on a low-end PC.
+- **Memory:** empty start 85 MB working set (private 144 MB); the bench picture peaks at 173 MB working set (271 MB private).
+  Layers are stored as tiles, so a step in the undo list only costs the tiles that changed (a test proves it). Changes:
+  the undo memory cap went from 1 GB to **512 MB** (the 60-step cap is unchanged), and **AI models are now let go after
+  5 minutes without use** (`ai/services.rs: release_if_idle`, checked once a minute, never while a job holds a model).
+  Before this they stayed loaded until the app closed, which the target forbids. A real hours-long editing session was not
+  run; the cap is covered by `whole_picture_edits_cannot_pile_up_past_the_memory_limit`.
+- **Installer:** one edition only, named **Flash Editor** (no AI edition). `installer/FlashEditor.iss` + `installer/build-installer.ps1`
+  build `installer/output/FlashEditor-Setup-<version>.exe` (version read from `Cargo.toml`). It installs `Flash Editor.exe`,
+  the three AI runtime DLLs, and `models\` / `settings\` folders in the install folder; the optional page downloads the AI
+  models with SHA-256 checks; shortcuts, desktop icon, clean uninstall. New AppId, so it never overwrites the C# install.
+  Built: `FlashEditor-Setup-0.1.0.exe`, 20.4 MB. Tested with a silent install into a folder (all files and the `models` /
+  `settings` folders appeared), the installed exe started and ran, the silent uninstall removed the whole folder. Not tested:
+  the wizard pages by eye, the model-download page, an admin install into Program Files, a clean Windows.
+- **README** rewritten: features, numbers, install, build, test, structure. `scripts/measure.ps1` added (memory / CPU sampling).
+
 ## 2026-11-28 · A click no longer moves things
 
 - Fixed: clicking an object could shift it by a pixel (any mouse jitter moved it). Now the Select / Move tool waits until the

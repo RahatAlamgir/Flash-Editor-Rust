@@ -98,9 +98,16 @@ pub fn paint(painter: &Painter, t: ViewTransform, app: &FlashApp) {
         let mid = a.lerp(b, 0.5);
         let galley = painter.layout_no_wrap(length.to_string(), FontId::proportional(11.5), Color32::WHITE);
         let size = galley.size() + vec2(10.0, 4.0);
-        let center = if horizontal { mid + vec2(0.0, -size.y / 2.0 - 4.0) } else { mid + vec2(size.x / 2.0 + 4.0, 0.0) };
+        let center =
+            if horizontal { mid + vec2(0.0, -size.y / 2.0 - 4.0) } else { mid + vec2(size.x / 2.0 + 4.0, 0.0) };
         let pill = Rect::from_center_size(center, size);
         painter.rect_filled(pill, 4, INK);
-        painter.text(pill.center(), Align2::CENTER_CENTER, length.to_string(), FontId::proportional(11.5), Color32::WHITE);
+        painter.text(
+            pill.center(),
+            Align2::CENTER_CENTER,
+            length.to_string(),
+            FontId::proportional(11.5),
+            Color32::WHITE,
+        );
     }
 }

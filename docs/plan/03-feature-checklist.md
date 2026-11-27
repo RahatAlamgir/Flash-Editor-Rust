@@ -133,4 +133,4 @@ has been checked. "Ph" = phase in `02-phases.md`. C# paths are under `D:\AiBuild
 | [x] | Icon style Plain / Colorful | 15 | `Services/IconTheme.cs` |
 | [x] | Quick Tour, About, Settings | 15 | `MainWindow.cs`, `SettingsDialog*` |
 | [x] | Status bar (tool info, size, zoom) | 2 | `MainWindow.xaml` |
-| [ ] | Installers (Standard and AI edition) | 16 | `installer/*` |
+| [x] | Installer (one edition, Flash Editor; models download on demand) | 16 | `installer/*` |

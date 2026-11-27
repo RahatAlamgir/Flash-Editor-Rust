@@ -1,5 +1,5 @@
-//! The row above the canvas: the Projects button, one tab per open project, then (on the right) the New and
-//! Open buttons and the view aids (C# `MainWindow.xaml`, "Projects").
+//! The row above the canvas: the Projects button, one tab per open project, then (on the right) the Open button,
+//! the Play button (presentations) and the view aids (C# `MainWindow.xaml`, "Projects").
 
 use egui::{Align, Align2, Color32, FontId, Layout, Rect, Sense, Stroke, Ui, vec2};
 use fe_ui_kit::icons::glyphs;
@@ -19,8 +19,13 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
         if icon_button(ui, "Folder", "Open a picture or project (Ctrl+O)").clicked() {
             crate::commands::file::open_dialog(app, ui.ctx());
         }
-        if icon_button(ui, "Add", "New project (Ctrl+N)").clicked() {
-            app.dialog = Some(crate::dialogs::Dialog::NewProject(crate::dialogs::NewProjectForm::new()));
+        // A presentation gets a quick Play button, like the other icon buttons: Ctrl+click plays from the shown slide.
+        if app.project().presentation {
+            let tip = "Play the slideshow from the first slide (F5). Ctrl+click: from this slide (Ctrl+F5)";
+            if icon_button(ui, "Play", tip).clicked() {
+                let from_current = ui.input(|i| i.modifiers.command);
+                crate::commands::presentation::slideshow(app, ui.ctx(), from_current);
+            }
         }
         ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
             ui.add_space(6.0);

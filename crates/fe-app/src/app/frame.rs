@@ -35,6 +35,11 @@ impl eframe::App for FlashApp {
         self.eyedropper.paint(&ctx);
         crate::slideshow::show(&ctx, self);
         autosave::tick(self, &ctx);
+        if self.ai.services.any_loaded() {
+            // Models that nobody uses are let go after a while; look again in a minute.
+            self.ai.services.release_if_idle();
+            ctx.request_repaint_after(std::time::Duration::from_secs(60));
+        }
         settings_sync::save_if_changed(self);
         update_title(self, ui);
         track_placement(self, ui);
@@ -60,6 +65,7 @@ fn first_frame(app: &mut FlashApp, ctx: &egui::Context) {
     crate::commands::tutorial::first_start(app);
     crate::commands::tour::on_first_run(app);
     if files.is_empty() {
+        app.launcher = true;
         project_manager::open(app, ctx);
     }
     for path in files {
@@ -129,7 +135,11 @@ fn drive_bench(app: &mut FlashApp, ui: &Ui, frame: &eframe::Frame) {
 
 /// "Name - Flash Editor", like the C# window title.
 fn update_title(app: &mut FlashApp, ui: &Ui) {
-    let title = format!("{} - Flash Editor", app.project().name);
+    let title = if app.launcher {
+        "Flash Editor - Projects".to_owned()
+    } else {
+        format!("{} - Flash Editor", app.project().name)
+    };
     if title != app.title {
         ui.ctx().send_viewport_cmd(egui::ViewportCommand::Title(title.clone()));
         app.title = title;
@@ -140,6 +150,9 @@ fn update_title(app: &mut FlashApp, ui: &Ui) {
 /// the crash backup.
 fn track_placement(app: &mut FlashApp, ui: &Ui) {
     let (info, closing) = ui.input(|i| (i.viewport().clone(), i.viewport().close_requested()));
+    if app.launcher {
+        return; // the small Projects window is not the editor's place; closing it just ends the program
+    }
     if let Some(p) = WindowPlacement::from_viewport(&info) {
         // While maximized keep the last normal size, so "restore" goes back to it next time.
         app.placement = Some(match (p.maximized, app.placement) {

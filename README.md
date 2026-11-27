@@ -1,26 +1,61 @@
-# Flash Editor (Rust)
+# Flash Editor
 
-A Rust + egui rebuild of **Flash Editor**, the Photoshop / Canva-style image editor with offline AI tools.
-The original C# / WPF version lives in `D:\AiBuild\Flash Editor` and is the specification for this one.
+A fast image editor and design tool for Windows, built with Rust and [egui](https://github.com/emilk/egui). Think
+Photoshop and Canva in one small program, with offline AI tools, and presentations with slide transitions and animations.
 
-**Why rebuild it?** The C# version can lag on low-end PCs. The Rust version keeps the same features and about the
-same look, but is meant to be smoother, smaller and use less memory.
+It is the Rust rebuild of the C# / WPF version (`D:\AiBuild\Flash Editor`, the specification, never changed). Same
+features, about the same look, but smaller, quicker to start and light on memory.
 
-**Status:** UI polish done (padded, draggable dialogs). Phase 15 done: File drawer, command search, editable keyboard shortcuts (F1), online Templates in the Project Manager, Quick Tour / About, Remove by Color, ready-made layouts for new pictures. Phase 14: File > Export (format, quality, size, crop, real file size), Export For, Export All Pages, PDF, animated GIF, PowerPoint, SVG, PSD, Batch Convert; Image > Magic Resize and Split Asset Sheet; open PSD / SVG / HEIC / AVIF / RAW. Phase 13: all AI features (Remove Background with live preview and editable cut-out, Refine brush, Select Subject, Fill (AI), Remove Brush, Click Select, AI Upscale, AI Models window); the AI runs on the graphics card (DirectML) or the processor and the models download once after asking. Phase 12: Clone Stamp, Healing Brush, Spot Healing, Patch, Dodge / Burn, Blur / Sharpen and Liquify. Phase 11: Image Size, Canvas Size, crop tools, rotate / flip, 12 adjustments and 10 filters with a live preview, adjustment layers (Levels, Curves). Phase 10: QR codes, barcodes, 11 chart types, icons, badges, graphics, SmartArt, Brand Kit and the 14-page tutorial project. Phase 9: text (any installed font, curved text, 16 designs), gradients, shadow / glow / inner shadow / outline / 3D / blur, saved styles, frames and photo grids, on top of the shapes, pictures, groups, Curve tool and snapping of Phase 8. Phase 7: painting (7 brush types, eraser, bucket, eyedropper), the color picker with swatches, layer masks with the Mask Brush and Clip to Layer Below. Phase 6: all selection tools with marching ants, moving pixels and layers, copy / cut / paste (also with other programs), Split, Reveal All. Before that: `.flash` projects open and save (fully compatible with the C# version both ways), pages, the Project Manager, autosave and crash recovery; layers, undo / redo and a smooth canvas. Editing tools follow phase by phase. See [`docs/plan/05-progress-log.md`](docs/plan/05-progress-log.md).
+## What it does
 
-## The plan
+- **Pictures and pages:** layers (with masks, clipping, groups, adjustment layers), several pages per project, undo / redo
+  with a history list, autosave and crash recovery, the Project Manager with online templates.
+- **Objects that stay editable:** shapes, text (any installed font, curved text, 16 designs), pictures in frames and photo
+  grids, QR codes, barcodes, 11 chart types, icons, badges, SmartArt, a Curve (pen) tool, shadow / glow / outline / 3D effects,
+  gradients, saved styles and a Brand Kit. Smart guides, snapping, rulers, grid and guides. Hold Alt to see the distances
+  around the selected object.
+- **Painting and retouching:** 7 brush types, eraser, mask brush, Clone Stamp, Healing, Spot Healing, Patch, Dodge / Burn,
+  Blur / Sharpen, Liquify.
+- **Selections:** every selection tool with marching ants, Click Select, Select Subject, Remove by Color.
+- **Adjustments and filters:** Levels, Curves and 10+ adjustments and filters with a live preview, Image Size, Canvas Size,
+  crop tools, Magic Resize, Split Asset Sheet.
+- **AI, offline:** Remove Background (editable cut-out), Refine brush, Fill (AI), Remove Brush, Click Select, AI Upscale.
+  Runs on the graphics card (DirectML) or the processor. The models download once, after asking, and are freed again when
+  not used for 5 minutes.
+- **Presentations:** a project can be a presentation: slide transitions, object animations (entrance, emphasis, exit) listed
+  on the Animations tab of the Layers panel, slideshow (F5), export to PowerPoint with the transitions and animations.
+- **Files:** projects are saved as `.fe` (a small zip with lossless pictures). Open and export PNG, JPEG, WebP, GIF (animated),
+  PDF, SVG, PSD, PowerPoint, and open HEIC, AVIF, RAW. Batch Convert and Export All Pages.
+- **Everything searchable:** command search, editable keyboard shortcuts (F1), Quick Tour.
 
-| File | What it is |
-|---|---|
-| [`docs/PROMPT.md`](docs/PROMPT.md) | Prompt to start every build session with |
-| [`docs/plan/00-overview.md`](docs/plan/00-overview.md) | Goal, decisions, speed and size targets, working rules |
-| [`docs/plan/01-architecture.md`](docs/plan/01-architecture.md) | Crates, folders, libraries, performance design |
-| [`docs/plan/02-phases.md`](docs/plan/02-phases.md) | 17 build phases, each with a prompt and "done when" |
-| [`docs/plan/03-feature-checklist.md`](docs/plan/03-feature-checklist.md) | Every C# feature, its C# source and its phase |
-| [`docs/plan/04-design-guide.md`](docs/plan/04-design-guide.md) | Colors, layout, icons, how the look is checked |
-| [`docs/plan/05-progress-log.md`](docs/plan/05-progress-log.md) | What was done each session |
+## Numbers (release build, Intel Arc A750 PC)
 
-## How to build and run
+| What | Target | Measured |
+|---|---|---|
+| `flash-editor.exe` | under 20 MB | 19.2 MiB (20.1 MB) |
+| Start to a usable window | under 1 s | about 0.2 s |
+| Memory, empty start | under 150 MB | 85 MB working set |
+| Memory, 4000 x 3000 picture with 10 layers, zooming and panning | half of the C# version | 173 MB peak |
+| Idle CPU | about 0 % | 0 ms of CPU in 3 s |
+| Zoom / pan on 4000 x 3000 with 10 layers | steady 60 fps | 16.7 ms per frame (95 % 17.2 ms) |
+
+Measure them again with `scripts\measure.ps1` and `flash-editor.exe --bench` (see below).
+
+## Install
+
+Run `FlashEditor-Setup-<version>.exe`. The installer puts the program and the AI runtime into `Program Files\Flash Editor`,
+and can download the AI models for you (about 470 MB, optional, checked with SHA-256). Nothing is written outside the install
+folder; uninstalling removes it all.
+
+Build the installer yourself (needs [Inno Setup 6](https://jrsoftware.org/isinfo.php), `winget install JRSoftware.InnoSetup`):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
+```
+
+The result is `installer\output\FlashEditor-Setup-<version>.exe` (add `-TestInstall` for one that needs no administrator).
+
+## Build and run
 
 Needs Rust (stable, MSVC toolchain), installed with [rustup](https://rustup.rs).
 
@@ -34,22 +69,21 @@ Release build (small, fast exe in `target\release\flash-editor.exe`):
 cargo build -p fe-app --release
 ```
 
-Useful start options:
+Start options:
 
 ```powershell
-& "target\release\flash-editor.exe" "C:\path\to\photo.jpg"   # open a picture
+& "target\release\flash-editor.exe" "C:\path\to\photo.jpg"   # open a picture or a .fe project
 & "target\release\flash-editor.exe" --bench                      # speed test, results in target\release\settings\bench.txt
 & "target\release\flash-editor.exe" --wgpu                       # use the wgpu renderer instead of OpenGL
 ```
 
 In the app, F12 shows drawing statistics over the canvas.
 
-### AI features (models and runtime)
+### AI features while developing
 
-The AI tools need the ONNX Runtime DLLs (`onnxruntime.dll`, `onnxruntime_providers_shared.dll`, `DirectML.dll`) next to
-the program, and the models in a `models` folder next to it. The program asks before it downloads a model (one time,
-about 480 MB for all five), and the AI Models window (Settings tab) lists, downloads and deletes them. While developing,
-this copies the DLLs (and, with `-WithModels`, the models) from the C# build into `target\debug` and `target\release`:
+The AI tools need the ONNX Runtime DLLs (`onnxruntime.dll`, `onnxruntime_providers_shared.dll`, `DirectML.dll`) next to the
+program, and the models in a `models` folder next to it. This copies the DLLs (and, with `-WithModels`, the models) from the
+C# build into `target\debug` and `target\release`:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\get-ai-runtime.ps1 -WithModels
@@ -57,60 +91,68 @@ powershell -ExecutionPolicy Bypass -File scripts\get-ai-runtime.ps1 -WithModels
 
 Set `FLASH_AI_CPU=1` to force the processor instead of the graphics card, `FLASH_ORT_DLL` to use another runtime DLL.
 
+## Test
+
 Run every check (formatting, lints, tests) before finishing a change:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\check.ps1
 ```
 
+Engine tests live in `crates\fe-core\tests\` (`cargo test -p fe-core`). `scripts\screenshot.ps1` starts the app, can click and
+drag, saves a screenshot and prints start-up time, memory and idle CPU. `scripts\measure.ps1` samples memory and CPU while the
+app runs (for example with `-AppArgs "--bench"`).
+
 ## Project structure
 
 ```
 Flash Editor Rust/
-├── Cargo.toml              Workspace: shared dependency versions, build profiles
+├── Cargo.toml              Workspace: shared dependency versions, build profiles (fat LTO, stripped)
 ├── rustfmt.toml            Code formatting rules
-├── assets/icons/app/       App icon (.ico for the exe, .png for the window)
+├── assets/icons/app/       App icon (.ico for the exe and installer, .png for the window)
 ├── crates/
-│   ├── fe-core/            Image engine, no UI (imaging, document, objects, render (tiny-skia), text (fontdb + rustybuzz), selection,
-│   │                       history, paint, retouch, transform, effects, layout, codes, io)
-│   ├── fe-ai/              AI models (models, runtime, segmentation, inpainting, upscaling, effects)
+│   ├── fe-core/            Image engine, no UI: imaging (tiles), document (pages, layers, animations, transitions), objects,
+│   │                       render (tiny-skia), text (fontdb + rustybuzz), selection, history, paint, retouch, transform,
+│   │                       effects, layout (snapping), codes (QR, barcodes), io (.fe, PNG, PSD, PDF, PPTX, SVG...), library
+│   ├── fe-ai/              AI models: download and checks, ONNX runtime, segmentation, inpainting, upscaling
 │   ├── fe-gpu/             Canvas renderer: combined tiles as textures, zoom levels, background jobs
-│   ├── fe-ui-kit/          Look and feel: theme/ (colors, sizes, fonts, style), icons/ (line icons +
-│   │                       Windows icon-font glyphs), widgets/ (ribbon button, tool button, sliders...)
+│   ├── fe-ui-kit/          Look and feel: theme (colors, sizes, fonts), icons, widgets (ribbon button, sliders...)
 │   └── fe-app/             The program
 │       ├── build.rs        Puts the icon into the exe
+│       ├── examples/       build_templates: makes the template projects
 │       └── src/
 │           ├── main.rs     Starts logging and the window
-│           ├── app/        Window start-up (OpenGL, wgpu as fallback), app state, window placement,
-│           │               keyboard, clipboard, paths, logging
-│           ├── commands/   What buttons and shortcuts do: edit (undo / redo), file, layers, pages,
-│           │               selection (copy / paste, select all, split, reveal all), mask, objects
-│           │               (add shape, group, flip, align, Properties changes), checks
-│           ├── tools/      Tool catalog and toolbox state, options bar, selecting/ (one file per selection
-│           │               tool), moving/ (Select / Move: pick, drag, nudge, move selected pixels),
-│           │               painting/ (brush, eraser, mask brush, bucket, eyedropper, brush type pictures),
-│           │               snap.rs (smart guides while dragging)
-│           ├── canvas/     Canvas view: zoom / pan state, input, rulers, grid and guides, selection overlay
-│           │               (marching ants), right-click menu, speed test
-│           ├── panels/     ribbon/ (data + drawing), hint bar, toolbox, project tabs, right/ (properties,
-│           │               layers/ (header, row, list, menu, footer), history), page strip, status bar,
-│           │               pop-ups (ribbon lists, Undo Steps)
-│           └── dialogs/    One file per dialog (ask, new project, project manager, color picker...)
+│           ├── app/        Start-up, app state, layout (collapsible panels), keyboard, clipboard, paths, settings
+│           ├── commands/   What buttons and shortcuts do (edit, file, layers, pages, objects, presentation...)
+│           ├── tools/      Tool catalog, options bar, selecting/, moving/, painting/, retouching, snapping
+│           ├── canvas/     Canvas view: zoom / pan, input, rulers, grid, guides, selection overlay, distance guides
+│           ├── panels/     ribbon/, toolbox, project tabs, right/ (properties, layers + animations, history), page strip
+│           ├── dialogs/    One file per dialog (new project, project manager, color picker, export...)
+│           ├── ai/         AI jobs, the AI Models window, loaded models (released when idle)
+│           ├── slideshow/  Slideshow playback, transitions and animations
+│           ├── templates/  Online template catalog with lazy loading
+│           └── text_edit/  Editing text on the canvas
 ├── docs/
-│   ├── plan/               The porting plan (see table above)
-│   └── screenshots/        csharp/ = reference pictures of the C# app, compare/ = Rust screenshots
-├── scripts/
-│   ├── check.ps1           Format + lint + test in one go
-│   ├── screenshot.ps1      Start the app (optionally click / drag / press keys), save a screenshot, print
-│   │                       start time / memory / idle CPU
-│   └── convert_icons.py    Turn the C# Icons.xaml into crates/fe-ui-kit/src/icons/paths.rs
-├── tests/fixtures/         .flash projects written by the C# app's own code (tutorial, features)
-├── tools/csharp-fixtures/  .NET helper: writes those samples and prints what the C# reader sees in any
-│                           .flash file (to prove Rust-saved files open identically in the C# app)
-└── installer/              Installer script (Phase 16)
+│   ├── plan/               The porting plan, progress logs (05 main, 06 file size and later work, 07 animation)
+│   └── screenshots/        csharp/ = reference pictures of the C# app
+├── installer/              Inno Setup script and build-installer.ps1 (output goes to installer\output)
+├── scripts/                check.ps1, screenshot.ps1, measure.ps1, get-ai-runtime.ps1, convert_icons.py
+├── tests/fixtures/         Projects written by the C# app, used by the file tests
+└── tools/csharp-fixtures/  .NET helper that writes those fixtures
 ```
 
-`fe-core/src/imaging`, `document`, `paint`, `selection`, `objects`, `render`, `layout` and `io` hold the engine; the other folders hold only a short description for now and fill up phase by phase. Engine tests live in `crates/fe-core/tests/` (run `cargo test -p fe-core`).
-`fe-core` never depends on UI or GPU code, so the engine can be tested on its own.
+`fe-core` never depends on UI or GPU code, so the engine is tested on its own. While running, the app writes
+`settings\flash-editor.log` next to the exe.
 
-While running, the app writes `settings\flash-editor.log` next to the exe.
+## The plan
+
+| File | What it is |
+|---|---|
+| [`docs/PROMPT.md`](docs/PROMPT.md) | Prompt to start every build session with |
+| [`docs/plan/00-overview.md`](docs/plan/00-overview.md) | Goal, decisions, speed and size targets, working rules |
+| [`docs/plan/01-architecture.md`](docs/plan/01-architecture.md) | Crates, folders, libraries, performance design |
+| [`docs/plan/02-phases.md`](docs/plan/02-phases.md) | The build phases, each with a prompt and "done when" |
+| [`docs/plan/03-feature-checklist.md`](docs/plan/03-feature-checklist.md) | Every C# feature, its C# source and its phase |
+| [`docs/plan/04-design-guide.md`](docs/plan/04-design-guide.md) | Colors, layout, icons, how the look is checked |
+| [`docs/plan/05-progress-log.md`](docs/plan/05-progress-log.md) | What was done each session |
+| [`docs/plan/06-flash-size-log.md`](docs/plan/06-flash-size-log.md) | `.fe` file size, presentations, UI changes after Phase 15 |

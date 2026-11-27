@@ -9,6 +9,16 @@ use crate::canvas;
 use crate::panels::{self, ribbon};
 
 pub fn show(app: &mut FlashApp, ui: &mut Ui) {
+    if app.launcher {
+        // Start-up: just the Project Manager (it is drawn by the caller). If it was closed without opening anything (a cancelled
+        // dialog, a file that would not open) it comes back; its Close button is the way into the empty editor.
+        if !app.manager.open && app.dialog.is_none() && !app.status.starts_with("Opening") {
+            crate::dialogs::project_manager::open(app, ui.ctx());
+        }
+        // Same color as the manager, which fills the window, so it reads as one window and not a box on black.
+        ui.painter().rect_filled(ui.max_rect(), 0, ui.ctx().global_style().visuals.window_fill);
+        return;
+    }
     let plain = |fill| Frame::new().fill(fill);
     Panel::top("ribbon").frame(Frame::new()).resizable(false).show_separator_line(false).show(ui, |ui| {
         // Which buttons are dimmed is worked out first (the ribbon then borrows its own state).
@@ -49,7 +59,7 @@ pub fn show(app: &mut FlashApp, ui: &mut Ui) {
                 panels::right::show(ui, app);
             });
         }
-        if panels::collapse::side_handle(ui, panel, app.right_collapsed) {
+        if panels::collapse::side_handle(ui.ctx(), panel, app.right_collapsed) {
             app.right_collapsed = !app.right_collapsed;
         }
     });
@@ -73,7 +83,7 @@ pub fn show(app: &mut FlashApp, ui: &mut Ui) {
                     app.pages_collapsed = false;
                 }
             }
-            if panels::collapse::bottom_handle(ui, panel, app.pages_collapsed) {
+            if panels::collapse::bottom_handle(ui.ctx(), panel, app.pages_collapsed) {
                 app.pages_collapsed = !app.pages_collapsed;
             }
         });

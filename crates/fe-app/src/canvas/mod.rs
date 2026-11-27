@@ -3,10 +3,10 @@
 
 mod aids_overlay;
 mod animation_badges;
-mod distance_guides;
 pub mod bench;
 mod context_menu;
 mod debug_overlay;
+mod distance_guides;
 mod input;
 mod rulers;
 pub mod selection_overlay;

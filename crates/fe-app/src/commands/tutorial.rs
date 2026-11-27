@@ -20,7 +20,7 @@ pub fn create(app: &FlashApp, overwrite: bool) -> Result<PathBuf, String> {
         std::fs::create_dir_all(folder).map_err(|e| e.to_string())?;
     }
     let pages = fe_core::tutorial::build_pages();
-    fe_core::io::project::save(&pages, 0, &path).map_err(|e| e.to_string())?;
+    fe_core::io::project::save_as(&pages, 0, true, &path).map_err(|e| e.to_string())?;
     Ok(path)
 }
 
@@ -34,11 +34,13 @@ pub fn open(app: &mut FlashApp, ctx: &egui::Context) {
 
 /// First start: makes the tutorial file once.
 pub fn first_start(app: &mut FlashApp) {
-    if app.settings.demo_created {
+    // The tutorial is a presentation. One made by an older version (a plain project) is made again, once.
+    let old = path(app).exists() && !fe_core::io::project::read_info(path(app)).is_ok_and(|info| info.presentation);
+    if app.settings.demo_created && !old {
         return;
     }
     app.settings.demo_created = true;
-    if let Err(err) = create(app, false) {
+    if let Err(err) = create(app, old) {
         log::warn!("Could not make the tutorial: {err}");
     }
 }

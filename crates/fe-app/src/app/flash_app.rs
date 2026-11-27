@@ -50,6 +50,8 @@ pub struct FlashApp {
     pub props_share: f32,
     /// Which tab of the right column is shown: 0 Properties, 1 Effects, 2 Adjust, 3 Animation.
     pub props_tab: usize,
+    /// Start-up: only the Project Manager is shown (no editor behind it) until a project is opened or made.
+    pub launcher: bool,
     /// Which tab of the Layers panel is shown: 0 Layers, 1 Animations (presentations).
     pub layers_tab: usize,
     /// The right column is folded away to a thin strip.
@@ -121,6 +123,7 @@ impl FlashApp {
             pages_ui: PagesUi::default(),
             props_share: 0.6,
             props_tab: 0,
+            launcher: false,
             layers_tab: 0,
             right_collapsed: false,
             pages_collapsed: false,
@@ -155,6 +158,27 @@ impl FlashApp {
     /// The empty project shown when nothing else is open.
     pub fn blank_project() -> Project {
         Project::new("Untitled", Page::new("Page 1", Document::blank(1280, 720, ColorRgba::WHITE)))
+    }
+
+    /// The Projects window at start-up turns into the editor window: its saved size and place (maximized on the first start).
+    pub fn leave_launcher(&mut self) {
+        if !self.launcher {
+            return;
+        }
+        self.launcher = false;
+        self.title.clear(); // the title is set again
+        if let Some(ctx) = &self.ai.ctx {
+            use egui::ViewportCommand as Cmd;
+            ctx.send_viewport_cmd(Cmd::MinInnerSize(egui::vec2(900.0, 560.0)));
+            match super::WindowPlacement::load() {
+                Some(p) => {
+                    ctx.send_viewport_cmd(Cmd::InnerSize(egui::vec2(p.width, p.height)));
+                    ctx.send_viewport_cmd(Cmd::OuterPosition(egui::pos2(p.left, p.top)));
+                    ctx.send_viewport_cmd(Cmd::Maximized(p.maximized));
+                }
+                None => ctx.send_viewport_cmd(Cmd::Maximized(true)),
+            }
+        }
     }
 
     pub fn project(&self) -> &Project {

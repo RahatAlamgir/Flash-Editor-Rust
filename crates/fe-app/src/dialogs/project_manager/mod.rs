@@ -69,10 +69,17 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
     }
     let mut chosen: Option<(PathBuf, CardAction)> = None;
     let mut top_action = None;
-    let modal = super::frame::modal(ctx, "project-manager", |ui| {
+    let launcher = app.launcher;
+    let body = |ui: &mut egui::Ui| {
         let screen = ctx.content_rect();
-        ui.set_width((screen.width() - 160.0).clamp(500.0, 1180.0));
-        ui.set_height((screen.height() - 160.0).clamp(400.0, 820.0));
+        if launcher {
+            // Start-up: the manager is the whole (small) window, like the C# version's Projects window.
+            ui.set_width((screen.width() - 2.0 * super::frame::LAUNCHER_MARGIN.0).max(400.0));
+            ui.set_height((screen.height() - 2.0 * super::frame::LAUNCHER_MARGIN.1).max(300.0));
+        } else {
+            ui.set_width((screen.width() - 160.0).clamp(500.0, 1180.0));
+            ui.set_height((screen.height() - 160.0).clamp(400.0, 820.0));
+        }
         ui.horizontal(|ui| {
             let in_templates = app.manager.templates.view;
             ui.label(RichText::new(if in_templates { "Templates" } else { "Projects" }).heading());
@@ -145,10 +152,15 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
                 }
             });
         });
-    });
+    };
+    let modal = if launcher {
+        super::frame::fullscreen(ctx, "project-manager", body)
+    } else {
+        super::frame::modal(ctx, "project-manager", body)
+    };
     finish_rename(app, ctx);
     match top_action {
-        Some("close") => app.manager.open = false,
+        Some("close") => close(app, ctx),
         Some("templates") => app.manager.templates.view = !app.manager.templates.view,
         Some("open") => {
             app.manager.open = false;
@@ -173,8 +185,17 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
         if app.manager.templates.view {
             app.manager.templates.view = false; // Esc goes back to the projects
         } else {
-            app.manager.open = false;
+            close(app, ctx);
         }
+    }
+}
+
+/// Close: from the editor it hides the manager; at start-up it ends the program (the manager is all there is).
+fn close(app: &mut FlashApp, ctx: &egui::Context) {
+    if app.launcher {
+        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+    } else {
+        app.manager.open = false;
     }
 }
 

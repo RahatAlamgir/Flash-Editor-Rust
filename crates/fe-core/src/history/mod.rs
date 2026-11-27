@@ -2,7 +2,7 @@
 //!
 //! Every step keeps a copy of the page's document from before and after the change. Copies are cheap: layers
 //! share their tiles, so a step only costs memory for the tiles that really changed. Rules from the C#
-//! version: 30 steps by default (1 to 60), about 1 GB at most (the oldest steps are forgotten first), small
+//! version: 30 steps by default (1 to 60), 512 MB at most (the oldest steps are forgotten first), small
 //! repeated changes such as dragging the opacity slider merge into one step.
 
 mod size;

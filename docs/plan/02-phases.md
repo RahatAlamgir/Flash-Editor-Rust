@@ -325,7 +325,7 @@ the Templates part of `ProjectManagerWindow*`.
 * Performance pass: measure all targets in `00-overview.md` on the user's PC and, if possible, a low-end PC;
   profile and fix the worst spots; record final numbers.
 * Memory pass: long editing session, check undo memory cap and that AI memory is freed.
-* Installer (Inno Setup, like the C# one): Standard (models downloaded on demand) and AI edition (models included).
+* Installer (Inno Setup, like the C# one): one edition only, named Flash Editor (models downloaded on demand; no AI edition).
 * README with features, structure, build and test instructions.
 
 **Done when:** all targets met (or the user accepts the gap), installers built and tested on a clean Windows.

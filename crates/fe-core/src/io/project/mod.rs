@@ -41,6 +41,8 @@ pub struct ProjectInfo {
     /// Size of the first page.
     pub width: u32,
     pub height: u32,
+    /// Saved as a presentation.
+    pub presentation: bool,
 }
 
 /// Reads only the page list of a project (fast: no pictures are decoded).
@@ -53,11 +55,17 @@ pub fn read_info(path: impl AsRef<std::path::Path>) -> Result<ProjectInfo, crate
     zip.by_name(MANIFEST_ENTRY).map_err(|_| not_project())?.read_to_end(&mut text)?;
     let json: serde_json::Value = serde_json::from_slice(&text).map_err(|_| not_project())?;
     let field = |v: &serde_json::Value, name: &str| v.get(name).and_then(|x| x.as_u64()).unwrap_or(0) as u32;
+    let presentation = json.get("ProjectType").and_then(|t| t.as_str()) == Some("presentation");
     match json.get("Pages").and_then(|p| p.as_array()).filter(|p| !p.is_empty()) {
-        Some(pages) => {
-            Ok(ProjectInfo { pages: pages.len(), width: field(&pages[0], "Width"), height: field(&pages[0], "Height") })
+        Some(pages) => Ok(ProjectInfo {
+            pages: pages.len(),
+            width: field(&pages[0], "Width"),
+            height: field(&pages[0], "Height"),
+            presentation,
+        }),
+        None => {
+            Ok(ProjectInfo { pages: 1, width: field(&json, "Width"), height: field(&json, "Height"), presentation })
         }
-        None => Ok(ProjectInfo { pages: 1, width: field(&json, "Width"), height: field(&json, "Height") }),
     }
 }
 

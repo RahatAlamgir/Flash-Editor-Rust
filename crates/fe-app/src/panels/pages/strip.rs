@@ -46,7 +46,7 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
                     }
                     let events = card::show(ui, app, index, Vec2::new(w, h));
                     cards.push((index, events.response.rect));
-                    interact::card_events(ui, app, index, &events);
+                    interact::card_events(ui, app, index, &events, false);
                     if app.project().pages().len() != count {
                         return; // the pages changed: draw again next frame
                     }
@@ -56,7 +56,9 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
             });
         });
     });
-    interact::drag_feedback(ui, app, &cards);
+    if !app.pages_ui.grid {
+        interact::drag_feedback(ui, app, &cards);
+    }
 }
 
 fn add_page_card(ui: &mut Ui, app: &mut FlashApp) {

@@ -8,8 +8,8 @@ use super::menu;
 use crate::app::FlashApp;
 use crate::commands::pages as cmd;
 
-/// Handles what happened on the card of page `index`.
-pub fn card_events(ui: &Ui, app: &mut FlashApp, index: usize, events: &CardEvents) {
+/// Handles what happened on the card of page `index`. `in_grid`: the card is in the Grid view (not in the strip).
+pub fn card_events(ui: &Ui, app: &mut FlashApp, index: usize, events: &CardEvents, in_grid: bool) {
     let response = &events.response;
     if events.menu_button {
         app.pages_ui.focused = true;
@@ -30,7 +30,8 @@ pub fn card_events(ui: &Ui, app: &mut FlashApp, index: usize, events: &CardEvent
         click(app, index, ui.input(|i| i.modifiers));
     } else if response.secondary_clicked() && !app.pages_ui.selected.contains(&index) {
         click(app, index, Modifiers::NONE);
-    } else if response.drag_started_by(egui::PointerButton::Primary) {
+    } else if response.drag_started_by(egui::PointerButton::Primary) && in_grid == app.pages_ui.grid {
+        // Only the strip or only the Grid view takes the drag: whichever is on top (the Grid view covers the canvas).
         let moved = if app.pages_ui.selected.contains(&index) { cmd::picked(app) } else { vec![index] };
         app.pages_ui.drag = Some((moved, index));
     }

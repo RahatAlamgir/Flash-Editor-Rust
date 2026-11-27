@@ -8,8 +8,8 @@ pub const DEFAULT_STEPS: usize = 30;
 /// Smallest and largest allowed number of steps.
 pub const MIN_STEPS: usize = 1;
 pub const MAX_STEPS: usize = 60;
-/// Memory the history may use before the oldest steps are forgotten (about 1 GB).
-pub const MAX_BYTES: usize = 1 << 30;
+/// Memory the history may use before the oldest steps are forgotten (512 MB).
+pub const MAX_BYTES: usize = 512 << 20;
 
 /// Two steps in a row with the same key become one (for example dragging one layer's opacity slider).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -41,7 +41,7 @@ public static class FeWin {
     IntPtr found = IntPtr.Zero;
     EnumWindows((h, l) => { uint p; GetWindowThreadProcessId(h, out p);
       if (p == pid && IsWindowVisible(h)) { var s = new StringBuilder(256); GetWindowText(h, s, 256);
-        if (s.ToString().EndsWith("Flash Editor")) { found = h; return false; } }
+        if (s.ToString().Contains("Flash Editor")) { found = h; return false; } }
       return true; }, IntPtr.Zero);
     return found;
   }

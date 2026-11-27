@@ -21,22 +21,38 @@ pub fn run(startup: StartupOptions) -> Result<(), eframe::Error> {
 }
 
 fn run_with(renderer: eframe::Renderer, startup: StartupOptions) -> Result<(), eframe::Error> {
-    let mut viewport = egui::ViewportBuilder::default()
-        .with_title("Flash Editor")
-        .with_inner_size([1440.0, 900.0])
-        .with_min_inner_size([900.0, 560.0]);
-    viewport = match WindowPlacement::load() {
-        Some(p) => {
-            viewport.with_position([p.left, p.top]).with_inner_size([p.width, p.height]).with_maximized(p.maximized)
-        }
-        None => viewport.with_maximized(true), // first start: full screen, like the C# version
+    // Without a file to open the program starts as just the small Projects window; the editor window comes when a project is
+    // chosen (like the C# version).
+    let launcher = startup.files.is_empty() && !startup.bench;
+    let mut viewport = if launcher {
+        egui::ViewportBuilder::default()
+            .with_title("Flash Editor - Projects")
+            .with_inner_size([1000.0, 680.0])
+            .with_min_inner_size([720.0, 480.0])
+    } else {
+        placed(
+            egui::ViewportBuilder::default()
+                .with_title("Flash Editor")
+                .with_inner_size([1440.0, 900.0])
+                .with_min_inner_size([900.0, 560.0]),
+        )
     };
     if let Some(icon) = load_icon() {
         viewport = viewport.with_icon(icon);
     }
-    let options = eframe::NativeOptions { viewport, renderer, ..Default::default() };
+    let options = eframe::NativeOptions { viewport, renderer, centered: launcher, ..Default::default() };
     log::info!("Starting with renderer {renderer:?}");
     eframe::run_native("Flash Editor", options, Box::new(move |cc| Ok(Box::new(FlashApp::new(cc, startup)))))
+}
+
+/// The editor window where it was last time (maximized on the first start, like the C# version).
+fn placed(viewport: egui::ViewportBuilder) -> egui::ViewportBuilder {
+    match WindowPlacement::load() {
+        Some(p) => {
+            viewport.with_position([p.left, p.top]).with_inner_size([p.width, p.height]).with_maximized(p.maximized)
+        }
+        None => viewport.with_maximized(true), // first start: full screen, like the C# version
+    }
 }
 
 fn load_icon() -> Option<egui::IconData> {
