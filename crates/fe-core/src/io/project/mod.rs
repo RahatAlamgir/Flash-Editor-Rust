@@ -1,4 +1,4 @@
-//! `.flash` project files: a zip with `project.json`, a 480 px `preview.png` and `images/N.png`.
+//! `.fe` project files: a zip with `project.json`, a 480 px `preview.png` and `images/N.png`.
 //! Compatible with the C# version both ways (see `docs/plan/01-architecture.md`, ".flash compatibility").
 
 mod manifest;
@@ -13,7 +13,7 @@ pub use read::{open, open_from};
 pub use write::{save, to_bytes};
 
 /// File extension of projects.
-pub const EXTENSION: &str = "flash";
+pub const EXTENSION: &str = "fe";
 pub(crate) const MANIFEST_ENTRY: &str = "project.json";
 pub(crate) const PREVIEW_ENTRY: &str = "preview.png";
 pub(crate) const IMAGE_FOLDER: &str = "images/";
@@ -27,7 +27,7 @@ pub struct ProjectContent {
     pub active_page: usize,
 }
 
-/// True when the path ends in `.flash` (any case).
+/// True when the path ends in `.fe` (any case).
 pub fn is_project(path: &std::path::Path) -> bool {
     path.extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case(EXTENSION))
 }

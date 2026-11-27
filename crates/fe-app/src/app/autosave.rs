@@ -1,5 +1,5 @@
 //! Crash protection (C# `AutoSaveService`): every minute, unsaved work is written in the background to
-//! `settings\recovery\unsaved-work.flash`. A normal exit deletes it; if the program did not close properly, the
+//! `settings\recovery\unsaved-work.fe`. A normal exit deletes it; if the program did not close properly, the
 //! next start offers to bring the work back.
 
 use std::path::PathBuf;
@@ -30,7 +30,7 @@ impl Default for AutoSave {
 
 /// The backup file.
 pub fn recovery_file() -> PathBuf {
-    paths::settings_dir().join("recovery").join("unsaved-work.flash")
+    paths::settings_dir().join("recovery").join("unsaved-work.fe")
 }
 
 /// Deletes the backup (normal exit, or the user did not want it back).

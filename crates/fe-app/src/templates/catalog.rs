@@ -34,13 +34,18 @@ pub struct OnlineTemplate {
 }
 
 impl OnlineTemplate {
-    /// Where the project file is, relative to the catalog (for example "templates/poster/mega-sale/template.flash").
+    /// Where the project file is, relative to the catalog (for example "templates/poster/mega-sale/template.fe").
     pub fn file_path(&self) -> String {
-        format!("templates/{}/{}/template.flash", self.kind, self.id)
+        format!("templates/{}/{}/template.fe", self.kind, self.id)
     }
 
     pub fn thumbnail_path(&self) -> String {
         format!("templates/{}/{}/thumb.jpg", self.kind, self.id)
+    }
+
+    /// The picture of page `number` (1 is the first) shown in the preview window.
+    pub fn page_path(&self, number: usize) -> String {
+        format!("templates/{}/{}/page-{number}.jpg", self.kind, self.id)
     }
 
     /// True when the word is in the name, the type or a keyword.
@@ -207,7 +212,7 @@ mod tests {
         let file = repo.join("templates").join("poster").join("mega-sale");
         std::fs::create_dir_all(&file).expect("folder");
         let flash = b"fake project bytes".to_vec();
-        std::fs::write(file.join("template.flash"), &flash).expect("file");
+        std::fs::write(file.join("template.fe"), &flash).expect("file");
         let hash: String = Sha256::digest(&flash).iter().map(|b| format!("{b:02x}")).collect();
         std::fs::write(repo.join("types.json"), r#"{"types":[{"id":"poster","name":"Poster","width":1080,"height":1350},{"id":"card","name":"Card","width":1050,"height":600}]}"#).expect("types");
         std::fs::write(
@@ -265,7 +270,7 @@ mod tests {
         assert_eq!(download(&offline, &mega).expect("saved"), b"fake project bytes");
         // A swapped file is refused.
         std::fs::write(
-            root.join("cache").join("templates").join("poster").join("mega-sale").join("template.flash"),
+            root.join("cache").join("templates").join("poster").join("mega-sale").join("template.fe"),
             b"swapped",
         )
         .expect("write");

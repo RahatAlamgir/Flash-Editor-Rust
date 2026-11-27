@@ -27,11 +27,37 @@ pub struct TemplatesState {
     pub search: String,
     pub category: Option<String>,
     pub selected: Option<String>,
+    /// The preview window of a template with several pages.
+    pub preview: Option<super::template_preview::Preview>,
     textures: HashMap<String, TextureHandle>,
     requested: HashSet<String>,
     inflight: usize,
     /// "Getting ..." while a template is downloaded.
     pub busy: Option<String>,
+}
+
+impl TemplatesState {
+    pub fn texture(&self, key: &str) -> Option<&TextureHandle> {
+        self.textures.get(key)
+    }
+}
+
+/// Starts loading one picture of the catalog (card picture or a page) once; `key` names the texture.
+pub fn request_picture(app: &mut FlashApp, ctx: &egui::Context, key: String, path: String) {
+    if !app.manager.templates.requested.insert(key.clone()) {
+        return;
+    }
+    app.manager.templates.inflight += 1;
+    app.jobs.spawn(ctx, move || {
+        let image =
+            default_source().cached_or_fetch(&path).ok().and_then(|bytes| image::load_from_memory(&bytes).ok()).map(
+                |img| {
+                    let rgba = img.into_rgba8();
+                    ColorImage::from_rgba_unmultiplied([rgba.width() as usize, rgba.height() as usize], rgba.as_raw())
+                },
+            );
+        JobDone::TemplateThumb { id: key, image }
+    });
 }
 
 /// Starts reading the catalog the first time the browser is shown (or again after "Try again").
@@ -77,7 +103,7 @@ pub fn on_file(app: &mut FlashApp, ctx: &egui::Context, name: &str, result: Resu
         Ok(data) => {
             let folder = app.settings.projects_folder();
             let stem = crate::app::settings::clean_name(name);
-            let path = fe_core::io::batch::unique_path(&folder, &stem, ".flash");
+            let path = fe_core::io::batch::unique_path(&folder, &stem, ".fe");
             let written = std::fs::create_dir_all(&folder).and_then(|()| std::fs::write(&path, data));
             match written {
                 Ok(()) => {
@@ -111,23 +137,7 @@ fn pump_thumbs(app: &mut FlashApp, ctx: &egui::Context, shown: &[OnlineTemplate]
         if app.manager.templates.inflight >= PARALLEL {
             break;
         }
-        let key = format!("{}/{}", template.kind, template.id);
-        if !app.manager.templates.requested.insert(key.clone()) {
-            continue;
-        }
-        app.manager.templates.inflight += 1;
-        let path = template.thumbnail_path();
-        app.jobs.spawn(ctx, move || {
-            let image = default_source()
-                .cached_or_fetch(&path)
-                .ok()
-                .and_then(|bytes| image::load_from_memory(&bytes).ok())
-                .map(|img| {
-                    let rgba = img.into_rgba8();
-                    ColorImage::from_rgba_unmultiplied([rgba.width() as usize, rgba.height() as usize], rgba.as_raw())
-                });
-            JobDone::TemplateThumb { id: key, image }
-        });
+        request_picture(app, ctx, format!("{}/{}", template.kind, template.id), template.thumbnail_path());
     }
 }
 
@@ -218,8 +228,12 @@ pub fn show(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp) {
                 let (clicked, double) = card(ui, template, app.manager.templates.textures.get(&key), selected);
                 if clicked {
                     app.manager.templates.selected = Some(template.id.clone());
+                    if template.pages > 1 {
+                        app.manager.templates.preview =
+                            Some(super::template_preview::Preview { template: template.clone(), page: 0 });
+                    }
                 }
-                if double {
+                if double && template.pages <= 1 {
                     start = Some(template.clone());
                 }
             }
@@ -227,7 +241,9 @@ pub fn show(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp) {
     });
     ui.horizontal(|ui| {
         let pick = app.manager.templates.selected.clone().and_then(|id| shown.iter().find(|t| t.id == id).cloned());
-        let enter = ctx.input(|i| i.key_pressed(Key::Enter)) && !ctx.text_edit_focused();
+        let enter = ctx.input(|i| i.key_pressed(Key::Enter))
+            && !ctx.text_edit_focused()
+            && app.manager.templates.preview.is_none();
         let clicked = ui
             .add_enabled(
                 pick.is_some(),
@@ -238,6 +254,9 @@ pub fn show(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp) {
             start = start.take().or(pick);
         }
     });
+    if let Some(template) = super::template_preview::show(ctx, app) {
+        start = Some(template);
+    }
     if let Some(template) = start {
         choose(app, ctx, &template);
     }

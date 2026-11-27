@@ -6,7 +6,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use crate::document::{AdjustmentKind, AdjustmentStyle, CurvePoint};
 
 pub const FORMAT_NAME: &str = "flash-project";
-pub const CURRENT_VERSION: u32 = 2;
+pub const CURRENT_VERSION: u32 = 3;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase", default)]
@@ -65,8 +65,13 @@ pub struct LayerEntry {
     pub extended: Option<String>,
     pub extended_x: i32,
     pub extended_y: i32,
+    /// Version 3: where the top-left corner of the (cropped) `Pixels` picture lies on the canvas.
+    pub pixels_x: i32,
+    pub pixels_y: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub restore: Option<String>,
+    pub restore_x: i32,
+    pub restore_y: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub object: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -87,7 +92,11 @@ impl Default for LayerEntry {
             extended: None,
             extended_x: 0,
             extended_y: 0,
+            pixels_x: 0,
+            pixels_y: 0,
             restore: None,
+            restore_x: 0,
+            restore_y: 0,
             object: None,
             mask_picture: None,
             mask_enabled: true,

@@ -28,7 +28,7 @@ pub fn on_first_run(app: &mut FlashApp) {
 /// Settings > About.
 pub fn show_about(app: &mut FlashApp) {
     let text = format!(
-        "Flash Editor {}\nA small, fast layer-based image editor with offline AI tools, built with Rust and egui.\n\nProjects are .flash files that the C# version of Flash Editor opens too.",
+        "Flash Editor {}\nA small, fast layer-based image editor with offline AI tools, built with Rust and egui.\n\nProjects are .fe files.",
         env!("CARGO_PKG_VERSION")
     );
     tell(app, "About Flash Editor", text);

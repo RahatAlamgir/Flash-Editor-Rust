@@ -9,7 +9,7 @@ mod pictures;
 use crate::document::Page;
 
 /// The file name of the tutorial.
-pub const FILE_NAME: &str = "Flash Editor Tutorial.flash";
+pub const FILE_NAME: &str = "Flash Editor Tutorial.fe";
 
 /// The 14 pages (1280 x 720).
 pub fn build_pages() -> Vec<Page> {

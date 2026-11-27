@@ -1,4 +1,4 @@
-//! File commands: open (pictures and `.flash` projects), save, save as, close, add pictures as layers.
+//! File commands: open (pictures and `.fe` projects), save, save as, close, add pictures as layers.
 //! Reading and writing run on background threads; `on_opened` / `on_saved` finish the job.
 
 use std::path::{Path, PathBuf};

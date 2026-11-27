@@ -12,7 +12,7 @@ use zip::CompressionMethod;
 use zip::write::SimpleFileOptions;
 
 use super::manifest::{AdjustmentEntry, LayerEntry, Manifest, PageEntry};
-use super::png_stream::{encode_rows, encode_tiles};
+use super::png_stream::{encode_rows, encode_tiles, recompress_png, use_webp};
 use super::{IMAGE_FOLDER, MANIFEST_ENTRY, PREVIEW_ENTRY, PREVIEW_SIZE};
 use crate::document::{Layer, LayerMask, Page};
 use crate::imaging::{PixelRect, TileMap};
@@ -25,6 +25,19 @@ enum Picture {
     Tiles(TileMap, PixelRect),
     Mask(LayerMask),
     Bytes(Arc<Vec<u8>>),
+    /// An object picture stored again as lossless WebP (smaller).
+    Packed(Vec<u8>),
+}
+
+impl Picture {
+    /// `webp` for pictures stored losslessly as WebP, `png` for the very large ones and for object pictures.
+    fn extension(&self) -> &'static str {
+        match self {
+            Self::Tiles(_, rect) if use_webp(rect.width as u32, rect.height as u32) => "webp",
+            Self::Mask(mask) if use_webp(mask.width(), mask.height()) => "webp",
+            _ => "png",
+        }
+    }
 }
 
 /// Gives every picture a name (`images/N.png`); the same object picture is stored once.
@@ -41,7 +54,20 @@ impl Pictures {
         {
             return name.clone();
         }
-        let name = format!("{IMAGE_FOLDER}{}.png", self.list.len());
+        let picture = match picture {
+            Picture::Bytes(b) => match recompress_png(&b) {
+                Some(packed) => {
+                    let name = format!("{IMAGE_FOLDER}{}.webp", self.list.len());
+                    self.shared.insert(Arc::as_ptr(&b) as usize, name.clone());
+                    self.list.push((name.clone(), Picture::Packed(packed)));
+                    return name;
+                }
+                None => Picture::Bytes(b),
+            },
+            other => other,
+        };
+        let extension = picture.extension();
+        let name = format!("{IMAGE_FOLDER}{}.{extension}", self.list.len());
         if let Picture::Bytes(b) = &picture {
             self.shared.insert(Arc::as_ptr(b) as usize, name.clone());
         }
@@ -109,11 +135,11 @@ fn page_entry(page: &Page, pictures: &mut Pictures) -> PageEntry {
         active_layer: doc.active_index().unwrap_or(0),
         vertical_guides: page.vertical_guides.clone(),
         horizontal_guides: page.horizontal_guides.clone(),
-        layers: doc.layers().iter().map(|l| layer_entry(l, doc.bounds(), pictures)).collect(),
+        layers: doc.layers().iter().map(|l| layer_entry(l, pictures)).collect(),
     }
 }
 
-fn layer_entry(layer: &Layer, canvas: PixelRect, pictures: &mut Pictures) -> LayerEntry {
+fn layer_entry(layer: &Layer, pictures: &mut Pictures) -> LayerEntry {
     let pixels = layer.pixels();
     let mut entry = LayerEntry {
         name: layer.name.clone(),
@@ -122,19 +148,17 @@ fn layer_entry(layer: &Layer, canvas: PixelRect, pictures: &mut Pictures) -> Lay
         locked: layer.locked,
         blend_mode: layer.blend.key().into(),
         adjustment: layer.adjustment.as_ref().map(AdjustmentEntry::from),
-        pixels: Some(pictures.add(Picture::Tiles(pixels.clone(), canvas))),
         mask_enabled: layer.mask_enabled,
         ..LayerEntry::default()
     };
+    // Only the part with something on it is saved (and where it goes); the empty rest of the canvas costs nothing.
     let visible = pixels.visible_bounds();
-    if !visible.is_empty() && visible.intersect(&canvas) != visible {
-        let whole = canvas.union(&visible);
-        entry.extended = Some(pictures.add(Picture::Tiles(pixels.clone(), whole)));
-        entry.extended_x = whole.x;
-        entry.extended_y = whole.y;
-    }
+    entry.pixels = (!visible.is_empty()).then(|| pictures.add(Picture::Tiles(pixels.clone(), visible)));
+    (entry.pixels_x, entry.pixels_y) = (visible.x, visible.y);
     if let Some(restore) = &layer.restore {
-        entry.restore = Some(pictures.add(Picture::Tiles(restore.clone(), canvas)));
+        let used = restore.visible_bounds();
+        entry.restore = (!used.is_empty()).then(|| pictures.add(Picture::Tiles(restore.clone(), used)));
+        (entry.restore_x, entry.restore_y) = (used.x, used.y);
     }
     if let Some(mask) = layer.mask() {
         entry.mask_picture = Some(pictures.add(Picture::Mask(mask.clone())));
@@ -155,5 +179,6 @@ fn encode(picture: &Picture) -> Result<Vec<u8>, IoError> {
             mask.copy_region(rect).into_iter().flat_map(|v| [v, v, v, 255]).collect()
         }),
         Picture::Bytes(data) => Ok(data.as_ref().clone()),
+        Picture::Packed(data) => Ok(data.clone()),
     }
 }

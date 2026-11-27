@@ -4,6 +4,7 @@
 
 mod card;
 pub mod entry;
+mod template_preview;
 pub mod templates;
 
 use std::collections::HashMap;
@@ -206,7 +207,7 @@ fn finish_rename(app: &mut FlashApp, ctx: &egui::Context) {
         app.manager.renaming = None;
     } else if enter || clicked {
         app.manager.renaming = None;
-        let target = path.with_file_name(format!("{}.flash", crate::app::settings::clean_name(&name)));
+        let target = path.with_file_name(format!("{}.fe", crate::app::settings::clean_name(&name)));
         if target == path {
             return;
         }

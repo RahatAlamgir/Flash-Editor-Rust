@@ -1,5 +1,6 @@
-//! PNG reading and writing in bands of rows, straight from / into tiles. Project files hold one canvas-sized
-//! PNG per layer; streaming them keeps memory low even for 16384 px pictures.
+//! Picture reading and writing in bands of rows, straight from / into tiles. Project files hold one cropped picture
+//! per layer: lossless WebP (small), or PNG streamed in bands for very large ones (keeps memory low).
+//! Old files hold PNG only; reading works out the kind from the first bytes.
 
 use std::io::Write;
 
@@ -9,8 +10,54 @@ use crate::io::IoError;
 /// Rows handled at once.
 const BAND: u32 = TILE_SIZE as u32;
 
+/// Pictures up to this many pixels are stored as WebP (needs the whole picture in memory); bigger ones as PNG.
+const WEBP_LIMIT: u64 = 16_000_000;
+
+/// True when a `width` x `height` picture is stored as lossless WebP.
+pub fn use_webp(width: u32, height: u32) -> bool {
+    u64::from(width) * u64::from(height) <= WEBP_LIMIT && width <= 16383 && height <= 16383
+}
+
+/// Lossless WebP, smaller than the default setting. (Trying even harder takes 10x longer for about 0.3% less.)
+pub fn webp_lossless(rgba: &[u8], width: u32, height: u32) -> Vec<u8> {
+    let encoder = webp::Encoder::from_rgba(rgba, width, height);
+    if let Ok(mut config) = webp::WebPConfig::new() {
+        config.lossless = 1;
+        config.method = 4;
+        config.quality = 90.0;
+        if let Ok(data) = encoder.encode_advanced(&config) {
+            return data.to_vec();
+        }
+    }
+    encoder.encode_lossless().to_vec()
+}
+
+/// A PNG picture stored again as lossless WebP, when that is smaller (embedded photos). None = keep as it is.
+pub fn recompress_png(bytes: &[u8]) -> Option<Vec<u8>> {
+    if bytes.len() < 4096 || bytes[..4] != [0x89, b'P', b'N', b'G'] {
+        return None;
+    }
+    let mut rgba = Vec::new();
+    let (w, h) = decode_bands(bytes, |_, rows, _| rgba.extend_from_slice(rows)).ok()?;
+    if !use_webp(w, h) || rgba.len() != w as usize * h as usize * 4 {
+        return None;
+    }
+    let packed = webp_lossless(&rgba, w, h);
+    (packed.len() < bytes.len()).then_some(packed)
+}
+
+fn is_webp(bytes: &[u8]) -> bool {
+    bytes.len() > 12 && &bytes[..4] == b"RIFF" && &bytes[8..12] == b"WEBP"
+}
+
 /// Encodes a `width` x `height` RGBA picture whose rows come from `rows(y, count)` (RGBA bytes).
 pub fn encode_rows(width: u32, height: u32, rows: impl Fn(u32, u32) -> Vec<u8>) -> Result<Vec<u8>, IoError> {
+    if use_webp(width, height) {
+        let all = rows(0, height);
+        if all.len() == width as usize * height as usize * 4 {
+            return Ok(webp_lossless(&all, width, height));
+        }
+    }
     let failed = |e: png::EncodingError| IoError::CannotSave(format!("Could not save a picture of the project: {e}"));
     let mut out = Vec::new();
     {
@@ -41,6 +88,9 @@ pub fn encode_tiles(map: &TileMap, rect: PixelRect) -> Result<Vec<u8>, IoError> 
 /// Decodes a PNG band by band: `band(y, rows, width)` receives up to 256 RGBA rows at a time.
 /// Returns the picture size.
 pub fn decode_bands(bytes: &[u8], mut band: impl FnMut(u32, &[u8], u32)) -> Result<(u32, u32), IoError> {
+    if is_webp(bytes) {
+        return decode_webp(bytes, &mut band);
+    }
     let bad = |e: png::DecodingError| IoError::CannotOpen(format!("A picture inside the project is damaged ({e})."));
     let mut decoder = png::Decoder::new(std::io::Cursor::new(bytes));
     decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
@@ -84,4 +134,27 @@ fn to_rgba(row: &[u8], color: png::ColorType, out: &mut Vec<u8>) {
         }
         png::ColorType::Indexed => out.extend_from_slice(row), // EXPAND turns palettes into RGB(A) before this
     }
+}
+
+fn decode_webp(bytes: &[u8], band: &mut impl FnMut(u32, &[u8], u32)) -> Result<(u32, u32), IoError> {
+    let bad = || IoError::CannotOpen("A picture inside the project is damaged (WebP).".into());
+    let image = webp::Decoder::new(bytes).decode().ok_or_else(bad)?;
+    let (width, height) = (image.width(), image.height());
+    let channels = if image.is_alpha() { 4 } else { 3 };
+    let row_bytes = width as usize * channels;
+    let mut rows: Vec<u8> = Vec::with_capacity(width as usize * 4 * BAND as usize);
+    let mut y = 0u32;
+    while y < height {
+        let count = BAND.min(height - y);
+        rows.clear();
+        let part = &image[y as usize * row_bytes..(y + count) as usize * row_bytes];
+        if channels == 4 {
+            rows.extend_from_slice(part);
+        } else {
+            part.as_chunks::<3>().0.iter().for_each(|p| rows.extend_from_slice(&[p[0], p[1], p[2], 255]));
+        }
+        band(y, &rows, width);
+        y += count;
+    }
+    Ok((width, height))
 }

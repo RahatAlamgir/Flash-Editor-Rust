@@ -53,7 +53,7 @@ fn sections() -> Vec<(&'static str, Vec<Row>)> {
                     '\u{E74E}',
                     blue,
                     Command("Save project"),
-                    "Saves a .flash file that keeps every layer, shape and text editable",
+                    "Saves a .fe file that keeps every layer, shape and text editable",
                 ),
                 row("Save Project As", '\u{E792}', blue, Command("Save project as"), ""),
                 row(

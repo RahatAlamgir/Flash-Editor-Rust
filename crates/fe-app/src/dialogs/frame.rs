@@ -28,8 +28,17 @@ fn escape(ctx: &Context) -> bool {
 
 /// A dialog in the middle of the window, over a dimmed backdrop. `name` keeps its place when it was moved.
 pub fn modal(ctx: &Context, name: &str, add: impl FnOnce(&mut Ui)) -> Shown {
+    modal_at(ctx, name, (Order::Middle, Order::Foreground), add)
+}
+
+/// Like `modal`, for a dialog opened from another dialog (above it, dimming it).
+pub fn modal_over(ctx: &Context, name: &str, add: impl FnOnce(&mut Ui)) -> Shown {
+    modal_at(ctx, name, (Order::Foreground, Order::Tooltip), add)
+}
+
+fn modal_at(ctx: &Context, name: &str, (dim, window): (Order, Order), add: impl FnOnce(&mut Ui)) -> Shown {
     let screen = ctx.content_rect();
-    egui::Area::new(Id::NULL.with(("dialog-dim", name))).order(Order::Middle).fixed_pos(screen.min).show(ctx, |ui| {
+    egui::Area::new(Id::NULL.with(("dialog-dim", name))).order(dim).fixed_pos(screen.min).show(ctx, |ui| {
         ui.allocate_rect(screen, Sense::click_and_drag()); // nothing behind the dialog gets the mouse
         ui.painter().rect_filled(screen, 0.0, Color32::from_black_alpha(120));
     });
@@ -38,7 +47,7 @@ pub fn modal(ctx: &Context, name: &str, add: impl FnOnce(&mut Ui)) -> Shown {
         .title_bar(false)
         .resizable(false)
         .collapsible(false)
-        .order(Order::Foreground)
+        .order(window)
         .pivot(Align2::CENTER_CENTER)
         .default_pos(screen.center())
         .frame(window_frame(ctx))

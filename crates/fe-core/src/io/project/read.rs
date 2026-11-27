@@ -48,6 +48,7 @@ pub fn open_from(reader: impl Read + Seek) -> Result<ProjectContent, IoError> {
         ));
     }
     let active_page = manifest.active_page;
+    let manifest_version = manifest.version;
     let entries = if manifest.pages.is_empty() {
         vec![PageEntry {
             name: "Page 1".into(),
@@ -86,9 +87,10 @@ pub fn open_from(reader: impl Read + Seek) -> Result<ProjectContent, IoError> {
         bytes.insert(name, Arc::new(data));
     }
 
+    let strict = manifest_version < 3; // older files hold canvas-sized pictures; newer ones hold cropped pictures
     let mut pages = Vec::with_capacity(entries.len());
     for entry in &entries {
-        pages.push(build_page(entry, &bytes, &is_picture)?);
+        pages.push(build_page(entry, &bytes, &is_picture, strict)?);
     }
     if pages.is_empty() {
         return Err(damaged("no pages"));
@@ -101,6 +103,7 @@ fn build_page(
     entry: &PageEntry,
     bytes: &HashMap<String, Arc<Vec<u8>>>,
     is_picture: &(dyn Fn(&str) -> bool + Sync),
+    strict: bool,
 ) -> Result<Page, IoError> {
     if entry.layers.is_empty() {
         return Err(damaged("a page has no layers"));
@@ -109,7 +112,7 @@ fn build_page(
     let layers: Vec<Layer> = entry
         .layers
         .par_iter()
-        .map(|l| build_layer(l, entry.width, entry.height, bytes, is_picture))
+        .map(|l| build_layer(l, entry.width, entry.height, bytes, is_picture, strict))
         .collect::<Result<_, _>>()?;
     let mut doc = Document::new(entry.width, entry.height);
     let active = layers.get(entry.active_layer.min(layers.len() - 1)).map(Layer::id);
@@ -126,6 +129,7 @@ fn build_layer(
     height: u32,
     bytes: &HashMap<String, Arc<Vec<u8>>>,
     is_picture: &(dyn Fn(&str) -> bool + Sync),
+    strict: bool,
 ) -> Result<Layer, IoError> {
     let get = |name: &String| bytes.get(name).ok_or_else(|| damaged(format!("{name} is missing")));
     let mut layer = Layer::new(entry.name.clone());
@@ -133,12 +137,13 @@ fn build_layer(
     let pixels = match (&entry.extended, &entry.pixels) {
         (Some(ext), _) => decode_to_tiles(get(ext)?, entry.extended_x, entry.extended_y)?.0,
         (None, Some(px)) => {
-            let (map, w, h) = decode_to_tiles(get(px)?, 0, 0)?;
-            if (w, h) != (width, height) {
+            let (map, w, h) = decode_to_tiles(get(px)?, entry.pixels_x, entry.pixels_y)?;
+            if strict && (w, h) != (width, height) {
                 return Err(damaged("a layer does not match the size of the picture"));
             }
             map
         }
+        (None, None) if !strict => crate::imaging::TileMap::empty(), // a layer with nothing on it
         (None, None) => return Err(damaged("a layer has no picture")),
     };
     let object = match &entry.object {
@@ -157,7 +162,7 @@ fn build_layer(
     layer.blend = BlendMode::from_key(&entry.blend_mode).unwrap_or_default();
     layer.adjustment = entry.adjustment.as_ref().map(AdjustmentStyle::from);
     if let Some(restore) = &entry.restore {
-        layer.restore = Some(decode_to_tiles(get(restore)?, 0, 0)?.0);
+        layer.restore = Some(decode_to_tiles(get(restore)?, entry.restore_x, entry.restore_y)?.0);
     }
     if let Some(mask_name) = &entry.mask_picture {
         let mut mask = LayerMask::new(width, height, 255);

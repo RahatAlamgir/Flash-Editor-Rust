@@ -128,13 +128,13 @@ pub fn clean_name(name: &str) -> String {
     }
 }
 
-/// A path for a new project in `folder` that does not exist yet ("Name.flash", "Name (2).flash"...).
+/// A path for a new project in `folder` that does not exist yet ("Name.fe", "Name (2).fe"...).
 pub fn new_project_path(folder: &std::path::Path, name: &str) -> PathBuf {
     let name = clean_name(name);
-    let mut path = folder.join(format!("{name}.flash"));
+    let mut path = folder.join(format!("{name}.fe"));
     let mut i = 2;
     while path.exists() {
-        path = folder.join(format!("{name} ({i}).flash"));
+        path = folder.join(format!("{name} ({i}).fe"));
         i += 1;
     }
     path
