@@ -24,7 +24,7 @@ pub fn kind_of(label: &str) -> Option<TransitionKind> {
 
 /// True when the button is pressed: the transition the shown page has, or the Animation pane when it is open.
 pub fn is_current(state: &RibbonState, label: &str) -> bool {
-    button_label(state.transition.kind) == label || (label == "Animation Pane" && state.animation_pane)
+    button_label(state.transition.kind) == label
 }
 
 /// Draws the boxes of a custom group.

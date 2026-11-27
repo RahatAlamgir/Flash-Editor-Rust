@@ -33,8 +33,6 @@ pub struct RibbonState {
     pub animation_changed: bool,
     /// An effect picked in "Add animation".
     pub add_effect: Option<fe_core::document::animation::Effect>,
-    /// The Animation pane is open.
-    pub animation_pane: bool,
     /// Which animation of the shown page is chosen (position in its list).
     pub animation_selected: Option<usize>,
 }

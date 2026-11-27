@@ -48,6 +48,12 @@ pub struct FlashApp {
     pub pages_ui: PagesUi,
     /// Share of the right column's height given to Properties (the rest goes to Layers).
     pub props_share: f32,
+    /// Which tab of the right column is shown: 0 Properties, 1 Effects, 2 Adjust, 3 Animation.
+    pub props_tab: usize,
+    /// The right column is folded away to a thin strip.
+    pub right_collapsed: bool,
+    /// The page strip under the canvas is folded away to a thin bar.
+    pub pages_collapsed: bool,
     /// The Settings > Undo Steps window is open.
     pub undo_dialog: bool,
     /// The list under a ribbon "▾" button that is open: (tab, group, item, button rectangle).
@@ -112,6 +118,9 @@ impl FlashApp {
             layers_ui: LayersUi::default(),
             pages_ui: PagesUi::default(),
             props_share: 0.6,
+            props_tab: 0,
+            right_collapsed: false,
+            pages_collapsed: false,
             undo_dialog: false,
             ribbon_menu: None,
             file_menu: false,

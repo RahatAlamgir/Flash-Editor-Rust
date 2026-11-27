@@ -4,6 +4,26 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Animation pane moved into Properties, smaller fold handles
+
+- The **Animation pane popup is gone**. Everything it did is in the **Animation** tab of the Properties panel: Add Animation and
+  Preview at the top, **On this slide** (every animation in play order with its layer, effect, start and click number; click to
+  choose, the cross removes), and the settings of the chosen one (start, direction, duration, delay, earlier / later).
+  Adding an animation switches the right column to that tab (and unfolds it). The "Animation Pane" button of the ribbon is gone;
+  Preview Animations stays.
+- The fold handles are a little smaller (14 x 48 px on the right column, 48 x 14 px on the page strip, thinner chevron).
+
+## 2026-11-28 · Right column in tabs, panels that fold away
+
+- The right column (was one long Properties list) now has tabs side by side under its title: **Properties** (Transform, Align,
+  Text, Gradient, Picture in frame, QR / Barcode / Chart, Shape), **Effects** (Styles and Effects), **Adjust** (blur, tone...) and, for
+  presentations, **Animation** (the animations of the selected layer: add, start, duration, delay, direction, order, remove,
+  preview, Animation pane). Effects and Adjust say so when the layer is plain pixels.
+- **Fold away:** a handle (a small pill with a chevron that turns blue on hover) in the **middle** of the right column's left edge
+  folds the column to a thin strip, and one in the middle of the page strip's top edge folds the pages to a thin "Pages (n)"
+  bar; the same handle (or the bar) unfolds them. The panels **glide** (about a quarter of a second, eased) instead of jumping: the
+  full panel slides out of view while the space it leaves goes to the canvas. (Not remembered between runs.)
+
 ## 2026-11-28 · Presentations stage B: object animations
 
 Done:

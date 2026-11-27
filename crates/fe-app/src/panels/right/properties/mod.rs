@@ -6,6 +6,7 @@
 mod adjust;
 mod adjustment;
 mod align;
+mod animation;
 mod barcode;
 mod chart;
 mod frame;
@@ -69,6 +70,12 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
     }
     let locked = layer.locked;
     let pixels = layer.object().is_none();
+    let presentation = app.project().presentation;
+    if app.props_tab >= TABS.len() || (TABS[app.props_tab] == "Animation" && !presentation) {
+        app.props_tab = 0;
+    }
+    tab_row(ui, app, presentation);
+    let tab = TABS[app.props_tab];
     egui::ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
         egui::Frame::new().inner_margin(egui::Margin::symmetric(10, 6)).show(ui, |ui| {
             if locked {
@@ -79,6 +86,27 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
                     }
                 });
                 return;
+            }
+            let kinds = selected_kinds(app);
+            let all = |names: &[&str]| !kinds.is_empty() && kinds.iter().all(|k| names.contains(&k.as_str()));
+            let styled = !kinds.is_empty() && !kinds.iter().any(|k| k == "pixels");
+            match tab {
+                "Effects" | "Adjust" => {
+                    if !styled {
+                        note(ui, "Effects and Adjust work on shapes, text and pictures. This layer is plain pixels.");
+                    } else if tab == "Effects" {
+                        egui::CollapsingHeader::new("Styles").default_open(false).show(ui, |ui| styles::show(ui, app));
+                        egui::CollapsingHeader::new("Effects").default_open(true).show(ui, |ui| looks::show(ui, app));
+                    } else {
+                        adjust::show(ui, app);
+                    }
+                    return;
+                }
+                "Animation" => {
+                    animation::show(ui, app);
+                    return;
+                }
+                _ => {}
             }
             if pixels {
                 note(
@@ -91,8 +119,6 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
             egui::CollapsingHeader::new("Transform").default_open(true).show(ui, |ui| transform::show(ui, app));
             egui::CollapsingHeader::new("Align").default_open(true).show(ui, |ui| align::show(ui, app));
             // With several layers selected only the sections that fit all of them show; a change goes to all of them.
-            let kinds = selected_kinds(app);
-            let all = |names: &[&str]| !kinds.is_empty() && kinds.iter().all(|k| names.contains(&k.as_str()));
             if all(&["text"]) {
                 egui::CollapsingHeader::new("Text").default_open(true).show(ui, |ui| text::show(ui, app));
                 egui::CollapsingHeader::new("Text designs")
@@ -101,11 +127,6 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
             }
             if all(&["shape", "text", "image"]) {
                 egui::CollapsingHeader::new("Gradient").default_open(false).show(ui, |ui| gradient::show(ui, app));
-            }
-            if !kinds.is_empty() && !kinds.iter().any(|k| k == "pixels") {
-                egui::CollapsingHeader::new("Styles").default_open(false).show(ui, |ui| styles::show(ui, app));
-                egui::CollapsingHeader::new("Effects").default_open(false).show(ui, |ui| looks::show(ui, app));
-                egui::CollapsingHeader::new("Adjust").default_open(false).show(ui, |ui| adjust::show(ui, app));
             }
             if kinds.len() == 1
                 && crate::commands::parts::target_object(app).is_some_and(|o| o.picture_fill().is_some())
@@ -154,4 +175,27 @@ fn empty_hint(ui: &mut Ui) {
              font here.",
         );
     });
+}
+
+/// The tabs of the column: what each holds is in `show`.
+const TABS: [&str; 4] = ["Properties", "Effects", "Adjust", "Animation"];
+
+/// The row of tabs under the title bar.
+fn tab_row(ui: &mut Ui, app: &mut FlashApp, presentation: bool) {
+    ui.add_space(4.0);
+    ui.horizontal(|ui| {
+        ui.add_space(8.0);
+        ui.spacing_mut().item_spacing.x = 2.0;
+        for (i, name) in TABS.iter().enumerate() {
+            if *name == "Animation" && !presentation {
+                continue;
+            }
+            let on = app.props_tab == i;
+            let text = RichText::new(*name).size(12.0).color(if on { colors::TEXT } else { colors::SUBTLE_TEXT });
+            if ui.add(egui::Button::selectable(on, text)).clicked() {
+                app.props_tab = i;
+            }
+        }
+    });
+    ui.add_space(2.0);
 }

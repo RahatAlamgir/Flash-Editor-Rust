@@ -332,10 +332,7 @@ pub const TABS: &[RibbonTab] = &[
                     b('\u{E74D}', "Remove Animation", Red),
                 ],
             },
-            RibbonGroup {
-                name: "View",
-                items: &[b('\u{E8FD}', "Animation Pane", Sky), b('\u{E768}', "Preview Animations", Green)],
-            },
+            RibbonGroup { name: "Preview", items: &[b('\u{E768}', "Preview Animations", Green)] },
             RibbonGroup {
                 name: "Slideshow",
                 items: &[b('\u{E7F4}', "From Beginning", Red), b('\u{E768}', "From Current Slide", Red)],

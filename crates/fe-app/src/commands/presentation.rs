@@ -61,7 +61,7 @@ pub fn edit_animations(app: &mut FlashApp, name: &str, change: impl FnOnce(&mut 
 }
 
 /// "Add Animation": the effect goes on the selected layer.
-fn add_animation(app: &mut FlashApp, effect: Effect) {
+pub fn add_animation(app: &mut FlashApp, effect: Effect) {
     let Some(layer) =
         app.project().pages().get(app.project().active_index()).and_then(|p| p.doc.active_layer()).map(|l| l.id())
     else {
@@ -74,12 +74,13 @@ fn add_animation(app: &mut FlashApp, effect: Effect) {
         position = list.len() - 1;
     });
     app.ribbon.animation_selected = Some(position);
-    app.ribbon.animation_pane = true;
+    app.props_tab = 3; // the Animation tab of the Properties panel shows it
+    app.right_collapsed = false;
     app.status = format!("Added {} to the selected layer.", effect.name());
 }
 
 /// Removes, or moves one place, the chosen animation.
-fn move_selected(app: &mut FlashApp, by: isize) {
+pub fn move_selected(app: &mut FlashApp, by: isize) {
     let Some(i) = app.ribbon.animation_selected else { return };
     let mut now = i;
     edit_animations(app, "Reorder Animations", |list| {
@@ -132,7 +133,6 @@ pub fn ribbon_button(app: &mut FlashApp, ctx: &egui::Context, label: &str) -> bo
                 remove(app, i);
             }
         }
-        "Animation Pane" => app.ribbon.animation_pane = !app.ribbon.animation_pane,
         _ => return false,
     }
     true

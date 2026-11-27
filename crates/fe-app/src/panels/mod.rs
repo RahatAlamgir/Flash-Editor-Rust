@@ -1,6 +1,6 @@
 //! Ribbon, toolbox, options / hint bar, project tabs, right panels, page strip, status bar and pop-ups.
 
-pub mod animation_pane;
+pub mod collapse;
 pub mod file_drawer;
 pub mod hint_bar;
 pub mod pages;
