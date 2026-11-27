@@ -42,7 +42,12 @@ pub struct MoveTool {
     pan: Option<pan::PanDrag>,
     /// Mouse wheel notches waiting to zoom the picture of a frame.
     pub wheel: f32,
+    /// The mouse has moved far enough since it went down for this to count as a drag.
+    armed: bool,
 }
+
+/// Screen pixels the mouse must travel before a press turns into a drag.
+const DEAD_ZONE: f64 = 4.0;
 
 impl MoveTool {
     pub fn is_moving(&self) -> bool {
@@ -292,7 +297,26 @@ fn pointer_inner(app: &mut FlashApp, p: &Pointer) {
         pan::wheel(app, wheel);
     }
     if p.pressed {
+        app.tools.mover.armed = false;
         press(app, p);
+    }
+    // A click must never nudge anything: nothing moves until the mouse has travelled a few screen pixels.
+    if !app.tools.mover.armed && app.tools.mover.is_moving() {
+        let start = app.tools.mover.start;
+        let travelled = (p.pos.x - start.x).hypot(p.pos.y - start.y) * p.zoom;
+        if travelled >= DEAD_ZONE {
+            app.tools.mover.armed = true;
+        } else if p.released || !p.down {
+            // Let go without dragging: nothing changed, nothing to undo.
+            app.tools.mover.transform = None;
+            app.tools.mover.pan = None;
+            if let Some(drag) = app.tools.mover.drag.take() {
+                drag::end(app, drag);
+            }
+            return;
+        } else {
+            return;
+        }
     }
     if let Some(d) = app.tools.mover.transform.take() {
         app.tools.mover.transform = transform::pointer(app, d, p);

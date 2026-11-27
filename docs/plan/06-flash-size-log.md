@@ -4,6 +4,19 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · A click no longer moves things
+
+- Fixed: clicking an object could shift it by a pixel (any mouse jitter moved it). Now the Select / Move tool waits until the
+  mouse has travelled 4 screen pixels before a press becomes a drag (move, resize, rotate, reshape, picture in frame). A click
+  that never gets there changes nothing and leaves no undo step. Arrow keys still nudge by 1 px. Code: `tools/moving/mod.rs`
+  (`DEAD_ZONE`).
+
+## 2026-11-28 · Alt shows distances
+
+- Holding **Alt** with something selected draws pink lines from the selection to the nearest object on each side (the one that
+  overlaps it in that direction), or to the canvas border when nothing is there, with the distance in pixels. Code:
+  `canvas/distance_guides.rs`. Built and clippy-clean; not yet checked by screenshot (needs a held key).
+
 ## 2026-11-28 · Layer type icons, Animations tab in the Layers panel, numbers on the canvas
 
 - **Layer type icons:** every row of the layer list has a small drawn icon before the name: T (text), shape, picture, group, QR

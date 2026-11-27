@@ -83,6 +83,9 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
     };
     selection_overlay::paint(ui.ctx(), &painter, &mut app.canvas.overlay, transform, &overlay);
     crate::text_edit::paint::paint(&painter, transform, app, ui.input(|i| i.time));
+    if super::distance_guides::wanted(ui, app) {
+        super::distance_guides::paint(&painter, transform, app);
+    }
     if super::animation_badges::wanted(app) {
         super::animation_badges::paint(&painter, transform, app, viewport);
     }
