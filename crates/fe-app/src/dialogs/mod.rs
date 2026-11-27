@@ -80,7 +80,11 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
         },
         Dialog::NewProject(mut form) => match new_project::show(ctx, &mut form) {
             Some(true) => new_project::create(ctx, app, &form),
-            Some(false) => {}
+            Some(false) => {
+                if let Some(kind) = form.browse.take() {
+                    project_manager::open_templates(app, ctx, kind);
+                }
+            }
             None => app.dialog = Some(Dialog::NewProject(form)),
         },
         Dialog::SaveTemplate(mut name) => match save_template::show(ctx, &mut name) {

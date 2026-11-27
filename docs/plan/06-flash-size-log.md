@@ -4,6 +4,23 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Preview for every template, big catalogs, project types
+
+Done:
+- **Preview for every template.** Clicking any card opens the preview window (one-page templates show the big picture only; the
+  height follows the window size so tall posters fit). The double-click shortcut was removed.
+- **Big catalogs.** The template grid now draws and loads only the cards on screen (plus one row around). Tested with a made-up
+  catalog of 1000 templates: opens at once, 82 MB memory, 0% idle CPU. Pictures scrolled far away are dropped from memory
+  (more than 120 kept) and come back from the disk cache. The catalog list itself is one small file (about 0.4 MB for 1000).
+  If it ever reaches tens of thousands, the catalog can be split per type; not needed now.
+- **New Project window.** "Start from" removed. New: project type buttons (Custom, Presentation, Poster, Card, Thumbnail,
+  Instagram post, Story, Flyer, Resume, Banner) that set the size; changing width or height by hand makes it Custom;
+  "Browse <type> templates" opens the online templates on that type.
+- **My templates.** Because "Start from" is gone, the templates saved with File > Save as Template now live in
+  Project Manager > Templates > My templates (a list with "Use template").
+Not done: the ready-made layouts (Title slide, Quote card...) are no longer offered anywhere (the code is still in
+`fe-core/src/library/layouts.rs`); they could become online templates.
+
 ## 2026-11-27 · Templates repo converted, and the page preview window
 
 Done: tool `crates/fe-app/examples/build_templates.rs` re-saves every template as `template.fe`, makes `page-N.jpg` for every

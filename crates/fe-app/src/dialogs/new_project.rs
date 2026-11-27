@@ -1,8 +1,7 @@
-//! New project (C# `NewImageDialog` with a name): name, a ready-made size, width / height, background, and
-//! "Start from" (Blank or one of the user's saved templates, marked with a star). The ready-made layouts of the
-//! C# version (Title slide, Quote card...) need editable text and shapes; they arrive with Phase 10.
+//! New project: name, a project type (Presentation, Card, Thumbnail... or Custom) that sets the size, width / height
+//! and background. Ready-made designs are in the online Templates (Project Manager), not here.
 
-use egui::{ComboBox, DragValue, RichText};
+use egui::{DragValue, RichText};
 use fe_core::document::{Document, Page};
 use fe_core::imaging::ColorRgba;
 use fe_ui_kit::theme::colors;
@@ -33,42 +32,52 @@ pub const PRESETS: [(&str, u32, u32); 19] = [
     ("Small (800 x 600)", 800, 600),
 ];
 
-/// Background of the new page.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Background {
-    White,
-    Transparent,
-    /// The background color of the toolbox.
-    Color,
-}
+/// Project types shown in the dropdown: (online template type id, name, width, height). The first is Custom.
+pub const TYPES: [(Option<&str>, &str, u32, u32); 10] = [
+    (None, "Custom", 0, 0),
+    (Some("presentation"), "Presentation", 1920, 1080),
+    (Some("poster"), "Poster", 2700, 3600),
+    (Some("card"), "Card", 1050, 600),
+    (Some("youtube-thumbnail"), "Thumbnail", 1280, 720),
+    (Some("instagram-post"), "Instagram post", 1080, 1080),
+    (Some("story"), "Story", 1080, 1920),
+    (Some("flyer"), "Flyer", 2480, 3508),
+    (Some("resume"), "Resume", 2480, 3508),
+    (None, "Banner", 1584, 396),
+];
 
 /// What the user typed so far.
 pub struct NewProjectForm {
     pub name: String,
-    pub preset: usize,
+    /// Index in `TYPES` (0 = Custom).
+    pub kind: usize,
     pub width: u32,
     pub height: u32,
-    pub background: Background,
-    /// `None` = Blank; otherwise a user template name.
-    pub template: Option<String>,
-    /// A ready-made layout ("Blank", "Title slide"...) when no user template is chosen.
-    pub layout: &'static str,
-    templates: Vec<String>,
-    background_color: ColorRgba,
+    /// The color of the new page (white to start with).
+    pub color: [u8; 4],
+    /// No color at all: the page starts see-through.
+    pub transparent: bool,
+    /// "Browse templates" was clicked: show the online templates of this type (`None` = all) instead of creating.
+    pub browse: Option<Option<String>>,
+}
+
+impl Default for NewProjectForm {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl NewProjectForm {
-    pub fn new(background_color: ColorRgba) -> Self {
+    pub fn new() -> Self {
+        let (_, _, width, height) = TYPES[1];
         Self {
             name: "Untitled project".into(),
-            preset: 2,
-            width: 1280,
-            height: 720,
-            background: Background::White,
-            template: None,
-            layout: fe_core::library::layouts::BLANK,
-            templates: file::user_templates(),
-            background_color,
+            kind: 1,
+            width,
+            height,
+            color: [255, 255, 255, 255],
+            transparent: false,
+            browse: None,
         }
     }
 }
@@ -77,66 +86,55 @@ impl NewProjectForm {
 pub fn show(ctx: &egui::Context, form: &mut NewProjectForm) -> Option<bool> {
     let mut result = None;
     let modal = super::frame::modal(ctx, "new-project", |ui| {
-        ui.set_width(380.0);
+        ui.set_width(440.0);
         ui.label(RichText::new("New Project").heading());
         ui.add_space(8.0);
         let label = |ui: &mut egui::Ui, t: &str| ui.label(RichText::new(t).color(colors::SUBTLE_TEXT));
         label(ui, "Project name");
         ui.add(egui::TextEdit::singleline(&mut form.name).char_limit(80).desired_width(f32::INFINITY));
-        ui.add_space(8.0);
-        label(ui, "Preset");
-        let template_size = form.template.is_some();
-        ui.add_enabled_ui(!template_size, |ui| {
-            ComboBox::from_id_salt("new-preset").width(360.0).selected_text(PRESETS[form.preset].0).show_ui(ui, |ui| {
-                for (i, (name, w, h)) in PRESETS.iter().enumerate() {
-                    if ui.selectable_value(&mut form.preset, i, *name).clicked() && *w > 0 {
-                        form.width = *w;
-                        form.height = *h;
+        ui.add_space(10.0);
+        label(ui, "Project type");
+        let selected = match TYPES[form.kind] {
+            (_, name, w, h) if w > 0 => format!("{name} ({w} x {h})"),
+            (_, name, _, _) => name.to_owned(),
+        };
+        egui::ComboBox::from_id_salt("new-project-type").width(420.0).selected_text(selected).show_ui(ui, |ui| {
+            for (i, (_, name, w, h)) in TYPES.iter().enumerate() {
+                let text = if *w > 0 { format!("{name} ({w} x {h})") } else { (*name).to_owned() };
+                if ui.selectable_label(form.kind == i, text).clicked() {
+                    form.kind = i;
+                    if *w > 0 {
+                        (form.width, form.height) = (*w, *h);
                     }
                 }
-            });
-        });
-        ui.add_space(8.0);
-        label(ui, "Start from");
-        let selected = form.template.as_ref().map_or_else(|| form.layout.to_owned(), |t| format!("★ {t}"));
-        ComboBox::from_id_salt("new-template").width(360.0).selected_text(selected).show_ui(ui, |ui| {
-            for layout in fe_core::library::layouts::NAMES {
-                if ui.selectable_label(form.template.is_none() && form.layout == layout, layout).clicked() {
-                    form.template = None;
-                    form.layout = layout;
-                }
-            }
-            ui.separator();
-            for t in form.templates.clone() {
-                ui.selectable_value(&mut form.template, Some(t.clone()), format!("★ {t}"));
             }
         });
-        ui.label(
-            RichText::new(
-                "Blank = an empty picture. The ready-made layouts keep every word, shape and color editable. Your own templates (File > Save as Template) are marked with a star.",
-            )
-            .size(11.0)
-            .color(colors::SUBTLE_TEXT),
-        );
-        ui.add_space(8.0);
-        ui.add_enabled_ui(!template_size, |ui| {
-            ui.horizontal(|ui| {
-                label(ui, "Width");
-                if ui.add(DragValue::new(&mut form.width).range(1..=16384).suffix(" px")).changed() {
-                    form.preset = 0;
+        ui.add_space(10.0);
+        ui.horizontal(|ui| {
+            label(ui, "Width");
+            let wide = ui.add(DragValue::new(&mut form.width).range(1..=16384).suffix(" px")).changed();
+            label(ui, "Height");
+            let tall = ui.add(DragValue::new(&mut form.height).range(1..=16384).suffix(" px")).changed();
+            if wide || tall {
+                // A size that is not the type's own size is a custom size.
+                let (_, _, w, h) = TYPES[form.kind];
+                if (form.width, form.height) != (w, h) {
+                    form.kind = 0;
                 }
-                label(ui, "Height");
-                if ui.add(DragValue::new(&mut form.height).range(1..=16384).suffix(" px")).changed() {
-                    form.preset = 0;
+            }
+        });
+        ui.add_space(10.0);
+        label(ui, "Background");
+        ui.horizontal(|ui| {
+            ui.add_enabled_ui(!form.transparent, |ui| {
+                let mut c = egui::Color32::from_rgb(form.color[0], form.color[1], form.color[2]);
+                if ui.color_edit_button_srgba(&mut c).changed() {
+                    form.color = [c.r(), c.g(), c.b(), 255];
                 }
             });
-            ui.add_space(8.0);
-            label(ui, "Background");
-            ui.radio_value(&mut form.background, Background::White, "White");
-            ui.radio_value(&mut form.background, Background::Transparent, "Transparent");
-            ui.radio_value(&mut form.background, Background::Color, "Background color");
+            ui.checkbox(&mut form.transparent, "Transparent");
         });
-        ui.add_space(12.0);
+        ui.add_space(14.0);
         ui.horizontal(|ui| {
             if ui.add(egui::Button::new("Create").fill(colors::ACCENT).min_size(egui::vec2(90.0, 28.0))).clicked() {
                 result = Some(true);
@@ -144,6 +142,15 @@ pub fn show(ctx: &egui::Context, form: &mut NewProjectForm) -> Option<bool> {
             if ui.add(egui::Button::new("Cancel").min_size(egui::vec2(90.0, 28.0))).clicked() {
                 result = Some(false);
             }
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                let (id, name, _, _) = TYPES[form.kind];
+                let text =
+                    if id.is_some() { format!("Browse {name} templates") } else { "Browse templates".to_owned() };
+                if ui.button(text).clicked() {
+                    form.browse = Some(id.map(str::to_owned));
+                    result = Some(false);
+                }
+            });
         });
     });
     if result.is_none() && modal.should_close() {
@@ -154,24 +161,8 @@ pub fn show(ctx: &egui::Context, form: &mut NewProjectForm) -> Option<bool> {
 
 /// Makes the project the form describes.
 pub fn create(ctx: &egui::Context, app: &mut FlashApp, form: &NewProjectForm) {
-    let pages = match &form.template {
-        Some(name) => match file::template_pages(name) {
-            Ok(pages) => pages,
-            Err(err) => {
-                app.status = format!("Could not open the template \"{name}\": {err}");
-                return;
-            }
-        },
-        None => {
-            let background = match form.background {
-                Background::White => ColorRgba::WHITE,
-                Background::Transparent => ColorRgba::TRANSPARENT,
-                Background::Color => form.background_color,
-            };
-            let mut doc = Document::blank(form.width, form.height, background);
-            fe_core::library::layouts::apply(&mut doc, form.layout);
-            vec![Page::new("Page 1", doc)]
-        }
-    };
-    file::create_project(app, ctx, &form.name, pages);
+    let [r, g, b, a] = form.color;
+    let background = if form.transparent { ColorRgba::TRANSPARENT } else { ColorRgba::new(r, g, b, a) };
+    let doc = Document::blank(form.width, form.height, background);
+    file::create_project(app, ctx, &form.name, vec![Page::new("Page 1", doc)]);
 }

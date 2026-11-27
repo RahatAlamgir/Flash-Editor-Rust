@@ -20,7 +20,7 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
             crate::commands::file::open_dialog(app, ui.ctx());
         }
         if icon_button(ui, "Add", "New project (Ctrl+N)").clicked() {
-            app.dialog = Some(crate::dialogs::Dialog::NewProject(crate::dialogs::NewProjectForm::new(app.background)));
+            app.dialog = Some(crate::dialogs::Dialog::NewProject(crate::dialogs::NewProjectForm::new()));
         }
         ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
             ui.add_space(6.0);

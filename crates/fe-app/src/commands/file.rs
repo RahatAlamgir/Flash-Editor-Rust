@@ -302,7 +302,7 @@ pub fn save_as_template(app: &mut FlashApp, name: &str) {
         .map_err(|e| e.to_string())
         .and_then(|()| project::save(project.pages(), project.active_index(), &path).map_err(|e| e.to_string()));
     app.status = match result {
-        Ok(()) => format!("Saved as the template \"{name}\". It is in New project > Start from, marked with a star."),
+        Ok(()) => format!("Saved as the template \"{name}\". It is in Project Manager > Templates > My templates."),
         Err(err) => format!("Could not save the template: {err}"),
     };
 }

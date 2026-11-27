@@ -39,7 +39,7 @@ pub fn clipboard(app: &mut FlashApp, what: Clip) {
 /// Runs the command with this title (a title of [`super::COMMANDS`]). False for a title nothing is wired to.
 pub fn run(app: &mut FlashApp, ctx: &egui::Context, title: &str) -> bool {
     match title {
-        "New" => app.dialog = Some(Dialog::NewProject(NewProjectForm::new(app.background))),
+        "New" => app.dialog = Some(Dialog::NewProject(NewProjectForm::new())),
         "Open" => file::open_dialog(app, ctx),
         "Save project" => file::save(app, ctx),
         "Save project as" => {

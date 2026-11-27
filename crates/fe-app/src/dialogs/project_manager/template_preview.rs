@@ -9,7 +9,10 @@ use super::templates::{TemplatesState, request_picture};
 use crate::app::FlashApp;
 use crate::templates::OnlineTemplate;
 
-const BIG: egui::Vec2 = egui::Vec2::new(760.0, 440.0);
+/// The big picture: 760 wide, as tall as the window allows (room is left for the title, page strip and buttons).
+fn big(ctx: &egui::Context) -> egui::Vec2 {
+    vec2(760.0, (ctx.content_rect().height() - 300.0).clamp(280.0, 560.0))
+}
 const STRIP_HEIGHT: f32 = 78.0;
 
 /// Which template is open and which page is shown.
@@ -56,18 +59,20 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) -> Option<OnlineTemplate> {
         (preview.template.clone(), preview.page)
     };
     let pages = template.pages.max(1) as usize;
+    let big = big(ctx);
+    let count = if pages == 1 { "1 page".to_owned() } else { format!("{pages} pages") };
     for number in 1..=pages {
         request_picture(app, ctx, page_key(&template, number), template.page_path(number));
     }
     let state: &TemplatesState = &app.manager.templates;
     let (mut use_it, mut close) = (false, false);
     super::super::frame::modal_over(ctx, "template-preview", |ui| {
-        ui.set_width(BIG.x);
+        ui.set_width(big.x);
         ui.horizontal(|ui| {
             ui.label(RichText::new(&template.name).heading());
             ui.label(
                 RichText::new(format!(
-                    "{} \u{00B7} {pages} pages \u{00B7} {} x {}",
+                    "{} \u{00B7} {count} \u{00B7} {} x {}",
                     template.type_name, template.width, template.height
                 ))
                 .size(11.5)
@@ -75,10 +80,11 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) -> Option<OnlineTemplate> {
             );
         });
         ui.add_space(6.0);
-        let (area, _) = ui.allocate_exact_size(BIG, Sense::hover());
+        let (area, _) = ui.allocate_exact_size(big, Sense::hover());
         draw_page(ui, area, state.texture(&page_key(&template, page + 1)), 12.0);
-        // Arrows over the left and right edge of the big picture.
-        for (left, label, enabled) in [(true, "\u{25C0}", page > 0), (false, "\u{25B6}", page + 1 < pages)] {
+        // Arrows over the left and right edge of the big picture (only with several pages).
+        let arrows = [(true, "\u{25C0}", page > 0), (false, "\u{25B6}", page + 1 < pages)];
+        for (left, label, enabled) in arrows.into_iter().filter(|_| pages > 1) {
             let size = vec2(34.0, 60.0);
             let x = if left { area.left() + 6.0 } else { area.right() - 6.0 - size.x };
             let rect = Rect::from_min_size(pos2(x, area.center().y - size.y / 2.0), size);
@@ -100,9 +106,14 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) -> Option<OnlineTemplate> {
             }
         }
         ui.add_space(8.0);
-        ui.label(RichText::new(format!("Page {} of {pages}", page + 1)).size(11.5).color(colors::SUBTLE_TEXT));
+        if pages > 1 {
+            ui.label(RichText::new(format!("Page {} of {pages}", page + 1)).size(11.5).color(colors::SUBTLE_TEXT));
+        }
         egui::ScrollArea::horizontal().id_salt("template-pages").max_height(STRIP_HEIGHT + 14.0).show(ui, |ui| {
             ui.horizontal(|ui| {
+                if pages == 1 {
+                    return;
+                }
                 for number in 0..pages {
                     let aspect = template.width as f32 / template.height.max(1) as f32;
                     let size = vec2((STRIP_HEIGHT * aspect).clamp(40.0, 140.0), STRIP_HEIGHT);

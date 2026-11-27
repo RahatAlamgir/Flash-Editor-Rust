@@ -40,6 +40,14 @@ pub fn open(app: &mut FlashApp, ctx: &egui::Context) {
     refresh(app, ctx);
 }
 
+/// Opens the Project Manager on the online templates (of one type, or all when `kind` is `None`).
+pub fn open_templates(app: &mut FlashApp, ctx: &egui::Context, kind: Option<String>) {
+    open(app, ctx);
+    app.manager.templates.view = true;
+    app.manager.templates.category = kind;
+    app.manager.templates.wanted_category = true;
+}
+
 /// Reads the project list again (in the background).
 pub fn refresh(app: &mut FlashApp, ctx: &egui::Context) {
     app.manager.loading = true;
@@ -148,7 +156,7 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
         }
         Some("new") => {
             app.manager.open = false;
-            app.dialog = Some(Dialog::NewProject(NewProjectForm::new(app.background)));
+            app.dialog = Some(Dialog::NewProject(NewProjectForm::new()));
         }
         Some("folder") => {
             if let Some(folder) = rfd::FileDialog::new().set_directory(app.settings.projects_folder()).pick_folder() {

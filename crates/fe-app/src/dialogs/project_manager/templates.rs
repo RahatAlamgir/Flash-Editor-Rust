@@ -14,6 +14,8 @@ use crate::commands::file;
 use crate::templates::{Catalog, OnlineTemplate, default_source, download};
 
 const CARD: egui::Vec2 = egui::Vec2::new(214.0, 214.0);
+/// Space between cards.
+const SPACING: f32 = 12.0;
 /// How many pictures are loaded at the same time.
 const PARALLEL: usize = 4;
 
@@ -26,6 +28,10 @@ pub struct TemplatesState {
     pub error: Option<String>,
     pub search: String,
     pub category: Option<String>,
+    /// `category` was chosen from outside (the New Project window) and must survive the catalog arriving.
+    pub wanted_category: bool,
+    /// "My templates" (saved with File > Save as Template) is shown instead of the online ones.
+    pub mine: bool,
     pub selected: Option<String>,
     /// The preview window of a template with several pages.
     pub preview: Option<super::template_preview::Preview>,
@@ -36,7 +42,22 @@ pub struct TemplatesState {
     pub busy: Option<String>,
 }
 
+/// Most card pictures kept in memory; the ones scrolled far away are dropped (they come back from the disk cache).
+const KEEP_TEXTURES: usize = 120;
+
 impl TemplatesState {
+    /// Drops pictures that are not in `keep` once there are more than `KEEP_TEXTURES`.
+    fn evict_except(&mut self, keep: &HashSet<String>) {
+        if self.textures.len() <= KEEP_TEXTURES {
+            return;
+        }
+        let gone: Vec<String> = self.textures.keys().filter(|k| !keep.contains(*k)).cloned().collect();
+        for key in gone {
+            self.textures.remove(&key);
+            self.requested.remove(&key);
+        }
+    }
+
     pub fn texture(&self, key: &str) -> Option<&TextureHandle> {
         self.textures.get(key)
     }
@@ -78,7 +99,9 @@ pub fn on_catalog(app: &mut FlashApp, result: Result<Catalog, String>) {
     match result {
         Ok(catalog) => {
             t.catalog = Some(catalog);
-            t.category = None;
+            if !std::mem::take(&mut t.wanted_category) {
+                t.category = None;
+            }
         }
         Err(_) => t.error = Some(
             "Check your internet connection and try again. Templates you opened before still work without internet."
@@ -131,16 +154,6 @@ fn choose(app: &mut FlashApp, ctx: &egui::Context, template: &OnlineTemplate) {
     });
 }
 
-/// Starts loading the pictures of the shown cards, a few at a time.
-fn pump_thumbs(app: &mut FlashApp, ctx: &egui::Context, shown: &[OnlineTemplate]) {
-    for template in shown {
-        if app.manager.templates.inflight >= PARALLEL {
-            break;
-        }
-        request_picture(app, ctx, format!("{}/{}", template.kind, template.id), template.thumbnail_path());
-    }
-}
-
 /// Draws the browser into the Project Manager window.
 pub fn show(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp) {
     ensure_loaded(app, ctx);
@@ -185,15 +198,24 @@ pub fn show(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp) {
         };
         ui.label(RichText::new(note).size(11.5).color(colors::SUBTLE_TEXT));
     });
+    let mine = file::user_templates();
     ui.horizontal_wrapped(|ui| {
         for c in catalog.categories() {
-            let on = app.manager.templates.category == c.id;
+            let on = !app.manager.templates.mine && app.manager.templates.category == c.id;
             if ui.selectable_label(on, format!("{} ({})", c.name, c.count)).clicked() {
                 app.manager.templates.category = c.id;
+                app.manager.templates.mine = false;
             }
+        }
+        if ui.selectable_label(app.manager.templates.mine, format!("My templates ({})", mine.len())).clicked() {
+            app.manager.templates.mine = true;
         }
     });
     ui.separator();
+    if app.manager.templates.mine {
+        show_mine(ui, ctx, app, &mine);
+        return;
+    }
     let shown: Vec<OnlineTemplate> = catalog
         .find(app.manager.templates.category.as_deref(), &app.manager.templates.search)
         .into_iter()
@@ -205,7 +227,6 @@ pub fn show(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp) {
     } else if !shown.iter().any(|t| Some(&t.id) == app.manager.templates.selected.as_ref()) {
         app.manager.templates.selected = Some(shown[0].id.clone());
     }
-    pump_thumbs(app, ctx, &shown);
     if shown.is_empty() {
         let (title, text) = if app.manager.templates.search.trim().is_empty() {
             ("No templates here yet", "More are added all the time. Pick another category for now.")
@@ -219,26 +240,39 @@ pub fn show(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp) {
         });
     }
     let height = (ui.available_height() - 40.0).max(120.0);
-    egui::ScrollArea::vertical().max_height(height).auto_shrink(false).show(ui, |ui| {
-        ui.horizontal_wrapped(|ui| {
-            ui.spacing_mut().item_spacing = vec2(12.0, 12.0);
-            for template in &shown {
+    let mut opened = None;
+    let mut visible: HashSet<String> = HashSet::new();
+    egui::ScrollArea::vertical().max_height(height).auto_shrink(false).show_viewport(ui, |ui, viewport| {
+        // Only the cards on screen (and one row around them) are drawn and their pictures loaded, so a catalog of
+        // thousands of templates opens at once.
+        let step = CARD + vec2(SPACING, SPACING);
+        let columns = (((ui.available_width() + SPACING) / step.x) as usize).max(1);
+        let rows = shown.len().div_ceil(columns);
+        let origin = ui.min_rect().min;
+        ui.set_height((rows as f32 * step.y).max(1.0));
+        let first = ((viewport.min.y / step.y).floor() as usize).saturating_sub(1);
+        let last = (((viewport.max.y / step.y).ceil() as usize) + 1).min(rows);
+        for row in first..last {
+            for column in 0..columns {
+                let Some(template) = shown.get(row * columns + column) else { break };
                 let key = format!("{}/{}", template.kind, template.id);
+                if app.manager.templates.inflight < PARALLEL {
+                    request_picture(app, ctx, key.clone(), template.thumbnail_path());
+                }
+                let rect = Rect::from_min_size(origin + vec2(column as f32 * step.x, row as f32 * step.y), CARD);
                 let selected = app.manager.templates.selected.as_deref() == Some(&template.id);
-                let (clicked, double) = card(ui, template, app.manager.templates.textures.get(&key), selected);
-                if clicked {
-                    app.manager.templates.selected = Some(template.id.clone());
-                    if template.pages > 1 {
-                        app.manager.templates.preview =
-                            Some(super::template_preview::Preview { template: template.clone(), page: 0 });
-                    }
+                if card(ui, rect, template, app.manager.templates.textures.get(&key), selected) {
+                    opened = Some(template.clone());
                 }
-                if double && template.pages <= 1 {
-                    start = Some(template.clone());
-                }
+                visible.insert(key);
             }
-        });
+        }
     });
+    app.manager.templates.evict_except(&visible);
+    if let Some(template) = opened {
+        app.manager.templates.selected = Some(template.id.clone());
+        app.manager.templates.preview = Some(super::template_preview::Preview { template, page: 0 });
+    }
     ui.horizontal(|ui| {
         let pick = app.manager.templates.selected.clone().and_then(|id| shown.iter().find(|t| t.id == id).cloned());
         let enter = ctx.input(|i| i.key_pressed(Key::Enter))
@@ -262,9 +296,9 @@ pub fn show(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp) {
     }
 }
 
-/// One card: the picture, the name, and what the template is. Returns (clicked, double-clicked).
-fn card(ui: &mut egui::Ui, t: &OnlineTemplate, texture: Option<&TextureHandle>, selected: bool) -> (bool, bool) {
-    let (rect, response) = ui.allocate_exact_size(CARD, Sense::click());
+/// One card: the picture, the name, and what the template is. Returns true when it was clicked.
+fn card(ui: &mut egui::Ui, rect: Rect, t: &OnlineTemplate, texture: Option<&TextureHandle>, selected: bool) -> bool {
+    let response = ui.interact(rect, egui::Id::NULL.with(("template-card", &t.kind, &t.id)), Sense::click());
     let painter = ui.painter().clone();
     let fill = if response.hovered() { colors::HOVER } else { colors::PANEL_HEADER };
     let stroke = if selected { Stroke::new(2.0, colors::ACCENT) } else { Stroke::new(1.0, colors::DIVIDER) };
@@ -288,5 +322,37 @@ fn card(ui: &mut egui::Ui, t: &OnlineTemplate, texture: Option<&TextureHandle>, 
         FontId::proportional(11.0),
         colors::SUBTLE_TEXT,
     );
-    (response.clicked(), response.double_clicked())
+    response.clicked()
+}
+
+/// "My templates": the projects saved with File > Save as Template, as a list.
+fn show_mine(ui: &mut egui::Ui, ctx: &egui::Context, app: &mut FlashApp, names: &[String]) {
+    if names.is_empty() {
+        ui.add_space(30.0);
+        ui.vertical_centered(|ui| {
+            ui.label(RichText::new("No templates of your own yet").heading());
+            ui.label(RichText::new("Open a project and choose File > Save as Template.").color(colors::SUBTLE_TEXT));
+        });
+        return;
+    }
+    let mut chosen = None;
+    egui::ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
+        for name in names {
+            ui.horizontal(|ui| {
+                ui.label(RichText::new(format!("★ {name}")).color(colors::TEXT));
+                if ui.button("Use template").clicked() {
+                    chosen = Some(name.clone());
+                }
+            });
+        }
+    });
+    if let Some(name) = chosen {
+        match file::template_pages(&name) {
+            Ok(pages) => {
+                app.manager.open = false;
+                file::create_project(app, ctx, &name, pages);
+            }
+            Err(err) => crate::ai::outcome::tell(app, "Templates", format!("Could not open the template: {err}")),
+        }
+    }
 }
