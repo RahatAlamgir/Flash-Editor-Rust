@@ -11,6 +11,7 @@ pub mod painting;
 mod pointer;
 pub mod retouch;
 pub mod selecting;
+pub mod shape;
 pub mod snap;
 pub mod state;
 pub mod text;
@@ -38,6 +39,7 @@ pub fn pointer(app: &mut FlashApp, p: &Pointer) {
         crop::pointer(app, tool, p);
         curve::pointer(app, tool, p);
         text::pointer(app, tool, p);
+        shape::pointer(app, tool, p);
     }
 }
 
@@ -53,6 +55,7 @@ pub fn key(app: &mut FlashApp, key: egui::Key, mods: egui::Modifiers) -> bool {
                 || crop::key(app, key)
                 || retouch::key(app, key)
                 || ai_tools::key(app, key)
+                || shape::key(app, key)
         }
     }
 }
@@ -79,6 +82,7 @@ pub fn uses_crosshair(tool: ToolKind) -> bool {
                 | RemoveBrush
                 | ClickSelect
                 | Refine
+                | Shape
         )
 }
 

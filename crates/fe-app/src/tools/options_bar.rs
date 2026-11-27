@@ -103,6 +103,20 @@ pub fn show(ui: &mut Ui, tools: &mut ToolState) -> bool {
             hint(ui, &format!("  {text}"));
             true
         }
+        ToolKind::Shape => {
+            label(ui, "Shape");
+            let kind = &mut tools.shape.kind;
+            egui::ComboBox::from_id_salt("shape-tool-kind").width(170.0).selected_text(kind.name()).show_ui(ui, |ui| {
+                for (group, kinds) in crate::panels::shape_menu::GROUPS {
+                    ui.label(RichText::new(*group).strong().color(colors::SUBTLE_TEXT));
+                    for k in kinds.iter() {
+                        ui.selectable_value(kind, *k, k.name());
+                    }
+                }
+            });
+            hint(ui, &format!("  {}", ToolKind::Shape.hint()));
+            true
+        }
         ToolKind::Text => {
             let o = &mut tools.text;
             label(ui, "Font");
@@ -178,16 +192,22 @@ fn retouch_options(ui: &mut Ui, tools: &mut ToolState) {
 /// A list of the installed fonts, each name shown in plain text. True when another font was picked.
 pub fn font_picker(ui: &mut Ui, id: &str, family: &mut String, width: f32) -> bool {
     let mut changed = false;
-    egui::ComboBox::from_id_salt(id).width(width).selected_text(family.clone()).show_ui(ui, |ui| {
-        egui::ScrollArea::vertical().max_height(320.0).show(ui, |ui| {
-            for name in fe_core::text::fonts::families() {
-                if ui.selectable_label(name == family, name).clicked() && name != family {
-                    *family = name.clone();
-                    changed = true;
+    // A family can be a list ("Segoe Fluent Icons, Segoe MDL2 Assets" for icons): show the first name, cut to the box, so a long
+    // name never makes the box (and the panel around it) wider.
+    let shown = family.split(',').next().unwrap_or_default().trim().to_owned();
+    egui::ComboBox::from_id_salt(id).width(width).selected_text(shown).wrap_mode(egui::TextWrapMode::Truncate).show_ui(
+        ui,
+        |ui| {
+            egui::ScrollArea::vertical().max_height(320.0).show(ui, |ui| {
+                for name in fe_core::text::fonts::families() {
+                    if ui.selectable_label(name == family, name).clicked() && name != family {
+                        *family = name.clone();
+                        changed = true;
+                    }
                 }
-            }
-        });
-    });
+            });
+        },
+    );
     changed
 }
 

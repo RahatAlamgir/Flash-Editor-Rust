@@ -4,6 +4,18 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Icon broke the Properties column; Shape tool
+
+- **Bug:** selecting (or adding) an icon made the right column too wide, so the canvas area slid over it and cut off the left
+  of Properties and Layers. Cause: icons are text in the font "Segoe Fluent Icons, Segoe MDL2 Assets"; the font box showed that
+  whole long name and grew to fit it. Found by logging the used width of each Properties section (only "Text" was wider).
+  Fix: `font_picker` (options bar and Properties) shows only the first family name and cuts it to the box width.
+- **Shape tool** in the toolbox (key U, above Text): the options bar has a shape list (all shapes, grouped like Insert >
+  Shapes), then drag on the picture to draw (Shift = square / circle; a line snaps to 15 degrees; Esc cancels; a click puts
+  a default-size shape around the click). A blue outline previews the drag; the new shape is selected and the tool goes back to
+  Select / Move. Code: `tools/shape.rs`, `commands/objects.rs` (`add_shape_at`, `add_shape_box`). Seen by screenshot:
+  the button, the options bar, a dragged rectangle. Not tried: other shapes, a line, Shift, Esc.
+
 ## 2026-11-28 · Start-up: a small Projects window, like the C# version
 
 - I had misread "only the project manager": it is **its own small window** (as in the C# `ProjectManagerWindow`: 1000 x 680,

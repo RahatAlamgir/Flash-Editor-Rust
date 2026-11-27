@@ -12,6 +12,11 @@ use crate::tools::ToolKind;
 
 /// Insert > Shapes: a shape in the middle of the picture (blue; a line is black).
 pub fn add_shape(app: &mut FlashApp, kind: ShapeKind) {
+    add_shape_at(app, kind, None);
+}
+
+/// A shape in its default size around `center` (the middle of the picture when `None`).
+pub fn add_shape_at(app: &mut FlashApp, kind: ShapeKind, center: Option<fe_core::imaging::PointD>) {
     use ShapeKind::*;
     let (dw, dh) = (app.doc().width() as f64, app.doc().height() as f64);
     let size = (dw.min(dh) * 0.35).max(40.0);
@@ -28,7 +33,14 @@ pub fn add_shape(app: &mut FlashApp, kind: ShapeKind) {
         size
     };
     let h = if line { 6.0 } else { size };
-    let b = ObjectBox::new((dw - w) / 2.0, (dh - h) / 2.0, w, h, 0.0);
+    let (cx, cy) = center.map_or((dw / 2.0, dh / 2.0), |c| (c.x, c.y));
+    add_shape_box(app, kind, ObjectBox::new(cx - w / 2.0, cy - h / 2.0, w, h, 0.0));
+}
+
+/// A shape in the given box (blue; a line is black).
+pub fn add_shape_box(app: &mut FlashApp, kind: ShapeKind, b: ObjectBox) {
+    use ShapeKind::*;
+    let line = kind == Line;
     let mut shape =
         ShapeData::new(kind, (!line).then_some(ColorRgba::rgb(59, 130, 246)), line.then_some(ColorRgba::BLACK), 4.0);
     if kind == Pie {

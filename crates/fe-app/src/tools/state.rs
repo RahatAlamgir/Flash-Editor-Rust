@@ -30,6 +30,8 @@ pub struct ToolState {
     pub key_overrides: std::collections::HashMap<ToolKind, Option<char>>,
     /// The Text tool's settings.
     pub text: super::text::TextTool,
+    /// The Shape tool's state.
+    pub shape: super::shape::ShapeTool,
 }
 
 impl Default for ToolState {
@@ -48,6 +50,7 @@ impl Default for ToolState {
             ai: Default::default(),
             key_overrides: Default::default(),
             text: Default::default(),
+            shape: Default::default(),
         }
     }
 }
