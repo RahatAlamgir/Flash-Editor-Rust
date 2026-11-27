@@ -4,6 +4,7 @@
 mod ask;
 mod batch;
 mod brand_kit;
+mod chart_picker;
 pub mod color_picker;
 pub mod effect;
 pub mod export;
@@ -58,6 +59,8 @@ pub enum Dialog {
     CanvasSize(CanvasSizeForm),
     ImageOp(ImageOpForm),
     SmartArt(SmartArtForm),
+    /// Insert > Chart: the picture list of chart kinds.
+    Chart,
     RemoveBg(Box<crate::ai::remove_bg::RemoveBgSession>),
     Upscale(crate::ai::upscale::UpscaleForm),
     AiModels,
@@ -106,6 +109,11 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
             },
             Some(None) => {}
             None => app.dialog = Some(Dialog::Icons(picker)),
+        },
+        Dialog::Chart => match chart_picker::show(ctx, &mut app.previews) {
+            Some(Some(kind)) => crate::commands::insert::add_chart(app, kind),
+            Some(None) => {}
+            None => app.dialog = Some(Dialog::Chart),
         },
         Dialog::SmartArt(mut form) => match smartart::show(ctx, &mut form, &mut app.previews) {
             Some(Some(choice)) => {

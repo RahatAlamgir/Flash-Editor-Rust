@@ -207,7 +207,7 @@ pub const TABS: &[RibbonTab] = &[
                     b('\u{E8B3}', "SmartArt", Orange),
                 ],
             },
-            RibbonGroup { name: "Chart", items: &[b('\u{E9D2}', "Chart ▾", Orange)] },
+            RibbonGroup { name: "Chart", items: &[b('\u{E9D2}', "Chart", Orange)] },
             RibbonGroup {
                 name: "Codes",
                 items: &[b('\u{E8A9}', "QR Code", Orange), b('\u{E8EC}', "Barcode ▾", Orange)],

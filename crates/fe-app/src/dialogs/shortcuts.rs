@@ -65,7 +65,7 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, f: &mut ShortcutsForm) -> b
         .frame(super::frame::titled_frame(ctx))
         .collapsible(false)
         .resizable(false)
-        .default_width(560.0)
+        .default_width(470.0)
         .show(ctx, |ui| {
             ui.add(egui::Label::new(RichText::new(&f.hint).size(11.5).color(colors::SUBTLE_TEXT)).wrap());
             ui.add_space(4.0);
@@ -78,7 +78,8 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp, f: &mut ShortcutsForm) -> b
                         ui.label(RichText::new(section.to_uppercase()).size(11.0).strong().color(colors::SUBTLE_TEXT));
                     }
                     ui.horizontal(|ui| {
-                        ui.allocate_ui_with_layout(vec2(280.0, 22.0), Layout::left_to_right(Align::Center), |ui| {
+                        ui.allocate_ui_with_layout(vec2(230.0, 22.0), Layout::left_to_right(Align::Center), |ui| {
+                            ui.set_min_size(vec2(230.0, 22.0)); // the keys of every row start at the same place
                             ui.label(entry.title);
                         });
                         let waiting = f.capturing == Some(i);

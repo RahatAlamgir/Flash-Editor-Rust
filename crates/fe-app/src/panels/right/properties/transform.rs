@@ -56,12 +56,16 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
                 set_box(app, "Resize", ObjectBox::from_center(b.center(), w, h, b.rotation));
             }
         });
-        ui.checkbox(&mut app.tools.mover.keep_proportions, "Keep proportions")
-            .on_hover_text("Corner handles and the size boxes keep the width / height ratio (Shift does the opposite)");
+        ui.horizontal(|ui| {
+            ui.add_space(super::LABEL_W + ui.spacing().item_spacing.x);
+            ui.checkbox(&mut app.tools.mover.keep_proportions, "Keep proportions").on_hover_text(
+                "Corner handles and the size boxes keep the width / height ratio (Shift does the opposite)",
+            );
+        });
         ui.horizontal(|ui| {
             label(ui, "Rotate");
             let mut r = b.rotation;
-            if number_slider(ui, &mut r, -180.0..=180.0, "°", 84.0, 50.0).changed() {
+            if number_slider(ui, &mut r, -180.0..=180.0, "°", super::SLIDER_W, super::VALUE_W).changed() {
                 set_box(app, "Rotate", ObjectBox { rotation: r, ..b });
             }
         });
@@ -100,7 +104,7 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
             label(ui, "Reshape");
             let on = app.tools.mover.reshaping;
             let toggle = ui
-                .selectable_label(on, "Reshape corners")
+                .add(egui::Button::new("Reshape corners").selected(on))
                 .on_hover_text("Drag the corner points of the object on the canvas (Esc ends)");
             if toggle.clicked() {
                 if !on && object.is_none() && !cmd::make_picture(app) {

@@ -1332,7 +1332,7 @@ dependencies = [
 
 [[package]]
 name = "fe-ai"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "fe-core",
  "ort",
@@ -1345,7 +1345,7 @@ dependencies = [
 
 [[package]]
 name = "fe-app"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "arboard",
  "chrono",
@@ -1372,7 +1372,7 @@ dependencies = [
 
 [[package]]
 name = "fe-core"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "fontdb",
  "image",
@@ -1391,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "fe-gpu"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "egui",
  "fe-core",
@@ -1400,7 +1400,7 @@ dependencies = [
 
 [[package]]
 name = "fe-ui-kit"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "egui",
  "egui_extras",

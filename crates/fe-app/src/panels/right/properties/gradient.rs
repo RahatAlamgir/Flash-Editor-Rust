@@ -50,7 +50,18 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
     });
     for (i, (color, position)) in g.stops.iter().enumerate() {
         ui.horizontal(|ui| {
-            if swatch(ui, Some(*color), "Color of this stop") {
+            // The color sits in the label column, so the sliders line up with the ones of the other rows.
+            let picked = ui
+                .allocate_ui_with_layout(
+                    egui::vec2(super::LABEL_W, 22.0),
+                    egui::Layout::left_to_right(egui::Align::Center),
+                    |ui| {
+                        ui.set_min_size(egui::vec2(super::LABEL_W, 22.0));
+                        swatch(ui, Some(*color), "Color of this stop")
+                    },
+                )
+                .inner;
+            if picked {
                 app.dialog = Some(Dialog::Color(ColorPicker::new(ColorTarget::GradientStop(i), *color)));
             }
             let mut pos = position * 100.0;

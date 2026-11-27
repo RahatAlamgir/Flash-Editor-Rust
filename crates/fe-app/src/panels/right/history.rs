@@ -58,7 +58,7 @@ fn steps(ui: &mut Ui, app: &mut FlashApp) {
     let names: Vec<String> =
         std::iter::once("Open".to_owned()).chain(history.steps().iter().map(|s| s.name.clone())).collect();
     let mut jump = None;
-    egui::ScrollArea::vertical().auto_shrink(false).stick_to_bottom(true).show(ui, |ui| {
+    egui::ScrollArea::vertical().id_salt("history-steps").auto_shrink(false).stick_to_bottom(true).show(ui, |ui| {
         ui.spacing_mut().item_spacing.y = 0.0;
         for (index, name) in names.iter().enumerate() {
             let (rect, response) = ui.allocate_exact_size(vec2(ui.available_width(), 24.0), Sense::click());

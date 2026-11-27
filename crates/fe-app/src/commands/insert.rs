@@ -42,15 +42,11 @@ fn brand_colors(app: &FlashApp) -> Vec<ColorRgba> {
     app.settings.brand_colors.iter().filter_map(|h| ColorRgba::parse_hex(h)).collect()
 }
 
-/// Insert > Chart: a chart with sample numbers in the middle of the picture.
-pub fn add_chart(app: &mut FlashApp, kind: ChartKind) {
-    let (dw, dh) = canvas_size(app);
-    let (w, h) = ((dw * 0.72).round(), (dh * 0.62).round());
-    let b = ObjectBox::new(((dw - w) / 2.0).round(), ((dh - h) / 2.0).round(), w, h, 0.0);
+/// A chart with sample numbers (the colors of the Brand Kit when there are at least two).
+pub fn sample_chart(kind: ChartKind, brand: &[ColorRgba]) -> ChartData {
     let mut chart = ChartData::sample(kind);
-    let brand = brand_colors(app);
     if brand.len() >= 2 {
-        chart.colors = brand;
+        chart.colors = brand.to_vec();
     }
     let items = |list: &[(&str, f64)]| list.iter().map(|(l, v)| ChartItem::new(l, *v)).collect::<Vec<_>>();
     // Some kinds look best with their own kind of numbers.
@@ -71,6 +67,15 @@ pub fn add_chart(app: &mut FlashApp, kind: ChartKind) {
         }
         _ => {}
     }
+    chart
+}
+
+/// Insert > Chart: a chart with sample numbers in the middle of the picture.
+pub fn add_chart(app: &mut FlashApp, kind: ChartKind) {
+    let (dw, dh) = canvas_size(app);
+    let (w, h) = ((dw * 0.72).round(), (dh * 0.62).round());
+    let b = ObjectBox::new(((dw - w) / 2.0).round(), ((dh - h) / 2.0).round(), w, h, 0.0);
+    let chart = sample_chart(kind, &brand_colors(app));
     let name = chart.layer_name();
     add_object(app, StoredObject::new_chart(b, &chart), &name, "Insert Chart");
     app.status =

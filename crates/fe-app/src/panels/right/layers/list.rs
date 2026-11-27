@@ -32,7 +32,7 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
     let mut actions = Vec::new();
     let mut spans: Vec<RowSpan> = Vec::new();
     let list_rect = ui.max_rect();
-    egui::ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
+    egui::ScrollArea::vertical().id_salt("layers-list").auto_shrink(false).show(ui, |ui| {
         ui.spacing_mut().item_spacing.y = 0.0;
         let doc = &app.projects[app.active_project].active_page().doc;
         let can_merge_down = doc.active_index().is_some_and(|i| i > 0);

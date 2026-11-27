@@ -2,7 +2,7 @@
 # Also prints start-up time, memory and idle CPU (for the progress log).
 # Usage:  powershell -ExecutionPolicy Bypass -File scripts\screenshot.ps1 -Out docs\screenshots\compare\name.png [-Release] [-Width 1919 -Height 1035]
 # -Steps runs mouse and key steps before the picture is taken, separated by ";" (x, y are inside the window):
-#   keys:<SendKeys text>   click:x,y   dclick:x,y (double-click)   drag:x1,y1,x2,y2   shiftdrag:x1,y1,x2,y2   wait:ms
+#   keys:<SendKeys text>   click:x,y   rclick:x,y (right-click)   dclick:x,y (double-click)   drag:x1,y1,x2,y2   shiftdrag:x1,y1,x2,y2   wait:ms
 
 param(
     [Parameter(Mandatory = $true)][string]$Out,
@@ -78,6 +78,7 @@ if ($Steps) {
         switch ($kind) {
             "keys" { [System.Windows.Forms.SendKeys]::SendWait($value); Start-Sleep -Milliseconds 400 }
             "dclick" { Move-To $v[0] $v[1]; [FeWin]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero); [FeWin]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 60; [FeWin]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero); [FeWin]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 500 }
+            "rclick" { Move-To $v[0] $v[1]; [FeWin]::mouse_event(8, 0, 0, 0, [UIntPtr]::Zero); [FeWin]::mouse_event(16, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 500 }
             "click" { Move-To $v[0] $v[1]; [FeWin]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero); [FeWin]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 500 }
             "drag" { Invoke-Drag $v }
             "shiftdrag" { [FeWin]::keybd_event(0x10, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 100; Invoke-Drag $v; [FeWin]::keybd_event(0x10, 0, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 300 }

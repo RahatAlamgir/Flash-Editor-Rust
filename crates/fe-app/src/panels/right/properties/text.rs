@@ -91,7 +91,7 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
         }
     });
     let mut width = t.outline_width;
-    if slider(ui, "Outline", &mut width, 0.0..=30.0, "px") {
+    if slider(ui, "Width", &mut width, 0.0..=30.0, "px") {
         cmd::change_text(app, "Outline Width", |d| {
             d.outline_width = width;
             if width > 0.0 {

@@ -22,7 +22,6 @@ fn ribbon_menu(ui: &mut Ui, app: &mut FlashApp) {
     let mut chosen = None;
     let mut shape = None;
     let mut frame = None;
-    let mut chart = None;
     let mut image_op: Option<i32> = None;
     let mut crop_op: Option<i32> = None;
     let mut barcode = None;
@@ -47,14 +46,17 @@ fn ribbon_menu(ui: &mut Ui, app: &mut FlashApp) {
             shape = Some(kind);
         }
         if label == "Frame ▾" {
-            for (text, tip, kind) in [
-                ("Rectangle", "A plain frame", "Rectangle"),
-                ("Rounded", "A frame with rounded corners", "Rounded"),
-                ("Circle", "A round frame", "Circle"),
-                ("Heart", "A heart-shaped frame", "Heart"),
-                ("Star", "A star-shaped frame", "Star"),
+            // Each frame with a small picture of its shape.
+            for (text, tip, kind, shape) in [
+                ("Rectangle", "A plain frame", "Rectangle", fe_core::objects::ShapeKind::Rectangle),
+                ("Rounded", "A frame with rounded corners", "Rounded", fe_core::objects::ShapeKind::Rectangle),
+                ("Circle", "A round frame", "Circle", fe_core::objects::ShapeKind::Ellipse),
+                ("Heart", "A heart-shaped frame", "Heart", fe_core::objects::ShapeKind::Heart),
+                ("Star", "A star-shaped frame", "Star", fe_core::objects::ShapeKind::Star),
             ] {
-                if ui.add(egui::Button::new(text).frame(false)).on_hover_text(tip).clicked() {
+                let picture = egui::Image::new((icons.texture(ui.ctx(), shape), egui::vec2(18.0, 18.0)))
+                    .tint(fe_ui_kit::theme::colors::ICON);
+                if ui.add(egui::Button::image_and_text(picture, text).frame(false)).on_hover_text(tip).clicked() {
                     frame = Some(kind);
                 }
             }
@@ -83,13 +85,6 @@ fn ribbon_menu(ui: &mut Ui, app: &mut FlashApp) {
             ] {
                 if ui.add(egui::Button::new(text).frame(false)).clicked() {
                     image_op = Some(value);
-                }
-            }
-        }
-        if label == "Chart ▾" {
-            for kind in fe_core::objects::ChartKind::ALL {
-                if ui.add(egui::Button::new(kind.name()).frame(false)).clicked() {
-                    chart = Some(kind);
                 }
             }
         }
@@ -179,11 +174,6 @@ fn ribbon_menu(ui: &mut Ui, app: &mut FlashApp) {
             5 => image::flip(app, true),
             _ => image::flip(app, false),
         }
-        app.ribbon_menu = None;
-        return;
-    }
-    if let Some(kind) = chart {
-        crate::commands::insert::add_chart(app, kind);
         app.ribbon_menu = None;
         return;
     }

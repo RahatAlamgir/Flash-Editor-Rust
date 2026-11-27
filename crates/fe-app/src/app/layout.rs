@@ -54,10 +54,12 @@ pub fn show(app: &mut FlashApp, ui: &mut Ui) {
         if side < 0.999 {
             let full =
                 egui::Rect::from_min_max(egui::pos2(panel.right() - metrics::RIGHT_COLUMN_W, panel.top()), panel.max);
-            ui.scope_builder(egui::UiBuilder::new().max_rect(full), |ui| {
-                ui.set_clip_rect(panel.intersect(ui.clip_rect()));
-                panels::right::show(ui, app);
-            });
+            // A child that does not report what it used: whatever is inside (a wide row, a scroll bar appearing) must never
+            // make the column, and with it the canvas next to it, a few pixels wider or narrower.
+            let mut child = ui.new_child(egui::UiBuilder::new().max_rect(full));
+            child.set_clip_rect(panel.intersect(ui.clip_rect()));
+            child.style_mut().spacing.scroll = egui::style::ScrollStyle::floating();
+            panels::right::show(&mut child, app);
         }
         if panels::collapse::side_handle(ui.ctx(), panel, app.right_collapsed) {
             app.right_collapsed = !app.right_collapsed;
@@ -73,10 +75,9 @@ pub fn show(app: &mut FlashApp, ui: &mut Ui) {
             let panel = ui.max_rect();
             if bottom < 0.999 {
                 let full = egui::Rect::from_min_size(panel.min, egui::vec2(panel.width(), metrics::PAGE_STRIP));
-                ui.scope_builder(egui::UiBuilder::new().max_rect(full), |ui| {
-                    ui.set_clip_rect(panel.intersect(ui.clip_rect()));
-                    panels::pages::show(ui, app);
-                });
+                let mut child = ui.new_child(egui::UiBuilder::new().max_rect(full));
+                child.set_clip_rect(panel.intersect(ui.clip_rect()));
+                panels::pages::show(&mut child, app);
             } else {
                 let label = format!("Pages ({})", app.project().pages().len());
                 if panels::collapse::folded_bar(ui, panel, &label) {

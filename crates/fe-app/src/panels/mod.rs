@@ -113,9 +113,10 @@ pub fn handle_ribbon_action(app: &mut FlashApp, ctx: &egui::Context, action: Rib
                     app.dialog = Some(crate::dialogs::Dialog::PhotoGrid(form));
                 }
                 "Fill Frames" => crate::commands::frames::fill_frames(app),
-                "Layer Mask ▾" | "Shapes ▾" | "Frame ▾" | "Chart ▾" | "Barcode ▾" | "Adjustment ▾" => {
+                "Layer Mask ▾" | "Shapes ▾" | "Frame ▾" | "Barcode ▾" | "Adjustment ▾" => {
                     app.ribbon_menu = Some((tab, group, item, rect));
                 }
+                "Chart" => app.dialog = Some(crate::dialogs::Dialog::Chart),
                 "QR Code" => ins::add_qr(app),
                 "Heading" => ins::add_text(app, ins::TextKind::Heading),
                 "Subheading" => ins::add_text(app, ins::TextKind::Subheading),

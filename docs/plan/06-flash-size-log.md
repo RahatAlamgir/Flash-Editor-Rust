@@ -4,6 +4,47 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Gradient rows cut off, red "ScrollArea" marks, Reshape button
+
+- **Gradient:** the color rows had an empty label that took the whole label column, so the slider and its number box ran past the
+  edge and were cut off ("24", "95"). The color now sits in the label column and the slider lines up with the other rows. All
+  slider rows share one size (`SLIDER_W` 90, `VALUE_W` 46 in `properties/mod.rs`).
+- **Red text "First use of ScrollArea ID ..." and red lines in History:** egui's warning that two scroll lists have the same id
+  (only drawn in the debug build). The Layers list and the History list both had no name. Every scroll list in the right column
+  now has its own (`layers-list`, `history-steps`, `props-scroll`, `props-adjustment`).
+- **Reshape corners** is a real button (it showed as bare text).
+
+## 2026-11-28 · The canvas and the right column no longer change size by a few pixels
+
+- **Bug:** what was inside the right column could change its width by a couple of pixels (for example the Text tab against the
+  Shape sections, or a scroll bar appearing when a section opened), and the canvas next to it moved with it. Fix: the column
+  content is now a child that does not report its size back (`app/layout.rs`), so the column is always exactly its width, and the
+  scroll bars float over the content instead of taking room. The page strip got the same treatment (its height).
+- Measured on screenshots: the page's left and right edges on the canvas are the same (126 and 1211) with nothing selected, a
+  text on the Text tab, a rectangle, and a rectangle with Transform and Gradient folded.
+
+## 2026-11-28 · Alignment: Properties, Keyboard Shortcuts, right-click menu
+
+- **Properties:** the label column is one width for every row (72 px, labels left aligned, so "Words gap" fits), so the controls
+  start at the same place on every row. The Rotate slider now has the same slider and number box widths as the others, "Keep
+  proportions" lines up with the controls, and the second "Outline" row of the Text tab is now called "Width".
+- **Keyboard Shortcuts (F1):** the key buttons were placed right after each name, so they sat at different places. Now they are
+  one column; the window is narrower.
+- **Right-click menu:** the Align row (with the sub menu arrow) is the same kind of row as the others now, so its icon and text
+  line up.
+- Seen by screenshot: Text and Properties tabs, F1 window, right-click menu. Other sections (QR, chart, gradient, effects) use
+  the same label column but were not looked at one by one.
+
+## 2026-11-28 · Text tab in Properties, icons in menus, Chart picker
+
+- **Properties tabs are now Properties, Text, Effects, Adjust.** The text sections (words, font, size, style, color, outline,
+  spacing, Text designs) moved to their own **Text** tab, which only shows while text is selected (also several texts).
+- **Icons in the right-click menu** (cut, copy, paste, duplicate, group, order, align, flip...) and **pictures of the shapes in the
+  Insert > Frame menu**. Not every right-click item has a matching icon: the Align row sits 2 px off the others.
+- **Insert > Chart opens a picture dialog** (like Icons / Badges / Graphics / SmartArt): all 11 chart kinds drawn as real charts
+  with their sample numbers; click one to insert. Code: `dialogs/chart_picker.rs`; `commands/insert.rs` has `sample_chart`, shared
+  with the previews. `scripts/screenshot.ps1` can right-click now (`rclick:x,y`).
+
 ## 2026-11-28 · Google (Material) icons, 33 more graphics, window no longer grows
 
 - **Google icons:** Insert > Icons has a new tab **Google icons**: Google's Material Icons font (2,226 icons: home, search,

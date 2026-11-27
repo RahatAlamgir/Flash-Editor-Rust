@@ -45,8 +45,10 @@ pub(super) fn slider(
     unit: &str,
 ) -> bool {
     ui.horizontal(|ui| {
-        label(ui, text);
-        number_slider(ui, value, range, unit, 96.0, 52.0).changed()
+        if !text.is_empty() {
+            label(ui, text);
+        }
+        number_slider(ui, value, range, unit, super::SLIDER_W, super::VALUE_W).changed()
     })
     .inner
 }

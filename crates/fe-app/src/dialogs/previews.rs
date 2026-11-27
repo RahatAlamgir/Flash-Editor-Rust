@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use egui::{ColorImage, Context, TextureHandle, TextureOptions};
 use fe_core::imaging::PixelRect;
 use fe_core::library::{badges, graphics, smartart};
-use fe_core::objects::StoredObject;
+use fe_core::objects::{ChartKind, ObjectBox, StoredObject};
 
 /// The textures made so far.
 #[derive(Default)]
@@ -48,6 +48,16 @@ impl Previews {
     pub fn graphic(&mut self, ctx: &Context, id: &str) -> Option<&TextureHandle> {
         let size = f64::from(SIZE);
         self.get(ctx, format!("graphic-{id}"), || graphics::build(id, size, size, size * 0.8))
+    }
+
+    /// A chart with its sample numbers.
+    pub fn chart(&mut self, ctx: &Context, kind: ChartKind) -> Option<&TextureHandle> {
+        let size = f64::from(SIZE);
+        self.get(ctx, format!("chart-{}", kind.name()), || {
+            let chart = crate::commands::insert::sample_chart(kind, &[]);
+            let b = ObjectBox::new(size * 0.04, size * 0.1, size * 0.92, size * 0.8, 0.0);
+            Some(StoredObject::new_chart(b, &chart))
+        })
     }
 
     /// A diagram with its sample words in a color scheme.

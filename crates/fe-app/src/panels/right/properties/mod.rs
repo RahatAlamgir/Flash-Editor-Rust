@@ -24,9 +24,18 @@ use fe_ui_kit::widgets::panel_title_bar;
 
 use crate::app::FlashApp;
 
-/// A label of the fixed width C# uses in the panel.
+/// The width of the label column; the controls of every row start right after it (checkbox rows use it too).
+pub(super) const LABEL_W: f32 = 72.0;
+/// The size of every slider row: the slider and the number box after it.
+pub(super) const SLIDER_W: f32 = 90.0;
+pub(super) const VALUE_W: f32 = 46.0;
+
+/// A label of the fixed column width, left aligned, so everything after it lines up from row to row.
 pub(super) fn label(ui: &mut Ui, text: &str) {
-    ui.add_sized([58.0, 22.0], egui::Label::new(RichText::new(text).color(colors::SUBTLE_TEXT)));
+    ui.allocate_ui_with_layout(egui::vec2(LABEL_W, 22.0), egui::Layout::left_to_right(egui::Align::Center), |ui| {
+        ui.set_min_size(egui::vec2(LABEL_W, 22.0));
+        ui.label(RichText::new(text).color(colors::SUBTLE_TEXT));
+    });
 }
 
 /// A small grey explanation.
@@ -62,19 +71,22 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
         return;
     };
     if layer.is_adjustment() {
-        egui::ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
+        egui::ScrollArea::vertical().id_salt("props-adjustment").auto_shrink(false).show(ui, |ui| {
             egui::Frame::new().inner_margin(egui::Margin::symmetric(10, 6)).show(ui, |ui| adjustment::show(ui, app));
         });
         return;
     }
     let locked = layer.locked;
     let pixels = layer.object().is_none();
-    if app.props_tab >= TABS.len() {
+    // Text has its own tab, which only shows while text is selected.
+    let kinds = selected_kinds(app);
+    let text_selected = !kinds.is_empty() && kinds.iter().all(|k| k == "text");
+    if app.props_tab >= TABS.len() || (TABS[app.props_tab] == "Text" && !text_selected) {
         app.props_tab = 0;
     }
-    tab_row(ui, app);
+    tab_row(ui, app, text_selected);
     let tab = TABS[app.props_tab];
-    egui::ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
+    egui::ScrollArea::vertical().id_salt("props-scroll").auto_shrink(false).show(ui, |ui| {
         egui::Frame::new().inner_margin(egui::Margin::symmetric(10, 6)).show(ui, |ui| {
             if locked {
                 ui.horizontal(|ui| {
@@ -85,7 +97,6 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
                 });
                 return;
             }
-            let kinds = selected_kinds(app);
             let all = |names: &[&str]| !kinds.is_empty() && kinds.iter().all(|k| names.contains(&k.as_str()));
             let styled = !kinds.is_empty() && !kinds.iter().any(|k| k == "pixels");
             match tab {
@@ -98,6 +109,13 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
                     } else {
                         adjust::show(ui, app);
                     }
+                    return;
+                }
+                "Text" => {
+                    egui::CollapsingHeader::new("Text").default_open(true).show(ui, |ui| text::show(ui, app));
+                    egui::CollapsingHeader::new("Text designs")
+                        .default_open(false)
+                        .show(ui, |ui| text_designs::show(ui, app));
                     return;
                 }
                 _ => {}
@@ -113,12 +131,6 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
             egui::CollapsingHeader::new("Transform").default_open(true).show(ui, |ui| transform::show(ui, app));
             egui::CollapsingHeader::new("Align").default_open(true).show(ui, |ui| align::show(ui, app));
             // With several layers selected only the sections that fit all of them show; a change goes to all of them.
-            if all(&["text"]) {
-                egui::CollapsingHeader::new("Text").default_open(true).show(ui, |ui| text::show(ui, app));
-                egui::CollapsingHeader::new("Text designs")
-                    .default_open(false)
-                    .show(ui, |ui| text_designs::show(ui, app));
-            }
             if all(&["shape", "text", "image"]) {
                 egui::CollapsingHeader::new("Gradient").default_open(false).show(ui, |ui| gradient::show(ui, app));
             }
@@ -172,15 +184,18 @@ fn empty_hint(ui: &mut Ui) {
 }
 
 /// The tabs of the column: what each holds is in `show`.
-const TABS: [&str; 3] = ["Properties", "Effects", "Adjust"];
+const TABS: [&str; 4] = ["Properties", "Text", "Effects", "Adjust"];
 
 /// The row of tabs under the title bar.
-fn tab_row(ui: &mut Ui, app: &mut FlashApp) {
+fn tab_row(ui: &mut Ui, app: &mut FlashApp, text_selected: bool) {
     ui.add_space(4.0);
     ui.horizontal(|ui| {
         ui.add_space(8.0);
         ui.spacing_mut().item_spacing.x = 2.0;
         for (i, name) in TABS.iter().enumerate() {
+            if *name == "Text" && !text_selected {
+                continue;
+            }
             let on = app.props_tab == i;
             let text = RichText::new(*name).size(12.0).color(if on { colors::TEXT } else { colors::SUBTLE_TEXT });
             if ui.add(egui::Button::selectable(on, text)).clicked() {

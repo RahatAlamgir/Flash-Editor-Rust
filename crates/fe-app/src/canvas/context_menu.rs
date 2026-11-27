@@ -15,52 +15,67 @@ pub fn show(response: &Response, app: &mut FlashApp) {
     let mut picked: Option<&'static str> = None;
     response.context_menu(|ui| {
         ui.set_min_width(220.0);
-        let mut item = |ui: &mut egui::Ui, text: &'static str, keys: &str| {
-            if ui.add(egui::Button::new(text).shortcut_text(keys).frame(false)).clicked() {
+        let mut item = |ui: &mut egui::Ui, icon: &str, text: &'static str, keys: &str| {
+            let picture = fe_ui_kit::icons::icon20(icon, fe_ui_kit::theme::colors::ICON)
+                .fit_to_exact_size(egui::vec2(16.0, 16.0));
+            if ui.add(egui::Button::image_and_text(picture, text).shortcut_text(keys).frame(false)).clicked() {
                 picked = Some(text);
                 ui.close();
             }
         };
-        item(ui, if has_selection { "Cut Selection" } else { "Cut" }, "Ctrl+X");
-        item(ui, if has_selection { "Copy Selection" } else { "Copy" }, "Ctrl+C");
-        item(ui, "Paste", "Ctrl+V");
-        item(ui, "Duplicate", "Ctrl+D");
+        item(ui, "Cut", if has_selection { "Cut Selection" } else { "Cut" }, "Ctrl+X");
+        item(ui, "Copy", if has_selection { "Copy Selection" } else { "Copy" }, "Ctrl+C");
+        item(ui, "Paste", "Paste", "Ctrl+V");
+        item(ui, "Duplicate", "Duplicate", "Ctrl+D");
         if selected >= 2 {
-            item(ui, "Group", "Ctrl+G");
+            item(ui, "Merge", "Group", "Ctrl+G");
         }
         if active_object.as_deref() == Some("group") {
-            item(ui, "Ungroup", "Ctrl+Shift+G");
+            item(ui, "Ungroup", "Ungroup", "Ctrl+Shift+G");
         }
         if has_selection {
-            item(ui, "Split to New Layer", "");
-            item(ui, "Delete Selected Pixels", "Delete");
+            item(ui, "Cut", "Split to New Layer", "");
+            item(ui, "Delete", "Delete Selected Pixels", "Delete");
         }
         ui.separator();
-        item(ui, "Bring to Front", "Ctrl+Shift+]");
-        item(ui, "Bring Forward", "Ctrl+]");
-        item(ui, "Send Backward", "Ctrl+[");
-        item(ui, "Send to Back", "Ctrl+Shift+[");
-        ui.menu_button("Align", |ui| {
-            for text in ["Left", "Center", "Right", "Top", "Middle", "Bottom"] {
-                item(ui, text, "");
+        item(ui, "Front", "Bring to Front", "Ctrl+Shift+]");
+        item(ui, "Up", "Bring Forward", "Ctrl+]");
+        item(ui, "Down", "Send Backward", "Ctrl+[");
+        item(ui, "Back", "Send to Back", "Ctrl+Shift+[");
+        let align_icon =
+            fe_ui_kit::icons::icon20("Align", fe_ui_kit::theme::colors::ICON).fit_to_exact_size(egui::vec2(16.0, 16.0));
+        // The same kind of row as the others, with the sub menu arrow on the right.
+        let align_button = egui::Button::image_and_text(align_icon, "Align")
+            .right_text(egui::containers::menu::SubMenuButton::arrow_atom(None))
+            .frame(false);
+        egui::containers::menu::SubMenuButton::from_button(align_button).ui(ui, |ui| {
+            for (icon, text) in [
+                ("AlignLeft", "Left"),
+                ("AlignCenter", "Center"),
+                ("AlignRight", "Right"),
+                ("AlignTop", "Top"),
+                ("AlignMiddle", "Middle"),
+                ("AlignBottom", "Bottom"),
+            ] {
+                item(ui, icon, text, "");
             }
             if selected > 2 {
                 ui.separator();
-                item(ui, "Distribute Horizontally", "");
-                item(ui, "Distribute Vertically", "");
+                item(ui, "AlignCenter", "Distribute Horizontally", "");
+                item(ui, "AlignMiddle", "Distribute Vertically", "");
             }
         });
         ui.separator();
-        item(ui, "Flip Horizontal", "");
-        item(ui, "Flip Vertical", "");
+        item(ui, "FlipH", "Flip Horizontal", "");
+        item(ui, "FlipV", "Flip Vertical", "");
         if active_object.is_some() {
-            item(ui, "Convert to Pixels", "");
+            item(ui, "Grid", "Convert to Pixels", "");
         }
         ui.separator();
-        item(ui, "Select Layer Content", "");
+        item(ui, "RectSelect", "Select Layer Content", "");
         if has_selection {
-            item(ui, "Invert Selection", "Ctrl+Shift+I");
-            item(ui, "Deselect", "Ctrl+Shift+D");
+            item(ui, "Swap", "Invert Selection", "Ctrl+Shift+I");
+            item(ui, "Deselect", "Deselect", "Ctrl+Shift+D");
         }
     });
     match picked {
