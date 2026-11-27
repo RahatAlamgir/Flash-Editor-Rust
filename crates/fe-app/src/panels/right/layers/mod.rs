@@ -1,12 +1,14 @@
 //! The Layers panel (C# `LayersPanel.xaml`): blend mode and opacity of the active layer, the four quick
 //! buttons, the layer list (top layer first) and the buttons along the bottom.
 
+mod animations;
 mod footer;
 mod header;
 mod list;
 mod menu;
 mod part_row;
 mod row;
+mod type_icon;
 
 use egui::{Rect, Stroke, Ui, UiBuilder, pos2};
 use fe_core::document::LayerId;
@@ -28,11 +30,34 @@ pub struct LayersUi {
     pub anchor: Option<LayerId>,
     /// Groups whose parts are listed under them.
     pub expanded: std::collections::HashSet<LayerId>,
+    /// An animation being dragged to a new place (its position in the list) and the gap it would drop into.
+    pub anim_drag: Option<(usize, usize)>,
 }
 
 pub fn show(ui: &mut Ui, app: &mut FlashApp) {
     let area = ui.max_rect();
-    panel_title_bar(ui, "Layers", |_| {});
+    let presentation = app.project().presentation;
+    if !presentation {
+        app.layers_tab = 0;
+    }
+    panel_title_bar(ui, "Layers", |ui| {
+        // Presentations have a second tab: what plays on the slide.
+        if presentation {
+            for (i, name) in ["Animations", "Layers"].iter().enumerate().map(|(i, n)| (1 - i, n)) {
+                let on = app.layers_tab == i;
+                let text =
+                    egui::RichText::new(*name).size(11.5).color(if on { colors::TEXT } else { colors::SUBTLE_TEXT });
+                if ui.add(egui::Button::selectable(on, text)).clicked() {
+                    app.layers_tab = i;
+                }
+            }
+        }
+    });
+    if app.layers_tab == 1 {
+        let rest = Rect::from_min_max(pos2(area.left(), ui.cursor().top()), area.max);
+        ui.scope_builder(UiBuilder::new().max_rect(rest), |ui| animations::show(ui, app));
+        return;
+    }
     header::mix_and_opacity(ui, app);
     header::quick_buttons(ui, app);
     let list_top = ui.cursor().top();

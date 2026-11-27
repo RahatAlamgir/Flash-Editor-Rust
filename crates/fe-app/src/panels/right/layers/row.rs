@@ -109,6 +109,17 @@ pub fn show(ui: &mut Ui, look: RowLook<'_>) -> RowEvents {
         text_left += 16.0;
     }
 
+    // What the layer holds: a small picture in front of the name.
+    let kind = super::type_icon::kind_of(layer);
+    let icon = Rect::from_min_size(
+        pos2(text_left, rect.center().y - super::type_icon::SIZE / 2.0),
+        Vec2::splat(super::type_icon::SIZE),
+    );
+    super::type_icon::paint(&painter, icon, kind, colors::ICON);
+    ui.interact(icon, ui.scope_id().with(("kind", layer.id())), Sense::hover())
+        .on_hover_text(super::type_icon::describe(kind));
+    text_left += super::type_icon::SIZE + 6.0;
+
     // Name, or the box to rename it.
     let name_rect = Rect::from_min_max(pos2(text_left, rect.top() + 6.0), pos2(lock.left() - 4.0, rect.bottom() - 6.0));
     match look.renaming {

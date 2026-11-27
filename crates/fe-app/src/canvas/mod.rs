@@ -2,6 +2,7 @@
 //! The selection tools draw their outlines here (`selection_overlay`).
 
 mod aids_overlay;
+mod animation_badges;
 pub mod bench;
 mod context_menu;
 mod debug_overlay;

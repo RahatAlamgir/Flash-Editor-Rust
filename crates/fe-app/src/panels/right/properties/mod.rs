@@ -6,7 +6,6 @@
 mod adjust;
 mod adjustment;
 mod align;
-mod animation;
 mod barcode;
 mod chart;
 mod frame;
@@ -70,11 +69,10 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
     }
     let locked = layer.locked;
     let pixels = layer.object().is_none();
-    let presentation = app.project().presentation;
-    if app.props_tab >= TABS.len() || (TABS[app.props_tab] == "Animation" && !presentation) {
+    if app.props_tab >= TABS.len() {
         app.props_tab = 0;
     }
-    tab_row(ui, app, presentation);
+    tab_row(ui, app);
     let tab = TABS[app.props_tab];
     egui::ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
         egui::Frame::new().inner_margin(egui::Margin::symmetric(10, 6)).show(ui, |ui| {
@@ -100,10 +98,6 @@ pub fn show(ui: &mut Ui, app: &mut FlashApp) {
                     } else {
                         adjust::show(ui, app);
                     }
-                    return;
-                }
-                "Animation" => {
-                    animation::show(ui, app);
                     return;
                 }
                 _ => {}
@@ -178,18 +172,15 @@ fn empty_hint(ui: &mut Ui) {
 }
 
 /// The tabs of the column: what each holds is in `show`.
-const TABS: [&str; 4] = ["Properties", "Effects", "Adjust", "Animation"];
+const TABS: [&str; 3] = ["Properties", "Effects", "Adjust"];
 
 /// The row of tabs under the title bar.
-fn tab_row(ui: &mut Ui, app: &mut FlashApp, presentation: bool) {
+fn tab_row(ui: &mut Ui, app: &mut FlashApp) {
     ui.add_space(4.0);
     ui.horizontal(|ui| {
         ui.add_space(8.0);
         ui.spacing_mut().item_spacing.x = 2.0;
         for (i, name) in TABS.iter().enumerate() {
-            if *name == "Animation" && !presentation {
-                continue;
-            }
             let on = app.props_tab == i;
             let text = RichText::new(*name).size(12.0).color(if on { colors::TEXT } else { colors::SUBTLE_TEXT });
             if ui.add(egui::Button::selectable(on, text)).clicked() {

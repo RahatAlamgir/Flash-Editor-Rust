@@ -4,6 +4,20 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Layer type icons, Animations tab in the Layers panel, numbers on the canvas
+
+- **Layer type icons:** every row of the layer list has a small drawn icon before the name: T (text), shape, picture, group, QR
+  code, barcode, chart, plain pixels (checker), adjustment (half-filled circle). Hover for the name of the type.
+- **Animations belong to the page, so they moved next to the Layers** (they are no longer in Properties): in a presentation the
+  Layers panel title bar has two tabs, **Layers** and **Animations**. The Animations tab has Add Animation + Preview, the list of
+  everything that plays on the slide (number, layer, effect, start, click number), **drag a row up or down to change the order**
+  (a blue line shows where it lands), click to choose, the cross removes, and the settings of the chosen one (start, direction,
+  duration, delay) below the list.
+- **Numbers on the canvas:** while the Animations tab is open, each animated object carries small numbers at its top left corner
+  (1, 2, 3 = the place in the play order; an object with two animations shows two); the chosen animation's number is blue, the
+  others orange. They are not part of the picture or the export.
+- Properties has three tabs again (Properties, Effects, Adjust).
+
 ## 2026-11-28 · Animation pane moved into Properties, smaller fold handles
 
 - The **Animation pane popup is gone**. Everything it did is in the **Animation** tab of the Properties panel: Add Animation and

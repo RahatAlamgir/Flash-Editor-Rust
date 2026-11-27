@@ -74,7 +74,7 @@ pub fn add_animation(app: &mut FlashApp, effect: Effect) {
         position = list.len() - 1;
     });
     app.ribbon.animation_selected = Some(position);
-    app.props_tab = 3; // the Animation tab of the Properties panel shows it
+    app.layers_tab = 1; // the Animations tab of the Layers panel shows it
     app.right_collapsed = false;
     app.status = format!("Added {} to the selected layer.", effect.name());
 }
@@ -89,6 +89,21 @@ pub fn move_selected(app: &mut FlashApp, by: isize) {
             list.swap(i, to as usize);
             now = to as usize;
         }
+    });
+    app.ribbon.animation_selected = Some(now);
+}
+
+/// Moves animation `from` to the place before `to` (`to` = the length of the list puts it last), keeping it chosen.
+pub fn move_to(app: &mut FlashApp, from: usize, to: usize) {
+    let mut now = from;
+    edit_animations(app, "Reorder Animations", |list| {
+        if from >= list.len() {
+            return;
+        }
+        let item = list.remove(from);
+        let at = if to > from { to - 1 } else { to }.min(list.len());
+        list.insert(at, item);
+        now = at;
     });
     app.ribbon.animation_selected = Some(now);
 }
