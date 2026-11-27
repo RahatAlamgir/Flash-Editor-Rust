@@ -104,16 +104,34 @@ pub fn show(ui: &mut Ui, tools: &mut ToolState) -> bool {
             true
         }
         ToolKind::Shape => {
-            label(ui, "Shape");
-            let kind = &mut tools.shape.kind;
-            egui::ComboBox::from_id_salt("shape-tool-kind").width(170.0).selected_text(kind.name()).show_ui(ui, |ui| {
-                for (group, kinds) in crate::panels::shape_menu::GROUPS {
-                    ui.label(RichText::new(*group).strong().color(colors::SUBTLE_TEXT));
-                    for k in kinds.iter() {
-                        ui.selectable_value(kind, *k, k.name());
-                    }
-                }
-            });
+            // The chosen shape as a picture on a button; it opens the gallery of pictures (like Insert > Shapes).
+            let ctx = ui.ctx().clone();
+            let state = &mut tools.shape;
+            let tint = colors::TEXT;
+            let icon = egui::Image::new((state.icons.texture(&ctx, state.kind), egui::vec2(20.0, 20.0))).tint(tint);
+            let button = egui::Button::image_and_text(icon, state.kind.name()).min_size(egui::vec2(150.0, 28.0));
+            let response = ui.add(button).on_hover_text("Choose the shape to draw");
+            if response.clicked() {
+                state.open = !state.open;
+            }
+            let mut icons = std::mem::take(&mut state.icons);
+            let mut open = state.open;
+            let mut picked = None;
+            fe_ui_kit::widgets::popup_below(
+                ui,
+                egui::Id::NULL.with("shape-tool-gallery"),
+                response.rect,
+                &mut open,
+                |ui| {
+                    picked = crate::panels::shape_menu::show(ui, &mut icons);
+                },
+            );
+            state.icons = icons;
+            state.open = open;
+            if let Some(kind) = picked {
+                state.kind = kind;
+                state.open = false;
+            }
             hint(ui, &format!("  {}", ToolKind::Shape.hint()));
             true
         }

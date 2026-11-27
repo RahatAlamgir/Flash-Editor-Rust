@@ -37,12 +37,15 @@ pub struct ToolState {
 impl Default for ToolState {
     /// The program starts on Select / Move, like the C# version.
     fn default() -> Self {
+        // Objects keep their proportions when resized by a corner (hold Shift for a free resize).
+        let mut mover = MoveTool::default();
+        mover.keep_proportions = true;
         Self {
             active: ToolKind::Move,
             current: GROUPS.iter().map(|g| g[0]).collect(),
             open_group: None,
             select: SelectTools::default(),
-            mover: MoveTool::default(),
+            mover,
             paint: PaintTools::default(),
             curve: Default::default(),
             crop: Default::default(),

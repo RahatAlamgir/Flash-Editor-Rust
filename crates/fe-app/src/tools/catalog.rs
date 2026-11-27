@@ -168,7 +168,7 @@ impl ToolKind {
                 "Click = corner, click and drag = smooth curve. Click the first point to close the shape, double-click or Enter to end a line. Select a curve to edit it: drag points and handles, double-click a point to make it smooth / sharp, double-click the line to add a point, Delete removes a point."
             }
             Shape => {
-                "Pick a shape above, then drag on the picture to draw it. Shift = square / circle (a line snaps to 15 degrees). A click puts one in the default size. Esc cancels."
+                "Pick a shape, then drag on the picture to draw it. Shift = square / circle (a line snaps to 15 degrees). A click puts one in the default size. Esc cancels."
             }
             _ => "The settings of this tool arrive in a later step of the Rust version.",
         }

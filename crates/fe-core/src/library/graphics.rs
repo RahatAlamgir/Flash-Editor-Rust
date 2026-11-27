@@ -14,8 +14,20 @@ pub struct GraphicInfo {
     pub category: &'static str,
 }
 
-pub const CATEGORIES: [&str; 6] =
-    ["Lines and dividers", "Arrows", "Blobs and shapes", "Decorations", "Frames and borders", "Patterns"];
+pub const CATEGORIES: [&str; 12] = [
+    "Lines and dividers",
+    "Arrows",
+    "Blobs and shapes",
+    "Decorations",
+    "Frames and borders",
+    "Patterns",
+    "Celebration",
+    "Nature",
+    "Business",
+    "Signs and buttons",
+    "Objects",
+    "Fun",
+];
 
 const LINES: &str = "Lines and dividers";
 const ARROWS: &str = "Arrows";
@@ -28,7 +40,8 @@ const fn g(id: &'static str, name: &'static str, category: &'static str) -> Grap
     GraphicInfo { id, name, category }
 }
 
-pub const ALL: [GraphicInfo; 50] = [
+/// The first 50 graphics; the rest are in `graphics_more.rs`. Use [`all`] to go through every graphic.
+const BASIC: [GraphicInfo; 50] = [
     g("line", "Line", LINES),
     g("dashed", "Dashed line", LINES),
     g("dotted", "Dotted line", LINES),
@@ -81,21 +94,26 @@ pub const ALL: [GraphicInfo; 50] = [
     g("waverows", "Wave rows", PATTERNS),
 ];
 
-/// The display name of a graphic.
-pub fn name_of(id: &str) -> &'static str {
-    ALL.iter().find(|i| i.id == id).map_or("Graphic", |i| i.name)
+/// Every graphic, in the order of the picker.
+pub fn all() -> impl Iterator<Item = &'static GraphicInfo> {
+    BASIC.iter().chain(super::graphics_more::MORE.iter()).chain(super::graphics_extra::EXTRA.iter())
 }
 
-fn p(x: f64, y: f64) -> PointD {
+/// The display name of a graphic.
+pub fn name_of(id: &str) -> &'static str {
+    all().find(|i| i.id == id).map_or("Graphic", |i| i.name)
+}
+
+pub(super) fn p(x: f64, y: f64) -> PointD {
     PointD::new(x, y)
 }
 
-fn node(point: PointD, handle_in: PointD, handle_out: PointD) -> CurveNode {
+pub(super) fn node(point: PointD, handle_in: PointD, handle_out: PointD) -> CurveNode {
     CurveNode { point, handle_in, handle_out }
 }
 
 /// A smooth wave: `half_waves` crests and troughs from the left to the right of the unit box.
-fn wave(half_waves: usize) -> Vec<CurveNode> {
+pub(super) fn wave(half_waves: usize) -> Vec<CurveNode> {
     let handle = 0.36 / half_waves as f64;
     (0..=half_waves)
         .map(|i| {
@@ -105,12 +123,12 @@ fn wave(half_waves: usize) -> Vec<CurveNode> {
         .collect()
 }
 
-fn zigzag(points: usize) -> Vec<CurveNode> {
+pub(super) fn zigzag(points: usize) -> Vec<CurveNode> {
     (0..=points).map(|i| CurveNode::corner(p(i as f64 / points as f64, if i % 2 == 0 { 1.0 } else { 0.0 }))).collect()
 }
 
 /// An organic closed shape: points around the center at the given distances (0..0.5), joined smoothly.
-fn blob(radii: &[f64]) -> Vec<CurveNode> {
+pub(super) fn blob(radii: &[f64]) -> Vec<CurveNode> {
     let n = radii.len();
     radii
         .iter()
@@ -150,10 +168,10 @@ fn crown() -> Vec<CurveNode> {
 }
 
 /// The same "random" numbers every time (the C# version uses `new Random(7)`).
-struct Rng(u64);
+pub(super) struct Rng(pub(super) u64);
 
 impl Rng {
-    fn next(&mut self) -> f64 {
+    pub(super) fn next(&mut self) -> f64 {
         self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
         ((self.0 >> 33) as f64) / f64::from(1u32 << 31)
     }
@@ -472,7 +490,7 @@ pub fn build(id: &str, canvas_w: f64, canvas_h: f64, width: f64) -> Option<Store
                 m.path("Wave", 0, f64::from(r) * 14.0, 100, 8, wave(12), false).stroke(sky, 1.6);
             }
         }
-        _ => return None,
+        _ => return super::graphics_more::build(id, canvas_w, canvas_h, width),
     }
     m.done()
 }

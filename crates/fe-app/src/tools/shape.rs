@@ -21,13 +21,17 @@ pub struct ShapeTool {
     pub kind: ShapeKind,
     /// The drag in progress: where it started and where the mouse is.
     drag: Option<(PointD, PointD)>,
+    /// The shape gallery under the options bar is open.
+    pub open: bool,
+    /// The pictures of the shapes for the gallery.
+    pub icons: crate::panels::shape_menu::ShapeIcons,
     shift: bool,
     zoom: f64,
 }
 
 impl Default for ShapeTool {
     fn default() -> Self {
-        Self { kind: ShapeKind::Rectangle, drag: None, shift: false, zoom: 1.0 }
+        Self { kind: ShapeKind::Rectangle, drag: None, open: false, icons: Default::default(), shift: false, zoom: 1.0 }
     }
 }
 

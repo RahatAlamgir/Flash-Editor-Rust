@@ -101,6 +101,7 @@ impl FlashApp {
     /// Called once when the window opens.
     pub fn new(cc: &eframe::CreationContext<'_>, startup: StartupOptions) -> Self {
         fe_ui_kit::install(&cc.egui_ctx);
+        fe_ui_kit::theme::fonts::add_material(&cc.egui_ctx, fe_core::library::material::FONT);
         let settings = Settings::load();
         let mut app = Self {
             ribbon: ribbon::RibbonState::default(),

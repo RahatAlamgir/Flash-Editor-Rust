@@ -4,7 +4,6 @@
 use fe_core::document::LayerId;
 use fe_core::document::object_ops::{self, AlignKind, UngroupError};
 use fe_core::history::MergeKey;
-use fe_core::imaging::ColorRgba;
 use fe_core::objects::{ObjectBox, ShapeData, ShapeKind, StoredObject};
 
 use crate::app::FlashApp;
@@ -37,12 +36,11 @@ pub fn add_shape_at(app: &mut FlashApp, kind: ShapeKind, center: Option<fe_core:
     add_shape_box(app, kind, ObjectBox::new(cx - w / 2.0, cy - h / 2.0, w, h, 0.0));
 }
 
-/// A shape in the given box (blue; a line is black).
+/// A shape in the given box, in the paint color (the color swatch at the bottom of the toolbox).
 pub fn add_shape_box(app: &mut FlashApp, kind: ShapeKind, b: ObjectBox) {
     use ShapeKind::*;
     let line = kind == Line;
-    let mut shape =
-        ShapeData::new(kind, (!line).then_some(ColorRgba::rgb(59, 130, 246)), line.then_some(ColorRgba::BLACK), 4.0);
+    let mut shape = ShapeData::new(kind, (!line).then_some(app.foreground), line.then_some(app.foreground), 4.0);
     if kind == Pie {
         shape.inner = 0.0;
     }

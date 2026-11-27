@@ -11,6 +11,8 @@ use egui::{FontData, FontDefinitions, FontFamily};
 pub const SEMIBOLD: &str = "semibold";
 /// Font family name for icon glyphs.
 pub const ICONS: &str = "icons";
+/// Font family name for the Google (Material) icons.
+pub const MATERIAL: &str = "material";
 
 /// Loads the fonts and makes Segoe UI the normal font.
 pub fn install(ctx: &egui::Context) {
@@ -57,4 +59,13 @@ fn add(fonts: &mut FontDefinitions, name: &str, files: &[&str]) -> Option<String
 fn windows_fonts_dir() -> PathBuf {
     let windows = std::env::var_os("WINDIR").map_or_else(|| PathBuf::from(r"C:\Windows"), PathBuf::from);
     windows.join("Fonts")
+}
+
+/// Adds the Google icon font (bytes from `fe-core`) as the family `MATERIAL`.
+pub fn add_material(ctx: &egui::Context, ttf: &'static [u8]) {
+    let family = egui::epaint::text::InsertFontFamily {
+        family: FontFamily::Name(MATERIAL.into()),
+        priority: egui::epaint::text::FontPriority::Highest,
+    };
+    ctx.add_font(egui::epaint::text::FontInsert::new("material-icons", FontData::from_static(ttf), vec![family]));
 }

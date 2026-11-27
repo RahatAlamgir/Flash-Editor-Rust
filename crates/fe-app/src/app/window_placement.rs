@@ -41,11 +41,14 @@ impl WindowPlacement {
             return None;
         }
         let rect = info.outer_rect?;
+        // The position is the outer corner, the size is the inside (that is what the window is asked for when it opens);
+        // saving the outer size made the window a little bigger every time the program was started.
+        let inner = info.inner_rect.unwrap_or(rect);
         Some(Self {
             left: rect.left(),
             top: rect.top(),
-            width: rect.width(),
-            height: rect.height(),
+            width: inner.width(),
+            height: inner.height(),
             maximized: info.maximized.unwrap_or(false),
         })
     }

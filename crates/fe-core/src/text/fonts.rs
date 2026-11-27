@@ -10,6 +10,8 @@ fn database() -> &'static fontdb::Database {
     DB.get_or_init(|| {
         let mut db = fontdb::Database::new();
         db.load_system_fonts();
+        // The Google icons come with the program (they are not installed on the PC).
+        db.load_font_data(crate::library::material::FONT.to_vec());
         db
     })
 }

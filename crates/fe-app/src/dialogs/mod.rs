@@ -100,6 +100,7 @@ pub fn show(ctx: &egui::Context, app: &mut FlashApp) {
         Dialog::Icons(mut picker) => match icon_picker::show(ctx, &mut picker, &mut app.previews) {
             Some(Some(pick)) => match pick {
                 Pick::Icon(i) => crate::commands::insert::add_icon(app, &fe_core::library::icons::ALL[i]),
+                Pick::Material(code) => crate::commands::insert::add_material_icon(app, code),
                 Pick::Badge(id) => crate::commands::insert::add_badge(app, id),
                 Pick::Graphic(id) => crate::commands::insert::add_graphic(app, id),
             },

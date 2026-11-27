@@ -47,10 +47,8 @@ fn objects(what: &str) -> (Vec<StoredObject>, (i32, i32)) {
             (list, (150, 150))
         }
         "graphics" => {
-            let list = library::graphics::ALL
-                .iter()
-                .filter_map(|i| library::graphics::build(i.id, 150.0, 150.0, 130.0))
-                .collect();
+            let list =
+                library::graphics::all().filter_map(|i| library::graphics::build(i.id, 150.0, 150.0, 130.0)).collect();
             (list, (150, 150))
         }
         "smartart" => {

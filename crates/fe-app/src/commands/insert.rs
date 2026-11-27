@@ -116,6 +116,22 @@ pub fn add_icon(app: &mut FlashApp, icon: &icons::IconItem) {
     );
 }
 
+/// Insert > Icons > Google icons: the icon as text in the Material Icons font, like the Windows icons.
+pub fn add_material_icon(app: &mut FlashApp, code: u32) {
+    use fe_core::library::material;
+    let Some(icon) = material::all().iter().find(|i| i.code == code) else { return };
+    let (dw, dh) = canvas_size(app);
+    let side = dw.min(dh);
+    let data = TextData::new(&icon.glyph(), material::FONT_FAMILY, (side * 0.2).round().max(24.0), app.foreground);
+    let (w, h) = measure_text(&data);
+    let b = ObjectBox::new(((dw - w) / 2.0).round(), ((dh - h) / 2.0).round(), w, h, 0.0);
+    add_object(app, StoredObject::new_text(b, &data), &format!("{} icon", icon.name), "Insert Icon");
+    app.status = format!(
+        "Added the {} icon. It is text: change its color, size, outline and shadow in Properties.",
+        icon.name.to_lowercase()
+    );
+}
+
 /// Insert > Badges.
 pub fn add_badge(app: &mut FlashApp, id: &str) {
     let (dw, dh) = canvas_size(app);

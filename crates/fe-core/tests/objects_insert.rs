@@ -53,7 +53,7 @@ fn every_badge_graphic_and_diagram_builds_and_draws() {
         let g = badges::build(info.id, 300.0, 300.0, 120.0).unwrap_or_else(|| panic!("badge {}", info.id));
         assert!(g.can_draw() && drawn(&g, 300, 300) > 100, "badge {}", info.id);
     }
-    for info in &graphics::ALL {
+    for info in graphics::all() {
         let g = graphics::build(info.id, 400.0, 400.0, 200.0).unwrap_or_else(|| panic!("graphic {}", info.id));
         assert!(g.can_draw() && drawn(&g, 400, 400) > 20, "graphic {}", info.id);
     }

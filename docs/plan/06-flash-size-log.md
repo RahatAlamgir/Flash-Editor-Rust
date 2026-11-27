@@ -4,14 +4,52 @@ Separate log for the file-size work (the main log is `05-progress-log.md`). Newe
 
 ---
 
+## 2026-11-28 · Google (Material) icons, 33 more graphics, window no longer grows
+
+- **Google icons:** Insert > Icons has a new tab **Google icons**: Google's Material Icons font (2,226 icons: home, search,
+  settings, share, mail, heart, cart...). Downloaded with the user's OK from github.com/google/material-design-icons (font and
+  name list, Apache License 2.0), kept in `assets/fonts/` (with a README about the license) and built into the program, so
+  projects look right on a PC without the font. It starts on ~250 "Popular" icons; the search box looks through all of them by
+  name. The grid draws only the rows on screen. Inserted as editable text in the family "Material Icons", like the Windows icons.
+  Code: `fe-core/src/library/material.rs`, `fe-app/src/dialogs/icon_picker.rs`, `commands/insert.rs`. Seen by screenshot: the
+  tab, the popular list, search for "cart", inserting the shopping cart. Brand logos (Google, etc.) are not in the font.
+- **33 more graphics** (148 in total) in `graphics_extra.rs`: signs and buttons (check, cross, info, warning, play, pause,
+  badge, map pin), objects (eye, padlock, cloud upload, phone, laptop, camera, coffee, book, pencil, music, gem), fun (paw,
+  cupcake, ice cream, rocket, planet, butterfly, fish), and a few lines / decorations. New groups: Signs and buttons, Objects, Fun.
+- **Bug found on the way:** the window got a little bigger every time the program started (it saved the outer size and asked for
+  it back as the inner size: +16 x +39 px per start). It now saves the inner size. A `window.json` already stretched stays as it is.
+
+## 2026-11-28 · Even more icons, and 65 more graphics
+
+- **Icons:** 88 more (about 395 in total), picked and named from contact sheets of the real icon font: thick arrows, filled
+  symbols, tools (eyedropper, pens, eraser), more media, a new category **Numbers** (1 - 12) and more shapes.
+- **Graphics:** 65 more (115 in total), in `fe-core/src/library/graphics_more.rs` (the old 50 stay in `graphics.rs`; use
+  `graphics::all()` to go through all of them). New groups **Celebration** (balloons, present, firework, banner, party hat,
+  streamers, stars), **Nature** (tree, mountains, sunrise, leaves, rain cloud, lightning, house, waves, daisy, snowflake,
+  rainbow) and **Business** (bar chart, target, light bulb, speech bubbles, checklist, gear, medal, calendar, envelope), plus
+  more lines, arrows, blobs, frames (circle, oval, heart, arch, stamp, polaroid, tape) and patterns (triangles, hearts, stars,
+  hexagons, diamonds, bubbles, grid, squares, rainbow bands). All drawn on a contact sheet and looked at; the "Cycle arrows"
+  and "Target" arrow are the plainest. Not seen in the picker window itself.
+
+## 2026-11-28 · Keep proportions on, paint color for shapes, more icons
+
+- **Keep proportions is on by default** (Properties > Transform checkbox; corner handles and the W / H boxes). Shift while
+  dragging a corner does the opposite, as before. Code: `tools/state.rs`.
+- **Shapes use the paint color** (the swatch at the bottom of the toolbox), both from the Shape tool and Insert > Shapes; a line
+  is drawn in it too. Before they were always blue. The Brush already used it, and icons already did (the black star).
+- **More icons:** 139 more (about 170 -> 309 in total), checked one by one on a contact sheet of the real font: more arrows, symbols
+  (heart, bell, menu, more, sliders, QR...), communication, media, objects, places, weather, shapes (triangles, pills), and a
+  new category **Text and editing** (bold, italic, underline, alignment, lists, font size...). Code: `fe-core/src/library/icons.rs`.
+  Not tried in the app: the picker with the new category.
+
 ## 2026-11-28 · Icon broke the Properties column; Shape tool
 
 - **Bug:** selecting (or adding) an icon made the right column too wide, so the canvas area slid over it and cut off the left
   of Properties and Layers. Cause: icons are text in the font "Segoe Fluent Icons, Segoe MDL2 Assets"; the font box showed that
   whole long name and grew to fit it. Found by logging the used width of each Properties section (only "Text" was wider).
   Fix: `font_picker` (options bar and Properties) shows only the first family name and cuts it to the box width.
-- **Shape tool** in the toolbox (key U, above Text): the options bar has a shape list (all shapes, grouped like Insert >
-  Shapes), then drag on the picture to draw (Shift = square / circle; a line snaps to 15 degrees; Esc cancels; a click puts
+- **Shape tool** in the toolbox (key U, above Text): the options bar has a button showing the chosen shape as a picture; it opens the gallery of
+  shape pictures (the same one as Insert > Shapes), then drag on the picture to draw (Shift = square / circle; a line snaps to 15 degrees; Esc cancels; a click puts
   a default-size shape around the click). A blue outline previews the drag; the new shape is selected and the tool goes back to
   Select / Move. Code: `tools/shape.rs`, `commands/objects.rs` (`add_shape_at`, `add_shape_box`). Seen by screenshot:
   the button, the options bar, a dragged rectangle. Not tried: other shapes, a line, Shift, Esc.

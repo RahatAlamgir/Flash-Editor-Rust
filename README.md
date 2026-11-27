@@ -12,7 +12,7 @@ features, about the same look, but smaller, quicker to start and light on memory
   with a history list, autosave and crash recovery, the Project Manager with online templates.
 - **Objects that stay editable:** shapes, text (any installed font, curved text, 16 designs), pictures in frames and photo
   grids, QR codes, barcodes, 11 chart types, icons, badges, SmartArt, a Curve (pen) tool, shadow / glow / outline / 3D effects,
-  gradients, saved styles and a Brand Kit. Smart guides, snapping, rulers, grid and guides. Hold Alt to see the distances
+  gradients, saved styles and a Brand Kit. About 400 Windows icons, 2,200 Google (Material) icons, 52 badges and 148 graphics to insert. Smart guides, snapping, rulers, grid and guides. Hold Alt to see the distances
   around the selected object.
 - **Painting and retouching:** 7 brush types, eraser, mask brush, Clone Stamp, Healing, Spot Healing, Patch, Dodge / Burn,
   Blur / Sharpen, Liquify.
