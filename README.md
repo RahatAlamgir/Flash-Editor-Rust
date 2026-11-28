@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/ss.jpg" alt="Flash Editor with the built-in tutorial open" width="100%">
+  <img src="docs/images/editor.jpg" alt="Flash Editor with the built-in tutorial open" width="100%">
 </p>
 
 ## ✨ Why Flash Editor
@@ -29,6 +29,36 @@
 - ✏️ **Everything editable.** Text, shapes, charts, QR codes and pictures stay objects you can change at any time.
 - 🤖 **Offline AI.** Remove a background, remove an object, upscale a photo: on your own computer, nothing is uploaded.
 - 🎞️ **Pictures and presentations in one place.** Design a page, or make a slideshow with transitions and animations.
+
+## 🖼️ Screenshots
+
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="docs/images/templates.jpg" alt="35 ready-made templates" width="100%"><br>
+      <sub>Start from a ready-made template, or a blank page.</sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="docs/images/dialogs.jpg" alt="File menu, New Project, colour picker, Export and Brand Kit" width="100%"><br>
+      <sub>File menu, new project, colours, export with crop, Brand Kit.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="docs/images/properties.jpg" alt="Properties panels for text, effects, adjustments and shapes" width="100%"><br>
+      <sub>Properties: text, effects (shadow, glow, 3D), adjustments, gradients.</sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="docs/images/pickers.jpg" alt="Icon, badge, graphic, SmartArt and chart pickers" width="100%"><br>
+      <sub>Icons, badges, graphics, SmartArt and charts to insert.</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/images/ribbon.jpg" alt="All the ribbon tabs" width="100%"><br>
+  <sub>Every tool is one click away in the ribbon, or in the command search.</sub>
+</p>
 
 ## 📥 Download and install
 
@@ -147,7 +177,8 @@ Flash Editor Rust/
 │           └── text_edit/  Editing text on the canvas
 ├── docs/
 │   ├── plan/               The porting plan, progress logs (05 main, 06 file size and later work, 07 animation)
-│   └── screenshots/        csharp/ = reference pictures of the C# app
+│   ├── images/             The screenshots shown in this README
+│   └── DEVELOPING.md       Build, test and make the installer
 ├── installer/              Inno Setup script and build-installer.ps1 (output goes to installer\output)
 ├── scripts/                check.ps1, screenshot.ps1, measure.ps1, get-ai-runtime.ps1, convert_icons.py
 ├── tests/fixtures/         Projects written by the C# app, used by the file tests
