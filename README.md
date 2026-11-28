@@ -167,4 +167,5 @@ Built with [egui](https://github.com/emilk/egui), [tiny-skia](https://github.com
 ## 📄 About this project
 
 Flash Editor was built with the help of AI (Claude by Anthropic), directed and tested by Rahat Alamgir. It is the Rust rebuild of
-the C# / WPF version: same features and look, but smaller and quicker. The optional AI models have their own licenses.
+the C# / WPF version: same features and look, but smaller and quicker. Everyone is free to use, copy, change and share it, personal or commercial, under the [MIT License](LICENSE): keep the license
+notice with the code. The software comes without any warranty. The optional AI models have their own licenses.

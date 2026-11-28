@@ -6,7 +6,7 @@ members = ["crates/fe-core", "crates/fe-ai", "crates/fe-gpu", "crates/fe-ui-kit"
 version = "1.0.0"
 edition = "2024"
 rust-version = "1.95"
-license = "Proprietary"
+license = "MIT"
 
 # Shared dependency versions. Crates use `name.workspace = true`.
 [workspace.dependencies]
